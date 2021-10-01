@@ -10,10 +10,10 @@ from nbody.hamiltonian cimport _hamiltonian, _gradients
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _one_step(body_t *bodies, unsigned int nbodies, double dt, int order):
+cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order):
 
     cdef unsigned int i,j,k
-    cdef double dtsquare = dt*dt
+    cdef long double dtsquare = dt*dt
     cdef body_t b
     cdef body_t tmp_b
     cdef body_t *mid_point = <body_t *>malloc(nbodies*sizeof(body_t))
@@ -25,7 +25,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, double dt, int order):
     if mid_point_2 == NULL:
         raise MemoryError
 
-    cdef double[:,:] g = _gradients(bodies, nbodies, order)
+    cdef long double[:,:] g = _gradients(bodies, nbodies, order)
 
     # FIXME: spins are not evolving!
     # iteration 0
@@ -85,16 +85,16 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, double dt, int order):
 @cython.cdivision(True)
 cdef void _initialise(body_t *bodies,
                       unsigned int n,
-                      double[:] mass,
-                      double[:] x,
-                      double[:] y,
-                      double[:] z,
-                      double[:] px,
-                      double[:] py,
-                      double[:] pz,
-                      double[:] sx,
-                      double[:] sy,
-                      double[:] sz):
+                      long double[:] mass,
+                      long double[:] x,
+                      long double[:] y,
+                      long double[:] z,
+                      long double[:] px,
+                      long double[:] py,
+                      long double[:] pz,
+                      long double[:] sx,
+                      long double[:] sy,
+                      long double[:] sz):
 
     _create_system(bodies, n, mass, x, y, z, px, py, pz, sx, sy, sz)
     return 
@@ -107,17 +107,17 @@ cdef void _free(body_t *s):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def run(unsigned int nsteps, double dt, int order,
-          np.ndarray[double, mode="c", ndim=1] mass,
-          np.ndarray[double, mode="c", ndim=1] x,
-          np.ndarray[double, mode="c", ndim=1] y,
-          np.ndarray[double, mode="c", ndim=1] z,
-          np.ndarray[double, mode="c", ndim=1] px,
-          np.ndarray[double, mode="c", ndim=1] py,
-          np.ndarray[double, mode="c", ndim=1] pz,
-          np.ndarray[double, mode="c", ndim=1] sx,
-          np.ndarray[double, mode="c", ndim=1] sy,
-          np.ndarray[double, mode="c", ndim=1] sz):
+def run(unsigned int nsteps, long double dt, int order,
+          np.ndarray[long double, mode="c", ndim=1] mass,
+          np.ndarray[long double, mode="c", ndim=1] x,
+          np.ndarray[long double, mode="c", ndim=1] y,
+          np.ndarray[long double, mode="c", ndim=1] z,
+          np.ndarray[long double, mode="c", ndim=1] px,
+          np.ndarray[long double, mode="c", ndim=1] py,
+          np.ndarray[long double, mode="c", ndim=1] pz,
+          np.ndarray[long double, mode="c", ndim=1] sx,
+          np.ndarray[long double, mode="c", ndim=1] sy,
+          np.ndarray[long double, mode="c", ndim=1] sz):
     
     from tqdm import tqdm
     cdef unsigned int i,j

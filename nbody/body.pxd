@@ -1,8 +1,8 @@
 cdef struct body:
-    double mass
-    double q[3]
-    double p[3]
-    double s[3]
+    long double mass
+    long double q[3]
+    long double p[3]
+    long double s[3]
 
 ctypedef body body_t
 
@@ -13,26 +13,26 @@ cdef struct system:
 ctypedef system system_t
 
 cdef void _create_body(body_t *b,
-                       double mass,
-                       double x,
-                       double y,
-                       double z,
-                       double px,
-                       double py,
-                       double pz,
-                       double sx,
-                       double sy,
-                       double sz) nogil
+                       long double mass,
+                       long double x,
+                       long double y,
+                       long double z,
+                       long double px,
+                       long double py,
+                       long double pz,
+                       long double sx,
+                       long double sy,
+                       long double sz) nogil
 
 cdef void _create_system(body_t *b,
                          unsigned int n,
-                         double[:] mass,
-                         double[:] x,
-                         double[:] y,
-                         double[:] z,
-                         double[:] px,
-                         double[:] py,
-                         double[:] pz,
-                         double[:] sx,
-                         double[:] sy,
-                         double[:] sz) nogil
+                         long double[:] mass,
+                         long double[:] x,
+                         long double[:] y,
+                         long double[:] z,
+                         long double[:] px,
+                         long double[:] py,
+                         long double[:] pz,
+                         long double[:] sx,
+                         long double[:] sy,
+                         long double[:] sz) nogil

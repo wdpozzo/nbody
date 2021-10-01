@@ -6,16 +6,16 @@ from libc.stdlib cimport malloc
 @cython.nonecheck(False)
 @cython.cdivision(True)
 cdef void _create_body(body_t *b,
-                       double mass,
-                       double x,
-                       double y,
-                       double z,
-                       double px,
-                       double py,
-                       double pz,
-                       double sx,
-                       double sy,
-                       double sz) nogil:
+                       long double mass,
+                       long double x,
+                       long double y,
+                       long double z,
+                       long double px,
+                       long double py,
+                       long double pz,
+                       long double sx,
+                       long double sy,
+                       long double sz) nogil:
     
     b.mass = mass
     b.q[0]    = x
@@ -34,16 +34,16 @@ cdef void _create_body(body_t *b,
 @cython.cdivision(True)
 cdef void _create_system(body_t *b,
                          unsigned int n,
-                         double[:] mass,
-                         double[:] x,
-                         double[:] y,
-                         double[:] z,
-                         double[:] px,
-                         double[:] py,
-                         double[:] pz,
-                         double[:] sx,
-                         double[:] sy,
-                         double[:] sz) nogil:
+                         long double[:] mass,
+                         long double[:] x,
+                         long double[:] y,
+                         long double[:] z,
+                         long double[:] px,
+                         long double[:] py,
+                         long double[:] pz,
+                         long double[:] sx,
+                         long double[:] sy,
+                         long double[:] sz) nogil:
 
     cdef unsigned int i
 

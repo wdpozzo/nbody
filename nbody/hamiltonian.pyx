@@ -4,17 +4,17 @@ cimport cython
 from libc.math cimport sqrt, abs
 from nbody.body cimport body_t, system_t
 
-cdef double G = 1.0#6.67e-11
-cdef double C = 3.0e8
-cdef double Msun = 2e30
-cdef double GM = 1.32712440018e20
+cdef long double G = 1.0#6.67e-11
+cdef long double C = 3.0e8
+cdef long double Msun = 2e30
+cdef long double GM = 1.32712440018e20
 
-cdef inline double _modulus(double x, double y, double z) nogil:
+cdef inline long double _modulus(long double x, long double y, long double z) nogil:
     return x*x+y*y+z*z
 
-cdef double _dot(double *v1, double *v2) nogil:
+cdef long double _dot(long double *v1, long double *v2) nogil:
     cdef unsigned int i
-    cdef double result = 0.0
+    cdef long double result = 0.0
     
     for i in range(3):
         result += v1[i]*v2[i]
@@ -25,20 +25,20 @@ cdef double _dot(double *v1, double *v2) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef double _hamiltonian(body_t *bodies, unsigned int N, int order):
+cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order):
     cdef unsigned int i, j, k
-    cdef double T = 0.0
-    cdef double V = 0.0
-    cdef double H = 0.0
+    cdef long double T = 0.0
+    cdef long double V = 0.0
+    cdef long double H = 0.0
     
     # for 1 PN
-    cdef double[3] normal
-    cdef double p2
-    cdef double p4
-    cdef double r
-    cdef double mi, mj
-    cdef double V0
-    cdef double C2 = C*C
+    cdef long double[3] normal
+    cdef long double p2
+    cdef long double p4
+    cdef long double r
+    cdef long double mi, mj
+    cdef long double V0
+    cdef long double C2 = C*C
     
     if order == 0:
         # compute the kinetic part
@@ -49,7 +49,7 @@ cdef double _hamiltonian(body_t *bodies, unsigned int N, int order):
                 V += _potential_0pn(bodies[i], bodies[j])
         return T+V
     
-    cdef double n_pi
+    cdef long double n_pi
 
     if order == 1:
         # compute the kinetic part
@@ -78,22 +78,22 @@ cdef double _hamiltonian(body_t *bodies, unsigned int N, int order):
                 V += V0
                     
                 V += ((1./8.)*(2.0*V0))*(-12.*p2/(mi*mi)+14.0*_dot(bodies[i].p,bodies[j].p)/(mi*mj)+2.0*n_pi*_dot(normal,bodies[j].p))/C2
-                #print('2',i,j,V)
+#                print('2',i,j,V)
                 V += (0.25*V0*G*(mi+mj)/r)/C2
-                #print('3',i,j,V)
+#                print('3',i,j,V)
         return T+V
 
-cdef inline double _kinetic_energy(body_t b) nogil:
+cdef inline long double _kinetic_energy(body_t b) nogil:
     return 0.5*_modulus(b.p[0],b.p[1],b.p[2])/b.mass
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef double _potential(body_t *bodies, unsigned int N, int order) nogil:
+cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
     
     cdef unsigned int i,j
-    cdef double V = 0.0
+    cdef long double V = 0.0
 
     for i in range(N):
         for j in range(i+1,N):
@@ -115,9 +115,9 @@ cdef double _potential(body_t *bodies, unsigned int N, int order) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef double _potential_0pn(body_t b1, body_t b2) nogil:
+cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
-    cdef double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
+    cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     
     return -0.5*G*b1.mass*b2.mass/r
 
@@ -125,13 +125,13 @@ cdef double _potential_0pn(body_t b1, body_t b2) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef np.ndarray[double, mode="c", ndim=2] _gradients(body_t *bodies, unsigned int N, int order):
+cdef np.ndarray[long double, mode="c", ndim=2] _gradients(body_t *bodies, unsigned int N, int order):
 
     cdef unsigned int i,j,k
-    cdef np.ndarray[double, mode="c", ndim=2] force = np.zeros((N,6),dtype=np.double)
-    cdef double[:,:] force_view = force
-    cdef np.ndarray[double, mode="c", ndim=1] tmp = np.zeros(6,dtype=np.double)
-    cdef double[:] tmp_view = tmp
+    cdef np.ndarray[long double, mode="c", ndim=2] force = np.zeros((N,6),dtype=np.longdouble)
+    cdef long double[:,:] force_view = force
+    cdef np.ndarray[long double, mode="c", ndim=1] tmp = np.zeros(6,dtype=np.longdouble)
+    cdef long double[:] tmp_view = tmp
     
     for i in range(N):
 
@@ -143,9 +143,9 @@ cdef np.ndarray[double, mode="c", ndim=2] _gradients(body_t *bodies, unsigned in
 
     return force
 
-cdef double[:] _gradient(body_t b1, body_t b2, int order):
+cdef long double[:] _gradient(body_t b1, body_t b2, int order):
     cdef unsigned int k
-    cdef double[:] f
+    cdef long double[:] f
 
     if order == 0:
         f = _gradient_0pn(b1,b2)
@@ -168,15 +168,15 @@ cdef double[:] _gradient(body_t b1, body_t b2, int order):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef double[:] _gradient_0pn(body_t b1, body_t b2):
+cdef long double[:] _gradient_0pn(body_t b1, body_t b2):
     
-    cdef double dx = b1.q[0]-b2.q[0]
-    cdef double dy = b1.q[1]-b2.q[1]
-    cdef double dz = b1.q[2]-b2.q[2]
-    cdef double r  = sqrt(_modulus(dx,dy,dz))
+    cdef long double dx = b1.q[0]-b2.q[0]
+    cdef long double dy = b1.q[1]-b2.q[1]
+    cdef long double dz = b1.q[2]-b2.q[2]
+    cdef long double r  = sqrt(_modulus(dx,dy,dz))
 
-    cdef double prefactor = -0.5*G*b1.mass*b2.mass/(r*r*r)
-    cdef double[6] f
+    cdef long double prefactor = -0.5*G*b1.mass*b2.mass/(r*r*r)
+    cdef long double[6] f
 
     f[0] = prefactor*dx
     f[1] = prefactor*dy
@@ -192,38 +192,38 @@ cdef double[:] _gradient_0pn(body_t b1, body_t b2):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef double[:] _gradient_1pn(body_t b1, body_t b2):
+cdef long double[:] _gradient_1pn(body_t b1, body_t b2):
     
     cdef unsigned int k
-    cdef double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
-    cdef double r2 = r*r
-    cdef double r3 = r2*r
-    cdef double[3] normal
+    cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
+    cdef long double r2 = r*r
+    cdef long double r3 = r2*r
+    cdef long double[3] normal
 
     for k in range(3):
         normal[k] = (b1.q[k]-b2.q[k])/r
 
-    cdef double m1 = b1.mass
-    cdef double m2 = b2.mass
+    cdef long double m1 = b1.mass
+    cdef long double m2 = b2.mass
     
-    cdef double m1sq = m1*m1
-    cdef double m1cu = m1*m1sq
+    cdef long double m1sq = m1*m1
+    cdef long double m1cu = m1*m1sq
     
-    cdef double m1m2 = m1*m2
+    cdef long double m1m2 = m1*m2
     
-    cdef double p2 = _modulus(b1.p[0],b1.p[1],b1.p[2])
-    cdef double p4 = p2*p2
+    cdef long double p2 = _modulus(b1.p[0],b1.p[1],b1.p[2])
+    cdef long double p4 = p2*p2
 
-    cdef double V0 = -G*b1.mass*b2.mass/r
-    cdef double dV0
-    cdef double C2 = C*C
+    cdef long double V0 = -G*b1.mass*b2.mass/r
+    cdef long double dV0
+    cdef long double C2 = C*C
     
-    cdef double n_p1 = _dot(normal,b1.p)
-    cdef double n_p2 = _dot(normal,b2.p)
-    cdef double p1_p2 = _dot(b1.p,b2.p)
+    cdef long double n_p1 = _dot(normal,b1.p)
+    cdef long double n_p2 = _dot(normal,b2.p)
+    cdef long double p1_p2 = _dot(b1.p,b2.p)
     
-    cdef double prefactor = -G*m1*m2/r3
-    cdef double[6] f
+    cdef long double prefactor = -G*m1*m2/r3
+    cdef long double[6] f
 
     for k in range(3):
 

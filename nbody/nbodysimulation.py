@@ -19,31 +19,31 @@ if __name__=="__main__":
     (opts,args)=parser.parse_args()
 
     nbodies = opts.n
+    np.random.seed(opts.seed)
 #    m = np.random.uniform(1.0,10.0,size = nbodies)
 #    x = np.random.uniform(-200.0,200.0,size = nbodies)
 #    y = np.random.uniform(-200.0,200.0,size = nbodies)
 #    z = np.random.uniform(-200.0,200.0,size = nbodies)
-    vx = np.random.uniform(0.0,0.1,size = nbodies)
-    vy = np.random.uniform(-0.01,0.01,size = nbodies)
+    vx = np.random.uniform(0.0,0.1,size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-0.01,0.01,size = nbodies).astype(np.longdouble)
 #    vz = np.random.uniform(-0.01,0.01,size = nbodies)
-    np.random.seed(opts.seed)
-    m = np.random.uniform(1.0,10.0,size = nbodies)
-    x = np.random.uniform(-400.0,400.0,size = nbodies)
-    y = np.random.uniform(-400.0,400.0,size = nbodies)
-    z = np.random.uniform(-400.0,400.0,size = nbodies)
+    m = np.random.uniform(1.0,10.0,size = nbodies).astype(np.longdouble)
+    x = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
+    y = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
+    z = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
 #    vx = np.array((0.0,0.0))
 #    vy = np.array((0.1,-0.1))
-    vz = np.random.uniform(-0.01,0.01,size = nbodies)
+    vz = np.random.uniform(-0.01,0.01,size = nbodies).astype(np.longdouble)
     
-    sx = np.random.uniform(-1.0,1.0,size = nbodies)
-    sy = np.random.uniform(-1.0,1.0,size = nbodies)
-    sz = np.random.uniform(-1.0,1.0,size = nbodies)
+    sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
+    sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
+    sz = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     
     dt = opts.dt
     N  = opts.steps
     
     if opts.p == 1:
-        s,H = run(N, dt, opts.order, m, x, y, z,
+        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z,
             m*vx, m*vy, m*vz, sx, sy, sz)
         s   = np.array(s)
         pickle.dump(s,open('solution.p','wb'))
