@@ -41,6 +41,7 @@ if __name__=="__main__":
     
     dt = opts.dt
     N  = opts.steps
+    Neff = N//10
     
     if opts.p == 1:
         s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z,
@@ -99,7 +100,7 @@ if __name__=="__main__":
                 animate_bodies(i,q,symbols[b])
             return []
         
-        anim = FuncAnimation(f, animate, N, fargs=(s, lines, symbols),
+        anim = FuncAnimation(f, animate, Neff, fargs=(s, lines, symbols),
                              interval = 0.1, blit = True)
         Writer = writers['ffmpeg']
         writer = Writer(fps=120, metadata=dict(artist='Me'), bitrate=900, extra_args=['-vcodec', 'libx264'])
@@ -111,18 +112,18 @@ if __name__=="__main__":
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
         
-        plotting_step = np.maximum(64,N//int(0.1*N))
+        plotting_step = np.maximum(64,Neff//int(0.1*Neff))
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111, projection = '3d')
         colors = cm.rainbow(np.linspace(0, 1, nbodies))
         for b in range(nbodies):
-            q = np.array([s[i][b]['q'] for i in range(0,N,plotting_step)])
+            q = np.array([s[i][b]['q'] for i in range(0,Neff,plotting_step)])
             ax.plot(q[:,0],q[:,1],q[:,2],color=colors[b],alpha=0.5)
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(range(N),H)
+        ax.plot(range(Neff),H)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Hamiltonian')
 

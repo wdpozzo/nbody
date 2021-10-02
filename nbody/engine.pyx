@@ -2,7 +2,7 @@ cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdlib cimport malloc, free
-
+from libc.string cimport memset
 from nbody.body cimport body_t, _create_system
 from nbody.hamiltonian cimport _hamiltonian, _gradients
 
@@ -25,7 +25,18 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
     if mid_point_2 == NULL:
         raise MemoryError
 
-    cdef long double[:,:] g = _gradients(bodies, nbodies, order)
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))
+    if g == NULL:
+        raise MemoryError
+    
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double))#FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))
+        
+
+    _gradients(g,bodies, nbodies, order)
 
     # FIXME: spins are not evolving!
     # iteration 0
@@ -35,17 +46,19 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
         
         for j in range(3):
 
-            tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i,3+j]
+            tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i][3+j]
             mid_point[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
 
-            tmp_b.p[j] = bodies[i].p[j] + dtsquare*g[i,j]
+            tmp_b.p[j] = bodies[i].p[j] + dtsquare*g[i][j]
             mid_point[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
             tmp_b.s[j] = bodies[i].s[j]
             bodies[i].s[j] = 0.5*(tmp_b.s[j] + bodies[i].s[j])
 
     # update the gradient
-    g = _gradients(mid_point, nbodies, order)
+    for i in range(nbodies):
+        memset(g[i], 0, 6*sizeof(long double))
+    _gradients(g, mid_point, nbodies, order)
     # iteration 1
     for i in range(nbodies):
         
@@ -54,10 +67,10 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
         
         for j in range(3):
 
-            tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i,3+j]
+            tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i][3+j]
             mid_point_2[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
 
-            tmp_b.p[j] = bodies[i].p[j] + dtsquare*g[i,j]
+            tmp_b.p[j] = bodies[i].p[j] + dtsquare*g[i][j]
             mid_point_2[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
             tmp_b.s[j] = bodies[i].s[j]
@@ -65,18 +78,23 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
 
     
     # update the gradient
-    g = _gradients(mid_point_2, nbodies, order)
+    for i in range(nbodies):
+        memset(g[i], 0, 6*sizeof(long double))
+    _gradients(g, mid_point_2, nbodies, order)
 
     for i in range(nbodies):
         mass = bodies[i].mass
         for j in range(3):
-            bodies[i].q[j] += dtsquare*g[i,3+j]
-            bodies[i].p[j] += dtsquare*g[i,j]
+            bodies[i].q[j] += dtsquare*g[i][3+j]
+            bodies[i].p[j] += dtsquare*g[i][j]
 #            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
 
     _free(mid_point)
     _free(mid_point_2)
-
+    for i in range(nbodies):
+        free(g[i])
+ 
+    free(g);
     return
 
 @cython.boundscheck(False)
@@ -134,7 +152,9 @@ def run(unsigned int nsteps, long double dt, int order,
     
     for i in tqdm(range(1,nsteps)):
         _one_step(bodies, n, dt, order)
-        solution.append([bodies[i] for i in range(n)])
-        H.append(_hamiltonian(bodies, n, order))
+        # store 1 every 10 steps
+        if i%10 == 0:
+            solution.append([bodies[i] for i in range(n)])
+            H.append(_hamiltonian(bodies, n, order))
     
     return solution,H
