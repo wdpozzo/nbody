@@ -17,4 +17,4 @@ cdef void _initialise(body_t *bodies,
                       long double[:] sy,
                       long double[:] sz)
 
-cdef void _free(body_t *s)
+cdef void _free(body_t *s) nogil

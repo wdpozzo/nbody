@@ -20,20 +20,19 @@ if __name__=="__main__":
 
     nbodies = opts.n
     np.random.seed(opts.seed)
-#    m = np.random.uniform(1.0,10.0,size = nbodies)
+    m = np.random.uniform(1e-5,1e-3,size = nbodies).astype(np.longdouble)
 #    x = np.random.uniform(-200.0,200.0,size = nbodies)
 #    y = np.random.uniform(-200.0,200.0,size = nbodies)
 #    z = np.random.uniform(-200.0,200.0,size = nbodies)
-    vx = np.random.uniform(0.0,0.1,size = nbodies).astype(np.longdouble)
-    vy = np.random.uniform(-0.01,0.01,size = nbodies).astype(np.longdouble)
+    vx = np.random.uniform(0.0,0.0001,size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
 #    vz = np.random.uniform(-0.01,0.01,size = nbodies)
-    m = np.random.uniform(1.0,10.0,size = nbodies).astype(np.longdouble)
     x = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
     y = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
     z = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
 #    vx = np.array((0.0,0.0))
 #    vy = np.array((0.1,-0.1))
-    vz = np.random.uniform(-0.01,0.01,size = nbodies).astype(np.longdouble)
+    vz = np.random.uniform(-0.0001,0.0001,size = nbodies).astype(np.longdouble)
     
     sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
@@ -117,9 +116,35 @@ if __name__=="__main__":
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111, projection = '3d')
         colors = cm.rainbow(np.linspace(0, 1, nbodies))
+
         for b in range(nbodies):
             q = np.array([s[i][b]['q'] for i in range(0,Neff,plotting_step)])
-            ax.plot(q[:,0],q[:,1],q[:,2],color=colors[b],alpha=0.5)
+            p = np.array([s[i][b]['p'] for i in range(0,Neff,plotting_step)])
+            ax.plot(q[:,0],q[:,1],q[:,2],color=colors[b])
+            ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=5,zorder=0)
+
+        f.set_facecolor('black')
+        ax.set_facecolor('black')
+        ax.xaxis.pane.fill = False
+        ax.yaxis.pane.fill = False
+        ax.zaxis.pane.fill = False
+
+        # Now set color to white (or whatever is "invisible")
+        ax.xaxis.pane.set_edgecolor('w')
+        ax.yaxis.pane.set_edgecolor('w')
+        ax.zaxis.pane.set_edgecolor('w')
+#        ax.w_xaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+#        ax.w_yaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+#        ax.w_zaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.zaxis.label.set_color('white')
+
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+        ax.tick_params(axis='z', colors='white')
+        # Bonus: To get rid of the grid as well:
+        ax.grid(False)
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)

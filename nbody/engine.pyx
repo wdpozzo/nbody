@@ -117,7 +117,7 @@ cdef void _initialise(body_t *bodies,
     _create_system(bodies, n, mass, x, y, z, px, py, pz, sx, sy, sz)
     return 
 
-cdef void _free(body_t *s):
+cdef void _free(body_t *s) nogil:
     free(<void *>s)
     return
 
