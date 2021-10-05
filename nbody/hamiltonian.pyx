@@ -151,7 +151,7 @@ cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
     if order == 0:
         _gradient_0pn(out, b1,b2)
 
-    elif order == 1:
+    elif order >= 1:
         _gradient_1pn(out, b1,b2)
 #
 #    if order >= 2:
@@ -177,10 +177,12 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r  = sqrt(_modulus(dx,dy,dz))
 
     cdef long double prefactor = -0.5*G*b1.mass*b2.mass/(r*r*r)
-
+    
+    # first 3 elements are the derivative wrt to q
     out[0] = prefactor*dx
     out[1] = prefactor*dy
     out[2] = prefactor*dz
+    # second 3 elements are the derivative wrt p
     out[3] = b1.p[0]/b1.mass
     out[4] = b1.p[1]/b1.mass
     out[5] = b1.p[2]/b1.mass
@@ -193,7 +195,12 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
 @cython.nonecheck(False)
 @cython.cdivision(True)
 cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
+    """
+    We are going to include the minus sign in Hamilton equations directly in the gradient
     
+    d1PN/dx := 0.25*G**2*m1*m2*(m1 + m2)*(-2*x1 + 2*x2)/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2 + 0.125*G*m1*m2*(-x1 + x2)*((14*px1*px2 + 14*py1*py2 + 14*pz1*pz2)/(m1*m2) + 2*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1*m2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) + (-12*px1**2 - 12*py1**2 - 12*pz1**2)/m1**2)/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**(3/2) + 0.125*G*m1*m2*(2*px1*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1*m2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) + 2*px2*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))/(m1*m2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) + 2*(-2*x1 + 2*x2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1*m2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2))/sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+    d1PN/dpx := 0.125*G*m1*m2*(14*px2/(m1*m2) + 2*(x1 - x2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1*m2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 24*px1/m1**2)/sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2) - 0.5*px1*(px1**2 + py1**2 + pz1**2)/m1**3
+    """
     cdef unsigned int k
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     cdef long double r2 = r*r
@@ -233,5 +240,12 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
 
         # derivative wrt q
         out[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
-    
+        
     return
+
+cdef int merger(body_t b1, body_t b2, double r) nogil:
+    if (2*G*b1.mass/(C*C)+2*G*b2.mass/(C*C))< r:
+        return 1
+    else:
+        return 0
+    

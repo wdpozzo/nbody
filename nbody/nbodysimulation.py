@@ -20,7 +20,7 @@ if __name__=="__main__":
 
     nbodies = opts.n
     np.random.seed(opts.seed)
-    m = np.random.uniform(1e-5,1e-3,size = nbodies).astype(np.longdouble)
+    m = np.random.uniform(1e-5,1e-2,size = nbodies).astype(np.longdouble)
 #    x = np.random.uniform(-200.0,200.0,size = nbodies)
 #    y = np.random.uniform(-200.0,200.0,size = nbodies)
 #    z = np.random.uniform(-200.0,200.0,size = nbodies)
@@ -120,8 +120,8 @@ if __name__=="__main__":
         for b in range(nbodies):
             q = np.array([s[i][b]['q'] for i in range(0,Neff,plotting_step)])
             p = np.array([s[i][b]['p'] for i in range(0,Neff,plotting_step)])
-            ax.plot(q[:,0],q[:,1],q[:,2],color=colors[b])
-            ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=5,zorder=0)
+            ax.plot(q[:,0],q[:,1],q[:,2],color=colors[b],lw=0.5)
+            ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=2,zorder=0)
 
         f.set_facecolor('black')
         ax.set_facecolor('black')
@@ -154,9 +154,12 @@ if __name__=="__main__":
 
         plt.show()
         
-        if 0:
+        if 1:
             f = plt.figure(figsize=(6,4))
             ax = f.add_subplot(111, projection = '3d')
+            f.set_facecolor('black')
+            ax.set_facecolor('black')
+
             colors = cm.rainbow(np.linspace(0, 1, nbodies))
       
             trails = {}
@@ -165,12 +168,35 @@ if __name__=="__main__":
 
             for i in range(0,N,plotting_step):
                 plt.cla()
+                ax.set_title('H = {}'.format(H[i]), fontdict={'color':'w'}, loc='center')
+                ax.xaxis.pane.fill = False
+                ax.yaxis.pane.fill = False
+                ax.zaxis.pane.fill = False
+
+                # Now set color to white (or whatever is "invisible")
+                ax.xaxis.pane.set_edgecolor('w')
+                ax.yaxis.pane.set_edgecolor('w')
+                ax.zaxis.pane.set_edgecolor('w')
+                #        ax.w_xaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+                #        ax.w_yaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+                #        ax.w_zaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+                ax.xaxis.label.set_color('white')
+                ax.yaxis.label.set_color('white')
+                ax.zaxis.label.set_color('white')
+
+                ax.tick_params(axis='x', colors='white')
+                ax.tick_params(axis='y', colors='white')
+                ax.tick_params(axis='z', colors='white')
+                # Bonus: To get rid of the grid as well:
+                ax.grid(False)
+                
                 for b in range(nbodies):
                     q = s[i][b]['q']
                     trails[b].append(q)
                     q_trail = np.array(trails[b])
-                    ax.scatter(q[0],q[1],q[2],color=colors[b],s=10*s[i][b]['mass'])
-                    ax.plot(q_trail[:,0],q_trail[:,1],q_trail[:,2],color=colors[b],alpha=0.5)
+                    ax.scatter(q[0],q[1],q[2],color=colors[b],s=1e4*s[i][b]['mass'])
+                    ax.plot(q_trail[:,0],q_trail[:,1],q_trail[:,2],color=colors[b],lw=0.5)
+                    ax.plot(q_trail[:,0],q_trail[:,1],q_trail[:,2],color='w',alpha=0.5,lw=2,zorder=0)
     #            ax.set(xlim=(-50, 50), ylim=(-50, 50), zlim=(-50,50))
                 plt.pause(0.00001)
             plt.show()

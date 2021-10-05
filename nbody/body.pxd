@@ -36,3 +36,5 @@ cdef void _create_system(body_t *b,
                          long double[:] sx,
                          long double[:] sy,
                          long double[:] sz) nogil
+
+cdef void _merge_bodies(body_t *b, unsigned int i1, unsigned int i2) nogil

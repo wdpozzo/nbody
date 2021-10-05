@@ -14,3 +14,4 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
 cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil
 cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil
 cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil
+cdef int merger(body_t b1, body_t b2, double r) nogil

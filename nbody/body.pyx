@@ -52,3 +52,9 @@ cdef void _create_system(body_t *b,
 
     return
     
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef void _merge_bodies(body_t *b, unsigned int i_survive, unsigned int i_remove) nogil:
+    return
