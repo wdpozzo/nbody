@@ -146,13 +146,11 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
     return
 
 cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
-    cdef unsigned int k
+    
+    _gradient_0pn(out, b1, b2)
 
-    if order == 0:
-        _gradient_0pn(out, b1,b2)
-
-    elif order >= 1:
-        _gradient_1pn(out, b1,b2)
+    if order >= 1:
+        _gradient_1pn(out, b1, b2)
 #
 #    if order >= 2:
 #        f += _gradient_2pn(b1,b2)
@@ -176,7 +174,7 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double dz = b1.q[2]-b2.q[2]
     cdef long double r  = sqrt(_modulus(dx,dy,dz))
 
-    cdef long double prefactor = -0.5*G*b1.mass*b2.mass/(r*r*r)
+    cdef long double prefactor = 0.5*G*b1.mass*b2.mass/(r*r*r)
     
     # first 3 elements are the derivative wrt to q
     out[0] = prefactor*dx
@@ -205,10 +203,12 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     cdef long double r2 = r*r
     cdef long double r3 = r2*r
+    cdef long double[3] dq
     cdef long double[3] normal
 
     for k in range(3):
-        normal[k] = (b1.q[k]-b2.q[k])/r
+        dq[k]     = b1.q[k]-b2.q[k]
+        normal[k] = dq[k]/r
 
     cdef long double m1 = b1.mass
     cdef long double m2 = b2.mass
@@ -218,28 +218,32 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     
     cdef long double m1m2 = m1*m2
     
-    cdef long double p2 = _modulus(b1.p[0],b1.p[1],b1.p[2])
-    cdef long double p4 = p2*p2
+    cdef long double p1sq = _modulus(b1.p[0],b1.p[1],b1.p[2])
 
-    cdef long double V0 = -G*b1.mass*b2.mass/r
-    cdef long double dV0
+    cdef long double Gmm_r = G*m1*m2/r
     cdef long double C2 = C*C
     
     cdef long double n_p1 = _dot(normal,b1.p)
     cdef long double n_p2 = _dot(normal,b2.p)
+    cdef long double dq_p1 = _dot(dq,b1.p)
+    cdef long double dq_p2 = _dot(dq,b2.p)
     cdef long double p1_p2 = _dot(b1.p,b2.p)
     
-    cdef long double prefactor = -G*m1*m2/r3
+    cdef long double prefactor = -Gmm_r/r2
+    cdef long double parenthesis = -12.0*p1sq/m1sq+14.0*p1_p2/m1m2+2.0*n_p1*n_p2/m1m2
     cdef long double[6] f
 
     for k in range(3):
 
-        dV0  = prefactor*(b1.q[k]-b2.q[k])
-        # derivative wrt p
-        out[k] = 0.5*dV0 + (0.125*dV0*(-12.*p2/(m1sq)+14.0*p1_p2/(m1m2)+2.0*n_p1*n_p2)+(1./8.)*V0*(2.*((r2-(b1.q[k]-b2.q[k])**2+b1.q[k]*b2.q[k])/(m1m2*r3))*(b1.p[k]*n_p2+b2.p[k]*n_p1)+0.25*G*(m1+m2)*(dV0/r-V0/r3) )) / C2
-
         # derivative wrt q
-        out[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
+        out[k] += (-0.125*prefactor*dq[k]*parenthesis + \
+                  0.250*Gmm_r*(n_p2*(b1.p[k]-dq[k]*dq_p1/r2)+n_p1*(b2.p[k]-dq[k]*dq_p2/r2))/(m1m2*r) + \
+                  0.25*prefactor*dq[k]*G*(m1+m2)/r + \
+                  0.25*Gmm_r*(-G*(m1+m2)*dq[k]/r3))/C2
+
+        # derivative wrt p
+        out[3+k] += (-0.5*b1.p[k]*p1sq/m1cu + Gmm_r * \
+                    (-24.*b1.p[k]/m1sq + 14.0*b2.p[k]/m1m2 + (2.*dq[k]/(m1m2*r2))*(b2.p[k]*dq_p2)))/C2
         
     return
 

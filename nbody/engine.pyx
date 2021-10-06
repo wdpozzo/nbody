@@ -49,7 +49,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
             tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i][3+j]
             mid_point[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
 
-            tmp_b.p[j] = bodies[i].p[j] + dtsquare*g[i][j]
+            tmp_b.p[j] = bodies[i].p[j] - dtsquare*g[i][j]
             mid_point[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
             tmp_b.s[j] = bodies[i].s[j]
@@ -70,7 +70,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
             tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i][3+j]
             mid_point_2[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
 
-            tmp_b.p[j] = bodies[i].p[j] + dtsquare*g[i][j]
+            tmp_b.p[j] = bodies[i].p[j] - dtsquare*g[i][j]
             mid_point_2[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
             tmp_b.s[j] = bodies[i].s[j]
@@ -86,7 +86,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
         mass = bodies[i].mass
         for j in range(3):
             bodies[i].q[j] += dtsquare*g[i][3+j]
-            bodies[i].p[j] += dtsquare*g[i][j]
+            bodies[i].p[j] -= dtsquare*g[i][j]
 #            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
 
     _free(mid_point)
