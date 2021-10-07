@@ -154,7 +154,7 @@ if __name__=="__main__":
 
         plt.show()
         
-        if 1:
+        if 0:
             f = plt.figure(figsize=(6,4))
             ax = f.add_subplot(111, projection = '3d')
             f.set_facecolor('black')

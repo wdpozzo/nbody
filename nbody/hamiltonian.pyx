@@ -3,7 +3,7 @@ cimport numpy as np
 cimport cython
 from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
-from nbody.body cimport body_t, system_t
+from nbody.body cimport body_t
 
 cdef long double G = 1.0#6.67e-11
 cdef long double C = 1.0#3.0e8

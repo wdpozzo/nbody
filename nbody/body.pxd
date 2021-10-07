@@ -6,11 +6,24 @@ cdef struct body:
 
 ctypedef body body_t
 
-cdef struct system:
-    body_t *bodies
-    unsigned int n
+cdef struct fit_coefficients:
+    long double m
+    long double eta
+    long double eta2
+    long double eta3
+    long double eta4
+    long double Stot
+    long double Shat
+    long double Shat2
+    long double Shat3
+    long double Shat4
+    long double chidiff
+    long double chidiff2
+    long double sqrt2
+    long double sqrt3
+    long double sqrt1m4eta
 
-ctypedef system system_t
+ctypedef fit_coefficients fit_coefficients_t
 
 cdef void _create_body(body_t *b,
                        long double mass,
@@ -38,3 +51,7 @@ cdef void _create_system(body_t *b,
                          long double[:] sz) nogil
 
 cdef void _merge_bodies(body_t *b, unsigned int i1, unsigned int i2) nogil
+
+cdef void _fits_setup(fit_coefficients_t *out, long double m1, long double m2, long double chi1, long double chi2) nogil
+cdef double _final_mass(long double m1, long double m2, long double chi1, long double chi2, unsigned int version) nogil
+cdef long double _final_spin(long double m1, long double m2, long double chi1, long double chi2, unsigned int version) nogil
