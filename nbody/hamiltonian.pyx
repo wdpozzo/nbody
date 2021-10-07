@@ -136,10 +136,12 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
     
     for i in range(N):
-
+        _gradient_free_particle(tmp, bodies[i])
+        for k in range(6):
+            out[i][k] += tmp[k]
         for j in range(N):
             if i != j:
-                _gradient(tmp, bodies[i],bodies[j],order)
+                _gradient(tmp, bodies[i], bodies[j], order)
                 for k in range(6):
                     out[i][k] += tmp[k]
     free(tmp)
@@ -147,7 +149,6 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
 
 cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
     
-    _gradient_free_particle(out, b1)
     _gradient_0pn(out, b1, b2)
 
     if order >= 1:
