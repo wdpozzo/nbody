@@ -1,6 +1,13 @@
 cimport cython
 from libc.math cimport abs, sqrt
-from libc.stdlib cimport malloc, free
+from libc.stdlib cimport malloc, free, realloc
+from libc.stdio cimport printf
+from nbody.hamiltonian cimport _modulus
+
+cdef long double G = 1.0#6.67e-11
+cdef long double C = 1.0#3.0e8
+cdef long double Msun = 2e30
+cdef long double GM = 1.32712440018e20
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -52,12 +59,63 @@ cdef void _create_system(body_t *b,
         _create_body(&b[i], mass[i], x[i], y[i], z[i], px[i], py[i], pz[i], sx[i], sy[i], sz[i])
 
     return
-    
+
+cdef (int, int) _find_mergers(body_t *b, unsigned int nbodies) nogil:
+    cdef unsigned int i,j
+    cdef long double r
+    cdef int i_survive = -1, i_remove = -1
+    for i in range(nbodies):
+        for j in range(i+1,nbodies):
+            r  = sqrt(_modulus(b[i].q[0]-b[j].q[0],b[i].q[1]-b[j].q[1],b[i].q[2]-b[j].q[2]))
+            if merger(b[i], b[j], r) == 1:
+                i_survive = i
+                i_remove  = j
+#                with gil:
+#                    print(i,b[i],j,b[j],r,2*G*b[i].mass/(C*C))
+#                    print(i,j,2*G*b[i].mass/(C*C),2*G*b[j].mass/(C*C),r)
+#                    exit()
+                break
+    return i_survive, i_remove
+
+cdef int merger(body_t b1, body_t b2, double r) nogil:
+#    with gil:
+#        print("r = {} r1 = {} r2 = {} rm = {}\n".format(r, 6*G*b1.mass/(C*C),6*G*b2.mass/(C*C), 6*G*b1.mass/(C*C)+6*G*b2.mass/(C*C)))
+    if r < (6*G*b1.mass/(C*C)+6*G*b2.mass/(C*C)):
+        return 1
+    else:
+        return 0
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _merge_bodies(body_t *b, unsigned int i_survive, unsigned int i_remove) nogil:
+cdef void _merge_bodies(body_t *b, int i_survive, int i_remove, unsigned int nbodies) nogil:
+    # compute the final bh state
+    cdef body_t b1 = b[i_survive]
+    cdef body_t b2 = b[i_remove]
+    #FIXME: this accounts only for the z component of the spin
+    cdef long double chi1 = b1.s[2]
+    cdef long double chi2 = b2.s[2]
+    cdef long double mf = _final_mass(b1.mass, b2.mass, chi1, chi2, 2)
+    cdef long double af = _final_spin(b1.mass, b2.mass, chi1, chi2, 2)
+#    with gil: print(mf,af,b1.mass, b2.mass, chi1, chi2)
+    #FIXME: need to compute the post-merger kick, for now we are just conserving Ptot
+    # update the surviving body
+    cdef unsigned int k
+    for k in range(3):
+        b1.p[k] = (b1.mass*b1.p[k]+b2.mass*b2.p[k])/(b1.mass+b2.mass)
+    
+    b1.mass = mf
+    b1.s[2] = af
+    
+    # remove the merged body
+    cdef unsigned int i
+    for i in range(i_remove, nbodies-1):
+        b[i] =  b[i+1]
+    cdef body_t *tmp =  <body_t*>realloc(b,(nbodies-1)*sizeof(body_t))
+    if tmp == NULL:
+        raise MemoryError
+    b = tmp
     return
 
 cdef void _fits_setup(fit_coefficients_t *out, long double m1, long double m2, long double chi1, long double chi2) nogil:

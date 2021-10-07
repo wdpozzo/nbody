@@ -45,7 +45,7 @@ if __name__=="__main__":
     if opts.p == 1:
         s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z,
             m*vx, m*vy, m*vz, sx, sy, sz)
-        s   = np.array(s)
+        s   = np.array(s, dtype=object)
         pickle.dump(s,open('solution.p','wb'))
         pickle.dump(H,open('hamiltonian.p','wb'))
     else:
@@ -114,13 +114,33 @@ if __name__=="__main__":
         plotting_step = np.maximum(64,Neff//int(0.1*Neff))
         
         f = plt.figure(figsize=(6,4))
+        ax = f.add_subplot(111)
+        ax.plot(range(Neff),H)
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('Hamiltonian')
+        colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
+        qs = [[] for x in range(nbodies)]
+    
+        # this is the number of bodies active in each step of the solution
+        nbodies = [len(si) for si in s]
+        
+        f = plt.figure(figsize=(6,4))
+        ax = f.add_subplot(111)
+        ax.plot(range(Neff),nbodies)
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('nbodies')
+    
+        f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111, projection = '3d')
-        colors = cm.rainbow(np.linspace(0, 1, nbodies))
+        
+        for i in range(0,Neff,plotting_step):
+            for j in range(nbodies[i]):
+                qs[j].append(s[i][j]['q'])
 
-        for b in range(nbodies):
-            q = np.array([s[i][b]['q'] for i in range(0,Neff,plotting_step)])
-            p = np.array([s[i][b]['p'] for i in range(0,Neff,plotting_step)])
-            ax.plot(q[:,0],q[:,1],q[:,2],color=colors[b],lw=0.5)
+        for q in qs:
+            q = np.array(q)
+            c = next(colors)
+            ax.plot(q[:,0],q[:,1],q[:,2],color=c,lw=0.5)
             ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=2,zorder=0)
 
         f.set_facecolor('black')
@@ -145,28 +165,20 @@ if __name__=="__main__":
         ax.tick_params(axis='z', colors='white')
         # Bonus: To get rid of the grid as well:
         ax.grid(False)
-        
-        f = plt.figure(figsize=(6,4))
-        ax = f.add_subplot(111)
-        ax.plot(range(Neff),H)
-        ax.set_xlabel('iteration')
-        ax.set_ylabel('Hamiltonian')
 
         plt.show()
         
-        if 0:
+        if 1:
             f = plt.figure(figsize=(6,4))
             ax = f.add_subplot(111, projection = '3d')
             f.set_facecolor('black')
             ax.set_facecolor('black')
-
-            colors = cm.rainbow(np.linspace(0, 1, nbodies))
-      
+            colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))
             trails = {}
-            for b in range(nbodies):
+            for b in range(nbodies[0]):
                 trails[b] = deque(maxlen=500)
 
-            for i in range(0,N,plotting_step):
+            for i in range(0,Neff,plotting_step):
                 plt.cla()
                 ax.set_title('H = {}'.format(H[i]), fontdict={'color':'w'}, loc='center')
                 ax.xaxis.pane.fill = False
@@ -190,7 +202,7 @@ if __name__=="__main__":
                 # Bonus: To get rid of the grid as well:
                 ax.grid(False)
                 
-                for b in range(nbodies):
+                for b in range(nbodies[0]):
                     q = s[i][b]['q']
                     trails[b].append(q)
                     q_trail = np.array(trails[b])

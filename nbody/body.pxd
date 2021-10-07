@@ -50,7 +50,9 @@ cdef void _create_system(body_t *b,
                          long double[:] sy,
                          long double[:] sz) nogil
 
-cdef void _merge_bodies(body_t *b, unsigned int i1, unsigned int i2) nogil
+cdef (int, int) _find_mergers(body_t *b, unsigned int nbodies) nogil
+cdef int merger(body_t b1, body_t b2, double r) nogil
+cdef void _merge_bodies(body_t *b, int i1, int i, unsigned int n) nogil
 
 cdef void _fits_setup(fit_coefficients_t *out, long double m1, long double m2, long double chi1, long double chi2) nogil
 cdef double _final_mass(long double m1, long double m2, long double chi1, long double chi2, unsigned int version) nogil

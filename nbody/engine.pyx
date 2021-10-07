@@ -3,8 +3,19 @@ import numpy as np
 cimport numpy as np
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset
-from nbody.body cimport body_t, _create_system
+from nbody.body cimport body_t, _create_system, _find_mergers, _merge_bodies
 from nbody.hamiltonian cimport _hamiltonian, _gradients
+
+cdef unsigned int _merge(body_t *bodies, unsigned int nbodies):
+    cdef int i_remove = -1
+    cdef int i_survive = -1
+    # first of all check for mergers (assume we get at most 1 per time step)
+    i_survive, i_remove = _find_mergers(bodies, nbodies)
+
+    if i_survive != -1 and i_remove != -1:
+        _merge_bodies(bodies, i_survive, i_remove, nbodies)
+        nbodies -= 1
+    return nbodies
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -149,8 +160,11 @@ def run(unsigned int nsteps, long double dt, int order,
                 px, py, pz, sx, sy, sz)
     solution.append([bodies[i] for i in range(n)])
     H.append(_hamiltonian(bodies, n, order))
-    
+
     for i in tqdm(range(1,nsteps)):
+        # check for mergers
+        n = _merge(bodies, n)
+        # evolve forward in time
         _one_step(bodies, n, dt, order)
         # store 1 every 10 steps
         if i%10 == 0:

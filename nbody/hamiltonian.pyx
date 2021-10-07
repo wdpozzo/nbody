@@ -3,7 +3,7 @@ cimport numpy as np
 cimport cython
 from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
-from nbody.body cimport body_t
+from nbody.body cimport body_t, merger, _merge_bodies
 
 cdef long double G = 1.0#6.67e-11
 cdef long double C = 1.0#3.0e8
@@ -147,6 +147,7 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
 
 cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
     
+    _gradient_free_particle(out, b1)
     _gradient_0pn(out, b1, b2)
 
     if order >= 1:
@@ -167,6 +168,24 @@ cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
+cdef void _gradient_free_particle(long double *out, body_t b1) nogil:
+    # first 3 elements are the derivative wrt to q
+    out[0] = 0.0
+    out[1] = 0.0
+    out[2] = 0.0
+    # second 3 elements are the derivative wrt p
+    out[3] = b1.p[0]/b1.mass
+    out[4] = b1.p[1]/b1.mass
+    out[5] = b1.p[2]/b1.mass
+    
+    return
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
 cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     
     cdef long double dx = b1.q[0]-b2.q[0]
@@ -177,13 +196,13 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double prefactor = 0.5*G*b1.mass*b2.mass/(r*r*r)
     
     # first 3 elements are the derivative wrt to q
-    out[0] = prefactor*dx
-    out[1] = prefactor*dy
-    out[2] = prefactor*dz
+    out[0] += prefactor*dx
+    out[1] += prefactor*dy
+    out[2] += prefactor*dz
     # second 3 elements are the derivative wrt p
-    out[3] = b1.p[0]/b1.mass
-    out[4] = b1.p[1]/b1.mass
-    out[5] = b1.p[2]/b1.mass
+#    out[3] = b1.p[0]/b1.mass
+#    out[4] = b1.p[1]/b1.mass
+#    out[5] = b1.p[2]/b1.mass
     
     return
 
@@ -246,10 +265,3 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
                     (-24.*b1.p[k]/m1sq + 14.0*b2.p[k]/m1m2 + (2.*dq[k]/(m1m2*r2))*(b2.p[k]*dq_p2)))/C2
         
     return
-
-cdef int merger(body_t b1, body_t b2, double r) nogil:
-    if (2*G*b1.mass/(C*C)+2*G*b2.mass/(C*C))< r:
-        return 1
-    else:
-        return 0
-    
