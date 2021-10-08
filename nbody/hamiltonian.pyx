@@ -103,11 +103,11 @@ cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
     for i in range(N):
         for j in range(i+1,N):
             V = _potential_0pn(bodies[i], bodies[j])
-#    if order >= 1:
-#        V = _potential_1pn(bi, bj)
-#
-#    if order >= 2:
-#        V += _potential_2pn(bi, bj)
+    if order >= 1:
+        V = _potential_1pn(bi, bj)
+
+    if order >= 2:
+        V += _potential_2pn(bi, bj)
 #
 #    if order >= 3:
 #        V += _potential_3pn(bi, bj)
@@ -151,12 +151,13 @@ cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
     
     _gradient_0pn(out, b1, b2)
 
+
     if order >= 1:
-        _gradient_1pn(out, b1, b2)
-#
-#    if order >= 2:
-#        f += _gradient_2pn(b1,b2)
-#
+        _gradient_1pn(b1,b2)
+
+    elif order >= 2:
+        _gradient_2pn(b1,b2)
+
 #    if order >= 3:
 #        f += _gradient_3pn(b1,b2)
 #
@@ -256,6 +257,7 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     for k in range(3):
 
         # derivative wrt q
+
         out[k] += (-0.125*prefactor*dq[k]*parenthesis + \
                   0.250*Gmm_r*(n_p2*(b1.p[k]-dq[k]*dq_p1/r2)+n_p1*(b2.p[k]-dq[k]*dq_p2/r2))/(m1m2*r) + \
                   0.25*prefactor*dq[k]*G*(m1+m2)/r + \
@@ -265,4 +267,56 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         out[3+k] += (-0.5*b1.p[k]*p1sq/m1cu + Gmm_r * \
                     (-24.*b1.p[k]/m1sq + 14.0*b2.p[k]/m1m2 + (2.*dq[k]/(m1m2*r2))*(b2.p[k]*dq_p2)))/C2
         
-    return
+
+        f[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
+    
+    return f
+    
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef double[:] _gradient_2pn(body_t b1, body_t b2):
+    
+    cdef unsigned int k
+    cdef double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
+    cdef double r2 = r*r
+    cdef double r3 = r2*r
+    cdef double[3] normal
+
+    for k in range(3):
+        normal[k] = (b1.q[k]-b2.q[k])/r
+
+    cdef double m1 = b1.mass
+    cdef double m2 = b2.mass
+    
+    cdef double m1sq = m1*m1
+    cdef double m1cu = m1*m1sq
+    
+    cdef double m1m2 = m1*m2
+    
+    cdef double p2 = _modulus(b1.p[0],b1.p[1],b1.p[2])
+    cdef double p4 = p2*p2
+
+    cdef double V0 = -G*b1.mass*b2.mass/r
+    cdef double dV0
+    cdef double C2 = C*C
+    
+    cdef double n_p1 = _dot(normal,b1.p)
+    cdef double n_p2 = _dot(normal,b2.p)
+    cdef double p1_p2 = _dot(b1.p,b2.p)
+    
+    cdef double prefactor = -G*m1*m2/r3
+    cdef double[6] f
+
+    for k in range(3):
+
+        dV0  = prefactor*(b1.q[k]-b2.q[k])
+        # derivative wrt p
+        f[k] = 0.5*dV0 + (0.125*dV0*(-12.*p2/(m1sq)+14.0*p1_p2/(m1m2)+2.0*n_p1*n_p2)+(1./8.)*V0*(2.*((r2-(b1.q[k]-b2.q[k])**2+b1.q[k]*b2.q[k])/(m1m2*r3))*(b1.p[k]*n_p2+b2.p[k]*n_p1)+0.25*G*(m1+m2)*(dV0/r-V0/r3) )) / C2
+
+        # derivative wrt q
+        f[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
+    
+    return f
+

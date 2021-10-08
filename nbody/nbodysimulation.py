@@ -1,10 +1,11 @@
 import numpy as np
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
-from nbody.engine import run
+from nbody.engine import run, CM_system
 from collections import deque
 from optparse import OptionParser
 import pickle
+
 
 if __name__=="__main__":
     parser = OptionParser()
@@ -15,6 +16,7 @@ if __name__=="__main__":
     parser.add_option('-p', default=0, type='int', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
     parser.add_option('--plot', default=1, type='int', help='plot')
+    parser.add_option('--cm', default=1, type='int', help='plot')
     parser.add_option('--seed', default=1, type='int', help='seed')
     (opts,args)=parser.parse_args()
 
@@ -105,7 +107,6 @@ if __name__=="__main__":
         writer = Writer(fps=120, metadata=dict(artist='Me'), bitrate=900, extra_args=['-vcodec', 'libx264'])
         anim.save('nbody.mp4', writer=writer)
         
-        
     if opts.plot==1:
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
@@ -168,7 +169,8 @@ if __name__=="__main__":
 
         plt.show()
         
-        if 1:
+        if 0:
+
             f = plt.figure(figsize=(6,4))
             ax = f.add_subplot(111, projection = '3d')
             f.set_facecolor('black')
@@ -212,3 +214,27 @@ if __name__=="__main__":
     #            ax.set(xlim=(-50, 50), ylim=(-50, 50), zlim=(-50,50))
                 plt.pause(0.00001)
             plt.show()
+            
+
+    if opts.cm == 1:
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
+        from mpl_toolkits import mplot3d
+        
+        q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, opts.steps)])
+        p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, opts.steps)])
+	
+        for i in range(0, opts.steps):
+        		q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
+        
+        f = plt.figure(figsize=(6,4))
+        
+        ax = f.add_subplot(111, projection = '3d')
+        colors = cm.rainbow(np.linspace(0, 1, nbodies))    
+        ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], alpha=0.9)
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_ylabel('z')
+
+        plt.show()
+        
