@@ -1,9 +1,10 @@
 import numpy as np
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
-from nbody.engine import run, CM_system
+from nbody.engine import run
 from collections import deque
 from optparse import OptionParser
+from CM_coord_system import CM_system
 import pickle
 
 
