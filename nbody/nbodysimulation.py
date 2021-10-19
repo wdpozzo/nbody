@@ -117,7 +117,7 @@ if __name__=="__main__":
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(range(Neff),H)
+        ax.plot(H)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Hamiltonian')
         colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
@@ -222,16 +222,20 @@ if __name__=="__main__":
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
         
-        q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, opts.steps)])
-        p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, opts.steps)])
-	
-        for i in range(0, opts.steps):
+        k = int(opts.steps/10)
+        
+        q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
+        p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
+        
+        #print(np.shape(q_rel), opts.steps, np.shape(s)) 
+        
+        for i in range(0, k):
         		q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
         
         f = plt.figure(figsize=(6,4))
         
         ax = f.add_subplot(111, projection = '3d')
-        colors = cm.rainbow(np.linspace(0, 1, nbodies))    
+        colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))    
         ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], alpha=0.9)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
