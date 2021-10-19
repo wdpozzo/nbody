@@ -103,11 +103,11 @@ cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
     for i in range(N):
         for j in range(i+1,N):
             V = _potential_0pn(bodies[i], bodies[j])
-    if order >= 1:
-        V = _potential_1pn(bi, bj)
+#    if order >= 1:
+#        V = _potential_1pn(bi, bj)
 
-    if order >= 2:
-        V += _potential_2pn(bi, bj)
+#    if order >= 2:
+#        V += _potential_2pn(bi, bj)
 #
 #    if order >= 3:
 #        V += _potential_3pn(bi, bj)
@@ -153,10 +153,10 @@ cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
 
 
     if order >= 1:
-        _gradient_1pn(b1,b2)
+        _gradient_1pn(out, b1,b2)
 
-    elif order >= 2:
-        _gradient_2pn(b1,b2)
+#    elif order >= 2:
+#        _gradient_2pn(b1,b2)
 
 #    if order >= 3:
 #        f += _gradient_3pn(b1,b2)
@@ -252,7 +252,6 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     
     cdef long double prefactor = -Gmm_r/r2
     cdef long double parenthesis = -12.0*p1sq/m1sq+14.0*p1_p2/m1m2+2.0*n_p1*n_p2/m1m2
-    cdef long double[6] f
 
     for k in range(3):
 
@@ -266,11 +265,8 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         # derivative wrt p
         out[3+k] += (-0.5*b1.p[k]*p1sq/m1cu + Gmm_r * \
                     (-24.*b1.p[k]/m1sq + 14.0*b2.p[k]/m1m2 + (2.*dq[k]/(m1m2*r2))*(b2.p[k]*dq_p2)))/C2
-        
-
-        f[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
     
-    return f
+    return
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -282,7 +278,7 @@ cdef double[:] _gradient_2pn(body_t b1, body_t b2):
     cdef double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     cdef double r2 = r*r
     cdef double r3 = r2*r
-    cdef double[3] normal
+    cdef long double[3] normal
 
     for k in range(3):
         normal[k] = (b1.q[k]-b2.q[k])/r
