@@ -4,7 +4,7 @@ import numpy as np
 from nbody.engine import run
 from collections import deque
 from optparse import OptionParser
-from CM_coord_system import CM_system
+from nbody.CM_coord_system import CM_system
 import pickle
 
 
@@ -24,17 +24,21 @@ if __name__=="__main__":
     nbodies = opts.n
     np.random.seed(opts.seed)
     m = np.random.uniform(1e-5,1e-2,size = nbodies).astype(np.longdouble)
+    
 #    x = np.random.uniform(-200.0,200.0,size = nbodies)
 #    y = np.random.uniform(-200.0,200.0,size = nbodies)
 #    z = np.random.uniform(-200.0,200.0,size = nbodies)
-    vx = np.random.uniform(0.0,0.0001,size = nbodies).astype(np.longdouble)
-    vy = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
-#    vz = np.random.uniform(-0.01,0.01,size = nbodies)
+
     x = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
     y = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
     z = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
+    
 #    vx = np.array((0.0,0.0))
 #    vy = np.array((0.1,-0.1))
+#    vz = np.random.uniform(-0.01,0.01,size = nbodies)
+
+    vx = np.random.uniform(0.0,0.0001,size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
     vz = np.random.uniform(-0.0001,0.0001,size = nbodies).astype(np.longdouble)
     
     sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
