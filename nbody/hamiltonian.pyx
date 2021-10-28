@@ -264,11 +264,12 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
                   #0.25*prefactor*dq[k]*G*(m1+m2)/r + \
                   #0.25*Gmm_r*(-G*(m1+m2)*dq[k]/r3))/C2
         
-        out[k] += (- 0.5*G**2*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*((14*p1_p2)/m1m2 + 2*(n_p1)*(n_p2)/(m1m2*r2)) + -12*p12/m1sq/r3 + 0.125*G*m1m2*(2*b1.p[k]*(n_p2)/(m1m2*r2) + 2*b2.p[k]*(n_p1)/(m1m2*r2) - 4*dq[k]*(n_p1)*(n_p2)/(m1m2*r4))/r)/C2
+        out[k] += (- 0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*((14*p1_p2)/m1m2 + 2*(n_p1)*(n_p2)/(m1m2*r2)) + -12*p12/m1sq/r3 + 0.125*G*m1m2*(2*b1.p[k]*(n_p2)/(m1m2*r2) + 2*b2.p[k]*(n_p1)/(m1m2*r2) - 4*dq[k]*(n_p1)*(n_p2)/(m1m2*r4))/r)/C2
 
         
         
         # derivative wrt p
+        
         #out[3+k] += (-0.5*b1.p[k]*p1sq/m1cu + Gmm_r * \
                     #(-24.*b1.p[k]/m1sq + 14.0*b2.p[k]/m1m2 + (2.*dq[k]/(m1m2*r2))*(b2.p[k]*dq_p2)))/C2 
                     
@@ -328,13 +329,13 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
         
         #f[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
         
-         out[k] += (0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*((19*p2)/m2sq + (10*p2)/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/(r5*r) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*(n_p1)*(n_p2)/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*(n_p2)*(n_p2)/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*(n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*(n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1)*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4)/r)/C2
+         out[k] += (0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*((19*p2)/m2sq + (10*p2)/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/(r6) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*(n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*(n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1)*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4)/r)/C2
 
 
         # derivative wrt p
         
         #f[k] = 0.5*dV0 + (0.125*dV0*(-12.*p2/(m1sq)+14.0*p1_p2/(m1m2)+2.0*n_p1*n_p2)+(1./8.)*V0*(2.*((r2-(b1.q[k]-b2.q[k])**2+b1.q[k]*b2.q[k])/(m1m2*r3))*(b1.p[k]*n_p2+b2.p[k]*n_p1)+0.25*G*(m1+m2)*(dV0/r-V0/r3) )) / C2
-        
+
         out[k+3] += (0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k+3] + 6*dq[k+3]*m1m2*(n_p2)/r2 + 20*m2*b1.p[k+3]/m1sq)/r2 + 0.125*G*m1m2*(-11.0*b1.p[k+3]*p22/(m1m2sq) + 10*b1.p[k+3]*n_p2*n_p2/(m1m2sq*r2) - 2*b2.p[k+3]*(p1_p2)/(m1m2sq) - 6*b2.p[k+3]*(n_p1)*(n_p2)/(m1m2sq*r2) - 6*dq[k+3]*(p1_p2)*(n_p2)/(m1m2sq*r2) - 3.*dq[k+3]*(n_p1)*(n_p2)sq/(m1m2sq*r2) + 20*b1.p[k+3]*p12/m1qu)/r + 0.375*b1.p[k+3]*p4/m1fi)/C2
 
     
