@@ -231,10 +231,11 @@ if __name__=="__main__":
         q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
         p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
         
-        #print(np.shape(q_rel), opts.steps, np.shape(s)) 
+        for i in range(0,k):
         
-        for i in range(0, k):
-        		q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
+            q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][0]['p'], s[i][0]['q'], s[i][1]['q'])
+
+        #print(np.shape(q_rel), opts.steps, np.shape(s)) 
         
         f = plt.figure(figsize=(6,4))
         

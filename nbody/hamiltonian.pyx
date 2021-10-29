@@ -250,7 +250,7 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double n_p2 = _dot(normal,b2.p)
     cdef long double dq_p1 = _dot(dq,b1.p)
     #cdef long double dq_p2 = _dot(dq,b2.p)
-    #cdef long double p1_p2 = _dot(b1.p,b2.p)
+    cdef long double p1_p2 = _dot(b1.p,b2.p)
     
     #cdef long double prefactor = -Gmm_r/r2
     #cdef long double parenthesis = -12.0*p1sq/m1sq+14.0*p1_p2/m1m2+2.0*n_p1*n_p2/m1m2
@@ -265,8 +265,6 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
                   #0.25*Gmm_r*(-G*(m1+m2)*dq[k]/r3))/C2
         
         out[k] += (- 0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*((14*p1_p2)/m1m2 + 2*(n_p1)*(n_p2)/(m1m2*r2)) + -12*p12/m1sq/r3 + 0.125*G*m1m2*(2*b1.p[k]*(n_p2)/(m1m2*r2) + 2*b2.p[k]*(n_p1)/(m1m2*r2) - 4*dq[k]*(n_p1)*(n_p2)/(m1m2*r4))/r)/C2
-
-        
         
         # derivative wrt p
         
@@ -291,15 +289,18 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r4 = r3*r
     cdef long double r5 = r4*r
     cdef long double r6 = r5*r
+    cdef long double[3] dq
     cdef long double[3] normal
 
     for k in range(3):
+        dq[k] = b1.q[k]-b2.q[k]
         normal[k] = (b1.q[k]-b2.q[k])/r
 
     cdef long double m1 = b1.mass
     cdef long double m2 = b2.mass
     
     cdef long double m1sq = m1*m1
+    cdef long double m2sq = m2*m2
     cdef long double m1cu = m1*m1sq
     cdef long double m1qu = m1*m1cu
     cdef long double m1fi = m1*m1qu
@@ -329,15 +330,17 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
         
         #f[3+k] = b1.p[k]/m1+ (-(1./(8.*m1cu))*4.0*b1.p[k]*p2+(1./8.)*V0*(-24.0*b1.p[k]*p2/m1sq+14.0*b2.p[k]/(m1m2)+2.0*normal[k]*n_p2/(m1m2)))/C2
         
-         out[k] += (0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*((19*p2)/m2sq + (10*p2)/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/(r6) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*(n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*(n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1)*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4)/r)/C2
+        out[k] += (0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*m2*((19*p22)/m2sq + (10*p12)/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/(r6) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*(n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*(n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1)*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4))/r)/C2
 
+        #-0.125*G**3*m1*m2*(-3*x1 + 3*x2)*(m1**2 + 5*m1*m2 + m2**2)/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**(5/2) + 0.25*G**2*m1*m2*(-2*x1 + 2*x2)*(m2*((19*px2**2 + 19*py2**2 + 19*pz2**2)/m2**2 + (10*px1**2 + 10*py1**2 + 10*pz1**2)/m1**2) - (0.5*m1 + 0.5*m2)*(27*px1*px2 + 27*py1*py2 + 27*pz1*pz2 + 6*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2))/(m1*m2))/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2 - 0.25*G**2*(0.5*m1 + 0.5*m2)*(6*px1*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2) + 6*px2*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2) + 6*(-2*x1 + 2*x2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2)/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2) + 0.125*G*m1*m2*(-x1 + x2)*(5*(px1**2 + py1**2 + pz1**2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - (5.5*px1**2 + 5.5*py1**2 + 5.5*pz1**2)*(px2**2 + py2**2 + pz2**2)/(m1**2*m2**2) - (px1*px2 + py1*py2 + pz1*pz2)**2/(m1**2*m2**2) - 6*(px1*px2 + py1*py2 + pz1*pz2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 1.5*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))**2*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2) + 5*(px1**2 + py1**2 + pz1**2)**2/m1**4)/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**(3/2) + 0.125*G*m1*m2*(-6*px1*(px1*px2 + py1*py2 + pz1*pz2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 3.0*px1*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2) + 10*px2*(px1**2 + py1**2 + pz1**2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 6*px2*(px1*px2 + py1*py2 + pz1*pz2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 3.0*px2*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))**2*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2) - 1.5*(-4*x1 + 4*x2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))**2*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**3) + 5*(-2*x1 + 2*x2)*(px1**2 + py1**2 + pz1**2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2) - 6*(-2*x1 + 2*x2)*(px1*px2 + py1*py2 + pz1*pz2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2))/sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
 
         # derivative wrt p
         
         #f[k] = 0.5*dV0 + (0.125*dV0*(-12.*p2/(m1sq)+14.0*p1_p2/(m1m2)+2.0*n_p1*n_p2)+(1./8.)*V0*(2.*((r2-(b1.q[k]-b2.q[k])**2+b1.q[k]*b2.q[k])/(m1m2*r3))*(b1.p[k]*n_p2+b2.p[k]*n_p1)+0.25*G*(m1+m2)*(dV0/r-V0/r3) )) / C2
+        
+        out[k+3] += (0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k+3] + 6*dq[k+3]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k+3]/m1sq)/r2 + 0.125*G*m1m2*(-11.0*b1.p[k+3]*p22/(m1m2sq) + 10*b1.p[k+3]*n_p2*n_p2/(m1m2sq*r2) - 2*b2.p[k+3]*(p1_p2)/(m1m2sq) - 6*b2.p[k+3]*(n_p1)*(n_p2)/(m1m2sq*r2) - 6*dq[k+3]*(p1_p2)*(n_p2)/(m1m2sq*r2) - 3.*dq[k+3]*(n_p1)*(n_p2)/(m1m2sq*r2) + 20*b1.p[k+3]*p12/m1qu)/r + 0.375*b1.p[k+3]*p12*p12/m1fi)/C2
 
-        out[k+3] += (0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k+3] + 6*dq[k+3]*m1m2*(n_p2)/r2 + 20*m2*b1.p[k+3]/m1sq)/r2 + 0.125*G*m1m2*(-11.0*b1.p[k+3]*p22/(m1m2sq) + 10*b1.p[k+3]*n_p2*n_p2/(m1m2sq*r2) - 2*b2.p[k+3]*(p1_p2)/(m1m2sq) - 6*b2.p[k+3]*(n_p1)*(n_p2)/(m1m2sq*r2) - 6*dq[k+3]*(p1_p2)*(n_p2)/(m1m2sq*r2) - 3.*dq[k+3]*(n_p1)*(n_p2)sq/(m1m2sq*r2) + 20*b1.p[k+3]*p12/m1qu)/r + 0.375*b1.p[k+3]*p4/m1fi)/C2
+        #0.25*G**2*m1*m2*(-(0.5*m1 + 0.5*m2)*(27*px2 + 6*(x1 - x2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2))/(m1*m2) + 20*m2*px1/m1**2)/((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2) + 0.125*G*m1*m2*(-11.0*px1*(px2**2 + py2**2 + pz2**2)/(m1**2*m2**2) + 10*px1*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 2*px2*(px1*px2 + py1*py2 + pz1*pz2)/(m1**2*m2**2) - 6*px2*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 6*(x1 - x2)*(px1*px2 + py1*py2 + pz1*pz2)*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)) - 1.5*(2*x1 - 2*x2)*(px1*(x1 - x2) + py1*(y1 - y2) + pz1*(z1 - z2))*(px2*(x1 - x2) + py2*(y1 - y2) + pz2*(z1 - z2))**2/(m1**2*m2**2*((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)**2) + 20*px1*(px1**2 + py1**2 + pz1**2)/m1**4)/sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2) + 0.375*px1*(px1**2 + py1**2 + pz1**2)**2/m1**5
 
-    
     return 
 
