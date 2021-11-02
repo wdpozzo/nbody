@@ -24,20 +24,12 @@ if __name__=="__main__":
     nbodies = opts.n
     np.random.seed(opts.seed)
     m = np.random.uniform(1e-5,1e-2,size = nbodies).astype(np.longdouble)
-    
-#    x = np.random.uniform(-200.0,200.0,size = nbodies)
-#    y = np.random.uniform(-200.0,200.0,size = nbodies)
-#    z = np.random.uniform(-200.0,200.0,size = nbodies)
 
     x = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
     y = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
     z = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
-    
-#    vx = np.array((0.0,0.0))
-#    vy = np.array((0.1,-0.1))
-#    vz = np.random.uniform(-0.01,0.01,size = nbodies)
 
-    vx = np.random.uniform(0.0,0.0001,size = nbodies).astype(np.longdouble)
+    vx = np.random.uniform(-0.0,0.0001,size = nbodies).astype(np.longdouble)
     vy = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
     vz = np.random.uniform(-0.0001,0.0001,size = nbodies).astype(np.longdouble)
     
@@ -50,15 +42,18 @@ if __name__=="__main__":
     Neff = N//10
     
     if opts.p == 1:
-        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z,
-            m*vx, m*vy, m*vz, sx, sy, sz)
+        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
         s   = np.array(s, dtype=object)
-        pickle.dump(s,open('solution.p','wb'))
-        pickle.dump(H,open('hamiltonian.p','wb'))
+        pickle.dump(s, open('solution.p','wb'))
+        pickle.dump(H, open('hamiltonian.p','wb'))
+        
     else:
         s = pickle.load(open('solution.p','rb'))
         H = pickle.load(open('hamiltonian.p','rb'))
-
+    
+    #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[1][0]['p'], s[1][1]['p'], s[1][0]['q'], s[1][1]['q']))
+        
+    
     if opts.animate == 1:
     
         import matplotlib.pyplot as plt
@@ -119,12 +114,14 @@ if __name__=="__main__":
         
         plotting_step = np.maximum(64,Neff//int(0.1*Neff))
         
+        
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(H)
+        ax.plot(range(Neff), H)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Hamiltonian')
         colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
+        
         qs = [[] for x in range(nbodies)]
     
         # this is the number of bodies active in each step of the solution
@@ -132,7 +129,7 @@ if __name__=="__main__":
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(range(Neff),nbodies)
+        ax.plot(range(Neff), nbodies)
         ax.set_xlabel('iteration')
         ax.set_ylabel('nbodies')
     
@@ -231,9 +228,10 @@ if __name__=="__main__":
         q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
         p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
         
-        for i in range(0,k):
+        #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q']))
         
-            q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][0]['p'], s[i][0]['q'], s[i][1]['q'])
+        for i in range(0,k):
+            q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
 
         #print(np.shape(q_rel), opts.steps, np.shape(s)) 
         

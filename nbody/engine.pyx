@@ -99,7 +99,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
             bodies[i].q[j] += dtsquare*g[i][3+j]
             bodies[i].p[j] -= dtsquare*g[i][j]
 #            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
-
+    
     _free(mid_point)
     _free(mid_point_2)
     for i in range(nbodies):
@@ -170,5 +170,5 @@ def run(unsigned int nsteps, long double dt, int order,
         if i%10 == 0:
             solution.append([bodies[i] for i in range(n)])
             H.append(_hamiltonian(bodies, n, order))
-    
+                     
     return solution,H
