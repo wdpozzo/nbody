@@ -22,10 +22,12 @@ vz = np.array((2,1)).astype(np.longdouble)
 sx = np.array((2,1)).astype(np.longdouble)
 sy = np.array((2,1)).astype(np.longdouble)
 sz = np.array((2,1)).astype(np.longdouble)
-    
+
+#set a seed if needed
 if 1:
     np.random.seed(39)
-    
+
+#initial conditions (random)
 m = np.random.uniform(1e-3,1e-1,size = nbodies).astype(np.longdouble)
 
 x = np.random.uniform(-200.0,200.0,size = nbodies).astype(np.longdouble)
@@ -59,6 +61,8 @@ sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
 '''
 
+#integrators for various orders
+
 s_N,H_N = run(N, np.longdouble(dt), 0, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_N = np.array(s_N, dtype=object)
 pickle.dump(s_N, open('solution.p','wb'))
@@ -74,7 +78,7 @@ s_2PN   = np.array(s_2PN, dtype=object)
 pickle.dump(s_2PN, open('solution.p','wb'))
 pickle.dump(H_2PN, open('hamiltonian.p','wb'))
 
-#print(len(s_2PN))
+#plots
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -119,7 +123,6 @@ qs_N = [[] for x in range(nbodies)]
 qs_1PN = [[] for x in range(nbodies)]
 qs_2PN = [[] for x in range(nbodies)]
 
-
 for i in range(0,Neff):
 
     for j in range(nbodies):
@@ -130,7 +133,6 @@ for i in range(0,Neff):
         
     for j in range(nbodies):
         qs_2PN[j].append(s_2PN[i][j]['q'])        
-
 
 q1_N = np.array(qs_N[0])
 q2_N = np.array(qs_N[1])  
@@ -182,5 +184,3 @@ ax.legend()
 f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsOrbits.pdf', bbox_inches='tight')
 
 plt.show()
-        
-        
