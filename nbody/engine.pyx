@@ -47,7 +47,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
         memset(g[i], 0, 6*sizeof(long double))
         
 
-    _gradients(g,bodies, nbodies, order)
+    _gradients(g, bodies, nbodies, order)
 
     # FIXME: spins are not evolving!
     # iteration 0

@@ -7,6 +7,10 @@ from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
 
+G = 1  #6.67e-11
+C = 1 #3.0e8 
+Msun = 2e30
+GM = 1.32712440018e20
 
 if __name__=="__main__":
     parser = OptionParser()
@@ -23,19 +27,56 @@ if __name__=="__main__":
 
     nbodies = opts.n
     np.random.seed(opts.seed)
-    m = np.random.uniform(1e-5,1e-2,size = nbodies).astype(np.longdouble)
+    
 
-    x = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
-    y = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
-    z = np.random.uniform(-400.0,400.0,size = nbodies).astype(np.longdouble)
+    m = np.array((2,1)).astype(np.longdouble)
 
-    vx = np.random.uniform(-0.0,0.0001,size = nbodies).astype(np.longdouble)
-    vy = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
-    vz = np.random.uniform(-0.0001,0.0001,size = nbodies).astype(np.longdouble)
+    x = np.array((2,1)).astype(np.longdouble)
+    y = np.array((2,1)).astype(np.longdouble)
+    z = np.array((2,1)).astype(np.longdouble)
+
+    vx = np.array((2,1)).astype(np.longdouble)
+    vy = np.array((2,1)).astype(np.longdouble)
+    vz = np.array((2,1)).astype(np.longdouble)
+    
+    sx = np.array((2,1)).astype(np.longdouble)
+    sy = np.array((2,1)).astype(np.longdouble)
+    sz = np.array((2,1)).astype(np.longdouble)
+    
+    '''
+    m[0], m[1] = 10., 1e-4 #Msun*(10e6), 10*Msun
+    
+    x[0], x[1] = 500., -800.
+    y[0], y[1] = -800., 500.
+    z[0], z[1] = 0., 0.
+
+    vx[0], vx[1] = 1e-5, -1e-3
+    vy[0], vy[1] = 5e-5, -2e-2
+    vz[0], vz[1] = 0., 0.
+    
+    sx[0], sx[1] = 0., 0.
+    sy[0], sy[1] = 0., 0.
+    sz[0], sz[1] = 0., 0.
+    
+    print(x,y,z,vx,vy,vz,sx,sy,sz)
+    '''
+
+    m = np.random.uniform(1e-3,1e-1,size = nbodies).astype(np.longdouble)
+
+    x = np.random.uniform(-200.0, 200.0,size = nbodies).astype(np.longdouble)
+    y = np.random.uniform(-200.0, 200.0,size = nbodies).astype(np.longdouble)
+    z = np.random.uniform(-200.0, 200.0,size = nbodies).astype(np.longdouble)
+
+    vx = np.random.uniform(-0.001, 0.001,size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-0.001, 0.001,size = nbodies).astype(np.longdouble)
+    vz = np.random.uniform(-0.001, 0.001,size = nbodies).astype(np.longdouble)
     
     sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sz = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
+
+    #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
+
     
     dt = opts.dt
     N  = opts.steps
@@ -120,6 +161,7 @@ if __name__=="__main__":
         ax.plot(range(Neff), H)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Hamiltonian')
+        ax.grid()
         colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
         
         qs = [[] for x in range(nbodies)]

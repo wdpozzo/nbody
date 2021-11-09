@@ -76,7 +76,7 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
            
             T += _kinetic_energy(bodies[i])   
             T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C*C) 
-            T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C*C)
+            T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C*C*C*C)
 
             # and the potential
             for j in range(i+1,N):
@@ -127,7 +127,7 @@ cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     
-    return -0.5*G*b1.mass*b2.mass/r
+    return - 0.5*G*b1.mass*b2.mass/r
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -183,13 +183,14 @@ cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
     
     cdef long double C2 = C*C
+    cdef long double C4 = C2*C2
     
     for k in range(3):
         normal[k] = (b1.q[k]-b2.q[k])/r
           
-    V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq)-(1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C2 
+    V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
     
-    V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C2
+    V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C4
     
     return V
 
@@ -260,10 +261,12 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double dy = b1.q[1]-b2.q[1]
     cdef long double dz = b1.q[2]-b2.q[2]
     cdef long double r  = sqrt(_modulus(dx,dy,dz))
-
-    cdef long double prefactor = 0.5*G*b1.mass*b2.mass/(r*r*r)
+    cdef long double r2 = r*r
+    cdef long double r3 = r*r2
     
-
+    cdef long double prefactor = 0.5*G*b1.mass*b2.mass/r3
+    
+    
     # first 3 elements are the derivative wrt to q
     out[0] += prefactor*dx
     out[1] += prefactor*dy
@@ -389,6 +392,7 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
     #cdef long double V0 = -G*b1.mass*b2.mass/r
     #cdef long double dV0
     cdef long double C2 = C*C
+    cdef long double C4 = C2*C2
     
     cdef long double n_p1 = _dot(normal,b1.p)
     cdef long double n_p2 = _dot(normal,b2.p)
@@ -403,7 +407,7 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
         
         # derivative wrt q
 
-        out[k] += ( 0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*(19*p22/m2sq + 10*p12/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/r2/m1m2/r4 ) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*(p1_p2*n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*(n_p1*n_p1*n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1*n_p1*n_p2*n_p2)/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4))/r )/C2
+        out[k] += ( 0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*(19*p22/m2sq + 10*p12/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/r2/m1m2/r4 ) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*(p1_p2*n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*(n_p1*n_p1*n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1*n_p1*n_p2*n_p2)/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4))/r )/C4
 
         #eq. prima del bug
         #out[k] += (0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*m2*((19*p22)/m2sq + (10*p12)/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*(n_p1)*(n_p2)*m1m2/(r6) - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*(n_p2)/r2 + 6*b2.p[k]*(n_p1)/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - (5.5*p12)*(p22)/(m1m2sq) - p1_p2*p1_p2/(m1m2sq) - 6*(p1_p2)*(n_p1)*(n_p2))/(m1m2sq*r2) - 1.5*(n_p1)*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*(n_p2)/(m1m2sq*r2) - 3.0*b1.p[k]*(n_p1)*(n_p2)*(n_p2)/(m1m2sq*r2) + 10*b2.p[k]*(p12)*(n_p2)/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*(n_p1)/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*(n_p2)/(m1m2sq*r4) + 6*dq[k]*(n_p1)*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10*dq[k]*(p12)*(n_p2)*(n_p2)/(m1m2sq*r4) + 12*dq[k]*(p1_p2)*(n_p1)*(n_p2)/(m1m2sq*r4))/r)/C2
@@ -413,7 +417,7 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
         
         # derivative wrt p
    
-        out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(-11.0*b1.p[k]*p22/(m1m2sq) + 10*b1.p[k]*n_p2*n_p2/(m1m2sq*r2) - 2*b2.p[k]*(p1_p2)/(m1m2sq) - 6*b2.p[k]*(n_p1)*(n_p2)/(m1m2sq*r2) - 6*dq[k]*(p1_p2)*(n_p2)/(m1m2sq*r2) - 3.*dq[k]*(n_p1)*(n_p2)/(m1m2sq*r2) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C2
+        out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(-11.0*b1.p[k]*p22/(m1m2sq) + 10*b1.p[k]*n_p2*n_p2/(m1m2sq*r2) - 2*b2.p[k]*(p1_p2)/(m1m2sq) - 6*b2.p[k]*(n_p1)*(n_p2)/(m1m2sq*r2) - 6*dq[k]*(p1_p2)*(n_p2)/(m1m2sq*r2) - 3.*dq[k]*(n_p1)*(n_p2)/(m1m2sq*r2) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
         
         #eq prima del bug
         #out[k+3] = (0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k+3] + 6*dq[k+3]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k+3]/m1sq)/r2 + 0.125*G*m1m2*(-11.0*b1.p[k+3]*p22/(m1m2sq) + 10*b1.p[k+3]*n_p2*n_p2/(m1m2sq*r2) - 2*b2.p[k+3]*(p1_p2)/(m1m2sq) - 6*b2.p[k+3]*(n_p1)*(n_p2)/(m1m2sq*r2) - 6*dq[k+3]*(p1_p2)*(n_p2)/(m1m2sq*r2) - 3.*dq[k+3]*(n_p1)*(n_p2)/(m1m2sq*r2) + 20*b1.p[k+3]*p12/m1qu)/r + 0.375*b1.p[k+3]*p12*p12/m1fi)/C2
