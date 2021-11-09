@@ -2,6 +2,12 @@ import numpy as np
 from nbody.engine import run
 import pickle
 
+'''
+File to test the behaviour of the integrator for all implemented orders so far.
+
+NB. --> the behaviour also depends on dt: the right dynamic will be achieved only if the dt is small enough
+'''
+
 #hand compile (for now) with the charateristichs of the simulation
 N = 3000000
 dt = 0.2
@@ -9,6 +15,7 @@ dt = 0.2
 Neff = N//10
 nbodies = 2
 
+#creating data arrays
 m = np.array((2,1)).astype(np.longdouble)
 
 x = np.array((2,1)).astype(np.longdouble)
@@ -27,7 +34,7 @@ sz = np.array((2,1)).astype(np.longdouble)
 if 1:
     np.random.seed(39)
 
-#initial conditions (random)
+#initial conditions (randomized)
 m = np.random.uniform(1e-3,1e-1,size = nbodies).astype(np.longdouble)
 
 x = np.random.uniform(-200.0,200.0,size = nbodies).astype(np.longdouble)
@@ -45,7 +52,7 @@ sz = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
 
 '''
-#initial conditions (change manually)
+#initial conditions (change manually, care to be coherent)
 m[0], m[1] = 10., 1e-4 #Msun*(10e6), 10*Msun
 
 x[0], x[1] = 500., -800.
@@ -61,7 +68,7 @@ sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
 '''
 
-#integrators for various orders
+#integration for various Newtonian orders
 
 s_N,H_N = run(N, np.longdouble(dt), 0, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_N = np.array(s_N, dtype=object)
@@ -78,7 +85,7 @@ s_2PN   = np.array(s_2PN, dtype=object)
 pickle.dump(s_2PN, open('solution.p','wb'))
 pickle.dump(H_2PN, open('hamiltonian.p','wb'))
 
-#plots
+#Energies, normalized energies, radii and orbits in the different cases
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -119,6 +126,7 @@ ax.legend()
 #colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
 f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonianNorm.pdf', bbox_inches='tight')
 
+#prepare data to evaluate the radius
 qs_N = [[] for x in range(nbodies)]
 qs_1PN = [[] for x in range(nbodies)]
 qs_2PN = [[] for x in range(nbodies)]
