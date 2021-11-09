@@ -3673,7 +3673,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  *     for k in range(3):
  *         normal[k] = (b1.q[k]-b2.q[k])/r             # <<<<<<<<<<<<<<
  * 
- *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq)-(1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
+ *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
  */
     (__pyx_v_normal[__pyx_v_k]) = (((__pyx_v_b1.q[__pyx_v_k]) - (__pyx_v_b2.q[__pyx_v_k])) / __pyx_v_r);
   }
@@ -3681,14 +3681,14 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   /* "nbody/hamiltonian.pyx":191
  *         normal[k] = (b1.q[k]-b2.q[k])/r
  * 
- *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq)-(1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4             # <<<<<<<<<<<<<<
+ *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4             # <<<<<<<<<<<<<<
  * 
  *     V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C4
  */
   __pyx_v_V = (__pyx_v_V + (((((1. / 8.) * __pyx_v_V0) * (((((((5. * __pyx_v_p14) / __pyx_v_m1qu) - ((((11. / 2.) * __pyx_v_p12) * __pyx_v_p22) / __pyx_v_m1m2sq)) - ((__pyx_v_p1_p2 * __pyx_v_p1_p2) / __pyx_v_m1m2sq)) + ((5. * ((__pyx_v_p12 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p))) / __pyx_v_m1m2sq)) - ((6. * ((__pyx_v_p1_p2 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p))) / __pyx_v_m1m2sq)) - ((((3. / 2.) * (__pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p))) * (__pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p))) / __pyx_v_m1m2sq))) + (((1. / 4.) * (((__pyx_v_5nbody_11hamiltonian_G * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) / __pyx_v_r2)) * ((__pyx_v_m2 * (((10. * __pyx_v_p12) / __pyx_v_m1sq) + ((19. * __pyx_v_p22) / __pyx_v_m2sq))) - ((((1. / 2.) * (__pyx_v_m1 + __pyx_v_m2)) * ((27. * __pyx_v_p1_p2) + ((6. * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p)))) / __pyx_v_m1m2)))) / __pyx_v_C4));
 
   /* "nbody/hamiltonian.pyx":193
- *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq)-(1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
+ *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
  * 
  *     V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C4             # <<<<<<<<<<<<<<
  * 
