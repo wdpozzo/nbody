@@ -21,10 +21,10 @@ cdef unsigned int _merge(body_t *bodies, unsigned int nbodies):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order):
+cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order) :
 
     cdef unsigned int i,j,k
-    cdef long double dtsquare = dt*dt
+    cdef long double dt2 = 0.5*dt
     cdef body_t b
     cdef body_t tmp_b
     cdef body_t *mid_point = <body_t *>malloc(nbodies*sizeof(body_t))
@@ -57,10 +57,10 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
         
         for j in range(3):
 
-            tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i][3+j]
+            tmp_b.q[j] = bodies[i].q[j] + dt2*g[i][3+j]
             mid_point[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
 
-            tmp_b.p[j] = bodies[i].p[j] - dtsquare*g[i][j]
+            tmp_b.p[j] = bodies[i].p[j] - dt2*g[i][j]
             mid_point[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
             tmp_b.s[j] = bodies[i].s[j]
@@ -78,10 +78,10 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
         
         for j in range(3):
 
-            tmp_b.q[j] = bodies[i].q[j] + dtsquare*g[i][3+j]
+            tmp_b.q[j] = bodies[i].q[j] + dt2*g[i][3+j]
             mid_point_2[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
 
-            tmp_b.p[j] = bodies[i].p[j] - dtsquare*g[i][j]
+            tmp_b.p[j] = bodies[i].p[j] - dt2*g[i][j]
             mid_point_2[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
             tmp_b.s[j] = bodies[i].s[j]
@@ -96,8 +96,8 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
     for i in range(nbodies):
         mass = bodies[i].mass
         for j in range(3):
-            bodies[i].q[j] += dtsquare*g[i][3+j]
-            bodies[i].p[j] -= dtsquare*g[i][j]
+            bodies[i].q[j] += dt2*g[i][3+j]
+            bodies[i].p[j] -= dt2*g[i][j]
 #            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
     
     _free(mid_point)

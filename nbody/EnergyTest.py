@@ -9,8 +9,8 @@ NB. --> the behaviour also depends on dt: the right dynamic will be achieved onl
 '''
 
 #hand compile (for now) with the charateristichs of the simulation
-N = 3000000
-dt = 0.2
+N = 4000000
+dt = 0.5
 
 Neff = N//10
 nbodies = 2
@@ -32,18 +32,18 @@ sz = np.array((2,1)).astype(np.longdouble)
 
 #set a seed if needed
 if 1:
-    np.random.seed(39)
+    np.random.seed(129)
 
 #initial conditions (randomized)
-m = np.random.uniform(1e-3,1e-1,size = nbodies).astype(np.longdouble)
+m = np.random.uniform(1e0, 1e1,size = nbodies).astype(np.longdouble)
 
-x = np.random.uniform(-200.0,200.0,size = nbodies).astype(np.longdouble)
-y = np.random.uniform(-200.0,200.0,size = nbodies).astype(np.longdouble)
-z = np.random.uniform(-200.0,200.0,size = nbodies).astype(np.longdouble)
+x = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
+y = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
+z = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
 
-vx = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
-vy = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
-vz = np.random.uniform(-0.001,0.001,size = nbodies).astype(np.longdouble)
+vx = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+vy = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+vz = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
 
 sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
@@ -53,19 +53,21 @@ sz = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 
 '''
 #initial conditions (change manually, care to be coherent)
-m[0], m[1] = 10., 1e-4 #Msun*(10e6), 10*Msun
+m[0], m[1] = 1e-2, 1e-4 #Msun*(10e6), 10*Msun
 
-x[0], x[1] = 500., -800.
-y[0], y[1] = -800., 500.
+x[0], x[1] = -50., 50.
+y[0], y[1] = 50., -50.
 z[0], z[1] = 0., 0.
 
-vx[0], vx[1] = 1e-5, -1e-3
-vy[0], vy[1] = 5e-5, -2e-2
+vx[0], vx[1] = 3e-5, -3e-3 
+vy[0], vy[1] = -1e-4, 1e-2
 vz[0], vz[1] = 0., 0.
 
 sx[0], sx[1] = 0., 0.
 sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
+
+print(x,y,z,vx,vy,vz,sx,sy,sz)
 '''
 
 #integration for various Newtonian orders

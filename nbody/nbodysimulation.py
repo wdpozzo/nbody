@@ -23,12 +23,11 @@ if __name__=="__main__":
     parser.add_option('--plot', default=1, type='int', help='plot')
     parser.add_option('--cm', default=1, type='int', help='plot')
     parser.add_option('--seed', default=1, type='int', help='seed')
-    (opts,args)=parser.parse_args()
+    (opts,args) = parser.parse_args()
 
     nbodies = opts.n
     np.random.seed(opts.seed)
     
-
     m = np.array((2,1)).astype(np.longdouble)
 
     x = np.array((2,1)).astype(np.longdouble)
@@ -44,14 +43,14 @@ if __name__=="__main__":
     sz = np.array((2,1)).astype(np.longdouble)
     
     '''
-    m[0], m[1] = 10., 1e-4 #Msun*(10e6), 10*Msun
+    m[0], m[1] = 1e-1, 1e-3 #Msun*(10e6), 10*Msun
     
-    x[0], x[1] = 500., -800.
-    y[0], y[1] = -800., 500.
+    x[0], x[1] = 50., -50.
+    y[0], y[1] = 50., 50.
     z[0], z[1] = 0., 0.
 
-    vx[0], vx[1] = 1e-5, -1e-3
-    vy[0], vy[1] = 5e-5, -2e-2
+    vx[0], vx[1] = 1e-4, 1e-3
+    vy[0], vy[1] = -1e-4, 1e-3
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -61,15 +60,15 @@ if __name__=="__main__":
     print(x,y,z,vx,vy,vz,sx,sy,sz)
     '''
 
-    m = np.random.uniform(1e-3,1e-1,size = nbodies).astype(np.longdouble)
+    m = np.random.uniform(1e0, 1e1,size = nbodies).astype(np.longdouble)
 
-    x = np.random.uniform(-200.0, 200.0,size = nbodies).astype(np.longdouble)
-    y = np.random.uniform(-200.0, 200.0,size = nbodies).astype(np.longdouble)
-    z = np.random.uniform(-200.0, 200.0,size = nbodies).astype(np.longdouble)
+    x = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
+    y = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
+    z = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
 
-    vx = np.random.uniform(-0.001, 0.001,size = nbodies).astype(np.longdouble)
-    vy = np.random.uniform(-0.001, 0.001,size = nbodies).astype(np.longdouble)
-    vz = np.random.uniform(-0.001, 0.001,size = nbodies).astype(np.longdouble)
+    vx = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+    vz = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
     
     sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
@@ -77,7 +76,6 @@ if __name__=="__main__":
 
     #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
 
-    
     dt = opts.dt
     N  = opts.steps
     Neff = N//10
@@ -154,7 +152,6 @@ if __name__=="__main__":
         from mpl_toolkits import mplot3d
         
         plotting_step = np.maximum(64,Neff//int(0.1*Neff))
-        
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
@@ -282,6 +279,7 @@ if __name__=="__main__":
         ax = f.add_subplot(111, projection = '3d')
         colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))    
         ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], alpha=0.9)
+        ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o-', alpha=0.9)       
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_ylabel('z')
