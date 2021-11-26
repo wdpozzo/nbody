@@ -103,8 +103,7 @@ cdef void _merge_bodies(body_t *b, int i_survive, int i_remove, unsigned int nbo
     # update the surviving body
     cdef unsigned int k
     for k in range(3):
-        b1.p[k] = (b1.mass*b1.p[k]+b2.mass*b2.p[k])/(b1.mass+b2.mass)
-    
+        b1.p[k] = b1.p[k] + b2.p[k]
     b1.mass = mf
     b1.s[2] = af
     
