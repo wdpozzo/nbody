@@ -18,15 +18,16 @@ if __name__=="__main__":
     parser.add_option('--steps', default=1000, type='int', help='n steps')
     parser.add_option('--order', default=0, type='int', help='PN order')
     parser.add_option('--dt', default=1, type='float', help='dt')
-    parser.add_option('-p', default=0, type='int', help='post process')
+    parser.add_option('-p', default = False, action = 'store_true', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
     parser.add_option('--plot', default=1, type='int', help='plot')
     parser.add_option('--cm', default=1, type='int', help='plot')
-    parser.add_option('--seed', default=1, type='int', help='seed')
+    parser.add_option('--seed', default = False, action = 'store_true', help='seed')
     (opts,args) = parser.parse_args()
 
     nbodies = opts.n
-    np.random.seed(opts.seed)
+    if opts.seed:
+        np.random.seed(1)
     
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -80,7 +81,7 @@ if __name__=="__main__":
     N  = opts.steps
     Neff = N//10
     
-    if opts.p == 1:
+    if not opts.p:
         s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
         s   = np.array(s, dtype=object)
         pickle.dump(s, open('solution.p','wb'))
@@ -257,7 +258,7 @@ if __name__=="__main__":
             plt.show()
             
 
-    if opts.cm == 1:
+    if opts.cm == 1 and nbodies == 2:
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
@@ -266,13 +267,13 @@ if __name__=="__main__":
         
         q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
         p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
-        
-        #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q']))
-        
-        for i in range(0,k):
-            q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
 
-        #print(np.shape(q_rel), opts.steps, np.shape(s)) 
+    
+        for i in range(k):
+            try:
+                q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
+            except:
+                pass
         
         f = plt.figure(figsize=(6,4))
         
