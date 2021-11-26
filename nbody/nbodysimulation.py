@@ -7,22 +7,28 @@ from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
 
-G = 1  #6.67e-11
-C = 1 #3.0e8 
-Msun = 2e30
-GM = 1.32712440018e20
+from datetime import datetime
+from astropy.time import Time
+from astropy.coordinates import solar_system_ephemeris, get_body_barycentric_posvel
+
+G = 1 #6.67e-11
+c = 1 #3.0e8
+Msun = 1 #2e30
+au = 1 #1.5e10 astronomical unit
+GM = 1 #1.32712440018e20 # G*Msun
 
 if __name__=="__main__":
     parser = OptionParser()
-    parser.add_option('-n', default=9, type='int', help='n bodies')
-    parser.add_option('--steps', default=1000, type='int', help='n steps')
-    parser.add_option('--order', default=0, type='int', help='PN order')
-    parser.add_option('--dt', default=1, type='float', help='dt')
-    parser.add_option('-p', default = False, action = 'store_true', help='post process')
-    parser.add_option('--animate', default=0, type='int', help='animate')
-    parser.add_option('--plot', default=1, type='int', help='plot')
-    parser.add_option('--cm', default=1, type='int', help='plot')
-    parser.add_option('--seed', default = False, action = 'store_true', help='seed')
+    parser.add_option('-n', default=2, type='int', help = "Number of bodies in the system")
+    parser.add_option('--steps', default = 1000, type='int', help = "Number of steps to compute")
+    parser.add_option('--order', default = 0, type='int', help = "Post Newtonian order")
+    parser.add_option('--dt', default = 1, type='float', help = "Time interval (dt)")
+    parser.add_option('-p', default = False, action = 'store_true', help = "Run postprocessing only")
+    parser.add_option('--animate', default = False, action = 'store_true', help = "Animate plots")
+    parser.add_option('--plot', default = True, action = 'store_true', help = "Make plots")
+    parser.add_option('--cm', default = False, action = 'store_true', help = "Plot separation (requires nbodies = 2)")
+    parser.add_option('--seed', default = False, action = 'store_true', help = "Fix seed to 1")
+    parser.add_option('-r', default = False, action = 'store_true', help = "Generate random system with n components")
     (opts,args) = parser.parse_args()
 
     nbodies = opts.n

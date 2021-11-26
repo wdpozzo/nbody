@@ -2,7 +2,9 @@ import numpy as np
 cimport numpy as np
 from nbody.body cimport body_t
 
-cdef long double G = 1
+cdef long double G = 6.67e-11
+
+cdef long double C = 3.0e8
 
 cdef long double _modulus(long double x, long double y, long double z) nogil
 

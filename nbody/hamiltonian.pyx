@@ -5,8 +5,8 @@ from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
 from nbody.body cimport body_t, merger, _merge_bodies
 
-cdef long double G = 1.0 #6.67e-11
-cdef long double C = 1.0 #3.0e8
+cdef long double G = 6.67e-11
+cdef long double C = 3.0e8
 cdef long double Msun = 2e30
 cdef long double GM = 1.32712440018e20
 
@@ -260,7 +260,7 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double dx = b1.q[0]-b2.q[0]
     cdef long double dy = b1.q[1]-b2.q[1]
     cdef long double dz = b1.q[2]-b2.q[2]
-    cdef long double r  = np.sqrt(_modulus(dx,dy,dz))
+    cdef long double r  = sqrt(_modulus(dx,dy,dz))
     cdef long double r2 = r*r
     cdef long double r3 = r*r2
     
@@ -290,7 +290,7 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     """
     
     cdef unsigned int k
-    cdef long double r  = np.sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
+    cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     cdef long double r2 = r*r
     cdef long double r3 = r2*r
     cdef long double r4 = r3*r
@@ -344,7 +344,7 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
 cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
     
     cdef unsigned int k
-    cdef long double r = np.sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
+    cdef long double r = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     cdef long double r2 = r*r
     cdef long double r3 = r2*r
     cdef long double r4 = r3*r
