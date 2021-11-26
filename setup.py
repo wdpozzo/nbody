@@ -35,6 +35,13 @@ ext_modules=[
                        include_dirs=[numpy.get_include(),"nbody"],
                        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
                        ),
+            Extension("nbody.CM_coord_system",
+                       sources=["nbody/CM_coord_system.pyx"],
+                       libraries=["m"], # Unix-like specific
+                       extra_compile_args=["-O3","-ffast-math"],
+                       include_dirs=[numpy.get_include(),"nbody"],
+                       define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+                       ),
              ]
 
 setup(
