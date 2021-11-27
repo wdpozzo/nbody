@@ -82,7 +82,7 @@ if __name__ == '__main__':
     
     earth = get_body_barycentric_posvel('earth', t)
     sun   = get_body_barycentric_posvel('sun', t)
-
+    print(earth)
     x = np.array([sun[0].x.value*AU, earth[0].x.value*AU]).astype(np.longdouble)
     y = np.array([sun[0].y.value*AU, earth[0].y.value*AU]).astype(np.longdouble)
     z = np.array([sun[0].z.value*AU, earth[0].z.value*AU]).astype(np.longdouble)
@@ -99,8 +99,8 @@ if __name__ == '__main__':
     v1 = np.sqrt(vx[1]**2+vy[1]**2+vz[1]**2)
     d  = np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2+(z[1]-z[0])**2)
     
-    E = - G*m[1]*m[0]/d
-    print(d, m[0]*v0, m[1]*v1)
+    E = 0.5*(v0**2*m[0] + v1**2*m[1])- G*m[1]*m[0]/d
+    print(E)
 
     dt = opts.dt
     N  = opts.steps
