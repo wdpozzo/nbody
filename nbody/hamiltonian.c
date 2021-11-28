@@ -2243,7 +2243,7 @@ static PyObject *contiguous = 0;
 static PyObject *indirect_contiguous = 0;
 static int __pyx_memoryview_thread_locks_used;
 static PyThread_type_lock __pyx_memoryview_thread_locks[8];
-static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__modulus(long double, long double, long double); /*proto*/
+static long double __pyx_f_5nbody_11hamiltonian__modulus(long double, long double, long double); /*proto*/
 static long double __pyx_f_5nbody_11hamiltonian__dot(long double *, long double *); /*proto*/
 static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__kinetic_energy(__pyx_t_5nbody_4body_body_t); /*proto*/
 static long double __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_t_5nbody_4body_body_t, __pyx_t_5nbody_4body_body_t); /*proto*/
@@ -2567,17 +2567,17 @@ static PyObject *__pyx_codeobj__27;
 /* "nbody/hamiltonian.pyx":13
  * cdef long double GM = 1.32712440018e20
  * 
- * cdef inline long double _modulus(long double x, long double y, long double z) nogil:             # <<<<<<<<<<<<<<
+ * cdef long double _modulus(long double x, long double y, long double z) nogil:             # <<<<<<<<<<<<<<
  *     return x*x+y*y+z*z
  * 
  */
 
-static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__modulus(long double __pyx_v_x, long double __pyx_v_y, long double __pyx_v_z) {
+static long double __pyx_f_5nbody_11hamiltonian__modulus(long double __pyx_v_x, long double __pyx_v_y, long double __pyx_v_z) {
   long double __pyx_r;
 
   /* "nbody/hamiltonian.pyx":14
  * 
- * cdef inline long double _modulus(long double x, long double y, long double z) nogil:
+ * cdef long double _modulus(long double x, long double y, long double z) nogil:
  *     return x*x+y*y+z*z             # <<<<<<<<<<<<<<
  * 
  * cdef long double _dot(long double *v1, long double *v2) nogil:
@@ -2588,7 +2588,7 @@ static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__modulus(long doub
   /* "nbody/hamiltonian.pyx":13
  * cdef long double GM = 1.32712440018e20
  * 
- * cdef inline long double _modulus(long double x, long double y, long double z) nogil:             # <<<<<<<<<<<<<<
+ * cdef long double _modulus(long double x, long double y, long double z) nogil:             # <<<<<<<<<<<<<<
  *     return x*x+y*y+z*z
  * 
  */
@@ -2753,34 +2753,66 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  *         for i in range(N):
  *             T += _kinetic_energy(bodies[i])             # <<<<<<<<<<<<<<
  *             # and the potential
- *             for j in range(i+1,N):
+ * 
  */
       __pyx_v_T = (__pyx_v_T + __pyx_f_5nbody_11hamiltonian__kinetic_energy((__pyx_v_bodies[__pyx_v_i])));
 
-      /* "nbody/hamiltonian.pyx":44
- *             T += _kinetic_energy(bodies[i])
+      /* "nbody/hamiltonian.pyx":45
  *             # and the potential
- *             for j in range(i+1,N):             # <<<<<<<<<<<<<<
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])
+ *             for j in range (N):             # <<<<<<<<<<<<<<
+ * 
+ *                 if (i==j):
  */
       __pyx_t_5 = __pyx_v_N;
       __pyx_t_6 = __pyx_t_5;
-      for (__pyx_t_7 = (__pyx_v_i + 1); __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
+      for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
         __pyx_v_j = __pyx_t_7;
 
-        /* "nbody/hamiltonian.pyx":46
- *             for j in range(i+1,N):
+        /* "nbody/hamiltonian.pyx":47
+ *             for j in range (N):
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
+ *                 if (i==j):             # <<<<<<<<<<<<<<
+ *                     V += 0
+ *                 else:
+ */
+        __pyx_t_1 = ((__pyx_v_i == __pyx_v_j) != 0);
+        if (__pyx_t_1) {
+
+          /* "nbody/hamiltonian.pyx":48
+ * 
+ *                 if (i==j):
+ *                     V += 0             # <<<<<<<<<<<<<<
+ *                 else:
+ *                     V += _potential_0pn(bodies[i], bodies[j])
+ */
+          __pyx_v_V = (__pyx_v_V + 0.0);
+
+          /* "nbody/hamiltonian.pyx":47
+ *             for j in range (N):
+ * 
+ *                 if (i==j):             # <<<<<<<<<<<<<<
+ *                     V += 0
+ *                 else:
+ */
+          goto __pyx_L8;
+        }
+
+        /* "nbody/hamiltonian.pyx":50
+ *                     V += 0
+ *                 else:
+ *                     V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
  * 
  *             H = T + V
  */
-        __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+        /*else*/ {
+          __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+        }
+        __pyx_L8:;
       }
 
-      /* "nbody/hamiltonian.pyx":48
- *                 V += _potential_0pn(bodies[i], bodies[j])
+      /* "nbody/hamiltonian.pyx":52
+ *                     V += _potential_0pn(bodies[i], bodies[j])
  * 
  *             H = T + V             # <<<<<<<<<<<<<<
  * 
@@ -2788,7 +2820,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_H = (__pyx_v_T + __pyx_v_V);
 
-      /* "nbody/hamiltonian.pyx":50
+      /* "nbody/hamiltonian.pyx":54
  *             H = T + V
  * 
  *             return H             # <<<<<<<<<<<<<<
@@ -2808,7 +2840,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
   }
 
-  /* "nbody/hamiltonian.pyx":52
+  /* "nbody/hamiltonian.pyx":56
  *             return H
  * 
  *     if order == 1:             # <<<<<<<<<<<<<<
@@ -2818,7 +2850,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
   __pyx_t_1 = ((__pyx_v_order == 1) != 0);
   if (__pyx_t_1) {
 
-    /* "nbody/hamiltonian.pyx":54
+    /* "nbody/hamiltonian.pyx":58
  *     if order == 1:
  *         # compute the kinetic part
  *         for i in range(N):             # <<<<<<<<<<<<<<
@@ -2830,7 +2862,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_i = __pyx_t_4;
 
-      /* "nbody/hamiltonian.pyx":55
+      /* "nbody/hamiltonian.pyx":59
  *         # compute the kinetic part
  *         for i in range(N):
  *             mi = bodies[i].mass             # <<<<<<<<<<<<<<
@@ -2840,7 +2872,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
       __pyx_t_8 = (__pyx_v_bodies[__pyx_v_i]).mass;
       __pyx_v_mi = __pyx_t_8;
 
-      /* "nbody/hamiltonian.pyx":57
+      /* "nbody/hamiltonian.pyx":61
  *             mi = bodies[i].mass
  * 
  *             T += _kinetic_energy(bodies[i])             # <<<<<<<<<<<<<<
@@ -2849,7 +2881,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_T = (__pyx_v_T + __pyx_f_5nbody_11hamiltonian__kinetic_energy((__pyx_v_bodies[__pyx_v_i])));
 
-      /* "nbody/hamiltonian.pyx":59
+      /* "nbody/hamiltonian.pyx":63
  *             T += _kinetic_energy(bodies[i])
  * 
  *             T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C*C)             # <<<<<<<<<<<<<<
@@ -2858,39 +2890,71 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_T = (__pyx_v_T + ((((-(1. / 8.)) * (__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2])) * __pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2])))) / ((__pyx_v_mi * __pyx_v_mi) * __pyx_v_mi)) / (__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C)));
 
-      /* "nbody/hamiltonian.pyx":63
- * 
+      /* "nbody/hamiltonian.pyx":68
  *             # and the potential
- *             for j in range(i+1,N):             # <<<<<<<<<<<<<<
+ *             #for j in range(i+1,N):
+ *             for j in range (N):             # <<<<<<<<<<<<<<
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])
+ *                if (i==j):
  */
       __pyx_t_5 = __pyx_v_N;
       __pyx_t_6 = __pyx_t_5;
-      for (__pyx_t_7 = (__pyx_v_i + 1); __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
+      for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
         __pyx_v_j = __pyx_t_7;
 
-        /* "nbody/hamiltonian.pyx":65
- *             for j in range(i+1,N):
+        /* "nbody/hamiltonian.pyx":70
+ *             for j in range (N):
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
- *                 V += _potential_1pn(bodies[i], bodies[j])
+ *                if (i==j):             # <<<<<<<<<<<<<<
+ *                   V += 0
+ *                else :
+ */
+        __pyx_t_1 = ((__pyx_v_i == __pyx_v_j) != 0);
+        if (__pyx_t_1) {
+
+          /* "nbody/hamiltonian.pyx":71
+ * 
+ *                if (i==j):
+ *                   V += 0             # <<<<<<<<<<<<<<
+ *                else :
+ *                   V += _potential_0pn(bodies[i], bodies[j])
+ */
+          __pyx_v_V = (__pyx_v_V + 0.0);
+
+          /* "nbody/hamiltonian.pyx":70
+ *             for j in range (N):
+ * 
+ *                if (i==j):             # <<<<<<<<<<<<<<
+ *                   V += 0
+ *                else :
+ */
+          goto __pyx_L14;
+        }
+
+        /* "nbody/hamiltonian.pyx":73
+ *                   V += 0
+ *                else :
+ *                   V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
+ *                   V += _potential_1pn(bodies[i], bodies[j])
  * 
  */
-        __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+        /*else*/ {
+          __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
 
-        /* "nbody/hamiltonian.pyx":66
- * 
- *                 V += _potential_0pn(bodies[i], bodies[j])
- *                 V += _potential_1pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
+          /* "nbody/hamiltonian.pyx":74
+ *                else :
+ *                   V += _potential_0pn(bodies[i], bodies[j])
+ *                   V += _potential_1pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
  * 
  *             H = T + V
  */
-        __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_1pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+          __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_1pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+        }
+        __pyx_L14:;
       }
 
-      /* "nbody/hamiltonian.pyx":68
- *                 V += _potential_1pn(bodies[i], bodies[j])
+      /* "nbody/hamiltonian.pyx":76
+ *                   V += _potential_1pn(bodies[i], bodies[j])
  * 
  *             H = T + V             # <<<<<<<<<<<<<<
  * 
@@ -2898,7 +2962,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_H = (__pyx_v_T + __pyx_v_V);
 
-      /* "nbody/hamiltonian.pyx":70
+      /* "nbody/hamiltonian.pyx":78
  *             H = T + V
  * 
  *             return H             # <<<<<<<<<<<<<<
@@ -2909,7 +2973,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
       goto __pyx_L0;
     }
 
-    /* "nbody/hamiltonian.pyx":52
+    /* "nbody/hamiltonian.pyx":56
  *             return H
  * 
  *     if order == 1:             # <<<<<<<<<<<<<<
@@ -2918,7 +2982,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
   }
 
-  /* "nbody/hamiltonian.pyx":72
+  /* "nbody/hamiltonian.pyx":80
  *             return H
  * 
  *     if order == 2:             # <<<<<<<<<<<<<<
@@ -2928,7 +2992,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
   __pyx_t_1 = ((__pyx_v_order == 2) != 0);
   if (__pyx_t_1) {
 
-    /* "nbody/hamiltonian.pyx":74
+    /* "nbody/hamiltonian.pyx":82
  *     if order == 2:
  *         # compute the kinetic part
  *         for i in range(N):             # <<<<<<<<<<<<<<
@@ -2940,7 +3004,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
       __pyx_v_i = __pyx_t_4;
 
-      /* "nbody/hamiltonian.pyx":75
+      /* "nbody/hamiltonian.pyx":83
  *         # compute the kinetic part
  *         for i in range(N):
  *             mi = bodies[i].mass             # <<<<<<<<<<<<<<
@@ -2950,7 +3014,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
       __pyx_t_8 = (__pyx_v_bodies[__pyx_v_i]).mass;
       __pyx_v_mi = __pyx_t_8;
 
-      /* "nbody/hamiltonian.pyx":77
+      /* "nbody/hamiltonian.pyx":85
  *             mi = bodies[i].mass
  * 
  *             T += _kinetic_energy(bodies[i])             # <<<<<<<<<<<<<<
@@ -2959,7 +3023,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_T = (__pyx_v_T + __pyx_f_5nbody_11hamiltonian__kinetic_energy((__pyx_v_bodies[__pyx_v_i])));
 
-      /* "nbody/hamiltonian.pyx":78
+      /* "nbody/hamiltonian.pyx":86
  * 
  *             T += _kinetic_energy(bodies[i])
  *             T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C*C)             # <<<<<<<<<<<<<<
@@ -2968,7 +3032,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_T = (__pyx_v_T + ((((-(1. / 8.)) * (__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2])) * __pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2])))) / ((__pyx_v_mi * __pyx_v_mi) * __pyx_v_mi)) / (__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C)));
 
-      /* "nbody/hamiltonian.pyx":79
+      /* "nbody/hamiltonian.pyx":87
  *             T += _kinetic_energy(bodies[i])
  *             T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C*C)
  *             T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C*C*C*C)             # <<<<<<<<<<<<<<
@@ -2977,48 +3041,80 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_T = (__pyx_v_T + ((((1. / 16.) * ((__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2])) * __pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2]))) * __pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_bodies[__pyx_v_i]).p[0]), ((__pyx_v_bodies[__pyx_v_i]).p[1]), ((__pyx_v_bodies[__pyx_v_i]).p[2])))) / ((((__pyx_v_mi * __pyx_v_mi) * __pyx_v_mi) * __pyx_v_mi) * __pyx_v_mi)) / (((__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C) * __pyx_v_5nbody_11hamiltonian_C) * __pyx_v_5nbody_11hamiltonian_C)));
 
-      /* "nbody/hamiltonian.pyx":82
- * 
+      /* "nbody/hamiltonian.pyx":91
  *             # and the potential
- *             for j in range(i+1,N):             # <<<<<<<<<<<<<<
+ *             #for j in range(i+1,N):
+ *             for j in range (N):             # <<<<<<<<<<<<<<
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])
+ *                 if (i==j):
  */
       __pyx_t_5 = __pyx_v_N;
       __pyx_t_6 = __pyx_t_5;
-      for (__pyx_t_7 = (__pyx_v_i + 1); __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
+      for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_t_6; __pyx_t_7+=1) {
         __pyx_v_j = __pyx_t_7;
 
-        /* "nbody/hamiltonian.pyx":84
- *             for j in range(i+1,N):
+        /* "nbody/hamiltonian.pyx":93
+ *             for j in range (N):
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
- *                 V += _potential_1pn(bodies[i], bodies[j])
- *                 V += _potential_2pn(bodies[i], bodies[j])
+ *                 if (i==j):             # <<<<<<<<<<<<<<
+ *                     V += 0
+ *                 else :
  */
-        __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+        __pyx_t_1 = ((__pyx_v_i == __pyx_v_j) != 0);
+        if (__pyx_t_1) {
 
-        /* "nbody/hamiltonian.pyx":85
+          /* "nbody/hamiltonian.pyx":94
  * 
- *                 V += _potential_0pn(bodies[i], bodies[j])
- *                 V += _potential_1pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
- *                 V += _potential_2pn(bodies[i], bodies[j])
+ *                 if (i==j):
+ *                     V += 0             # <<<<<<<<<<<<<<
+ *                 else :
+ *                     V += _potential_0pn(bodies[i], bodies[j])
+ */
+          __pyx_v_V = (__pyx_v_V + 0.0);
+
+          /* "nbody/hamiltonian.pyx":93
+ *             for j in range (N):
+ * 
+ *                 if (i==j):             # <<<<<<<<<<<<<<
+ *                     V += 0
+ *                 else :
+ */
+          goto __pyx_L20;
+        }
+
+        /* "nbody/hamiltonian.pyx":96
+ *                     V += 0
+ *                 else :
+ *                     V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
+ *                     V += _potential_1pn(bodies[i], bodies[j])
+ *                     V += _potential_2pn(bodies[i], bodies[j])
+ */
+        /*else*/ {
+          __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+
+          /* "nbody/hamiltonian.pyx":97
+ *                 else :
+ *                     V += _potential_0pn(bodies[i], bodies[j])
+ *                     V += _potential_1pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
+ *                     V += _potential_2pn(bodies[i], bodies[j])
  * 
  */
-        __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_1pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+          __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_1pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
 
-        /* "nbody/hamiltonian.pyx":86
- *                 V += _potential_0pn(bodies[i], bodies[j])
- *                 V += _potential_1pn(bodies[i], bodies[j])
- *                 V += _potential_2pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
+          /* "nbody/hamiltonian.pyx":98
+ *                     V += _potential_0pn(bodies[i], bodies[j])
+ *                     V += _potential_1pn(bodies[i], bodies[j])
+ *                     V += _potential_2pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
  * 
  *             H = T + V
  */
-        __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_2pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+          __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_2pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
+        }
+        __pyx_L20:;
       }
 
-      /* "nbody/hamiltonian.pyx":88
- *                 V += _potential_2pn(bodies[i], bodies[j])
+      /* "nbody/hamiltonian.pyx":100
+ *                     V += _potential_2pn(bodies[i], bodies[j])
  * 
  *             H = T + V             # <<<<<<<<<<<<<<
  * 
@@ -3026,7 +3122,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
  */
       __pyx_v_H = (__pyx_v_T + __pyx_v_V);
 
-      /* "nbody/hamiltonian.pyx":90
+      /* "nbody/hamiltonian.pyx":102
  *             H = T + V
  * 
  *             return H             # <<<<<<<<<<<<<<
@@ -3037,7 +3133,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
       goto __pyx_L0;
     }
 
-    /* "nbody/hamiltonian.pyx":72
+    /* "nbody/hamiltonian.pyx":80
  *             return H
  * 
  *     if order == 2:             # <<<<<<<<<<<<<<
@@ -3060,7 +3156,7 @@ static long double __pyx_f_5nbody_11hamiltonian__hamiltonian(__pyx_t_5nbody_4bod
   return __pyx_r;
 }
 
-/* "nbody/hamiltonian.pyx":93
+/* "nbody/hamiltonian.pyx":105
  * 
  * 
  * cdef inline long double _kinetic_energy(body_t b) nogil:             # <<<<<<<<<<<<<<
@@ -3075,7 +3171,7 @@ static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__kinetic_energy(__
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "nbody/hamiltonian.pyx":94
+  /* "nbody/hamiltonian.pyx":106
  * 
  * cdef inline long double _kinetic_energy(body_t b) nogil:
  *     return 0.5*_modulus(b.p[0],b.p[1],b.p[2])/b.mass             # <<<<<<<<<<<<<<
@@ -3091,12 +3187,12 @@ static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__kinetic_energy(__
     #ifdef WITH_THREAD
     __Pyx_PyGILState_Release(__pyx_gilstate_save);
     #endif
-    __PYX_ERR(0, 94, __pyx_L1_error)
+    __PYX_ERR(0, 106, __pyx_L1_error)
   }
   __pyx_r = (__pyx_t_1 / __pyx_v_b.mass);
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":93
+  /* "nbody/hamiltonian.pyx":105
  * 
  * 
  * cdef inline long double _kinetic_energy(body_t b) nogil:             # <<<<<<<<<<<<<<
@@ -3112,7 +3208,7 @@ static CYTHON_INLINE long double __pyx_f_5nbody_11hamiltonian__kinetic_energy(__
   return __pyx_r;
 }
 
-/* "nbody/hamiltonian.pyx":100
+/* "nbody/hamiltonian.pyx":112
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:             # <<<<<<<<<<<<<<
@@ -3133,7 +3229,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
   unsigned int __pyx_t_6;
   int __pyx_t_7;
 
-  /* "nbody/hamiltonian.pyx":103
+  /* "nbody/hamiltonian.pyx":115
  * 
  *     cdef unsigned int i,j
  *     cdef long double V = 0.0             # <<<<<<<<<<<<<<
@@ -3142,7 +3238,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
  */
   __pyx_v_V = 0.0;
 
-  /* "nbody/hamiltonian.pyx":105
+  /* "nbody/hamiltonian.pyx":117
  *     cdef long double V = 0.0
  * 
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3154,7 +3250,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "nbody/hamiltonian.pyx":106
+    /* "nbody/hamiltonian.pyx":118
  * 
  *     for i in range(N):
  *         for j in range(i+1,N):             # <<<<<<<<<<<<<<
@@ -3166,7 +3262,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
     for (__pyx_t_6 = (__pyx_v_i + 1); __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
       __pyx_v_j = __pyx_t_6;
 
-      /* "nbody/hamiltonian.pyx":107
+      /* "nbody/hamiltonian.pyx":119
  *     for i in range(N):
  *         for j in range(i+1,N):
  *             V += _potential_0pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
@@ -3175,7 +3271,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
  */
       __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_0pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
 
-      /* "nbody/hamiltonian.pyx":109
+      /* "nbody/hamiltonian.pyx":121
  *             V += _potential_0pn(bodies[i], bodies[j])
  * 
  *             if order >= 1:             # <<<<<<<<<<<<<<
@@ -3185,7 +3281,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
       __pyx_t_7 = ((__pyx_v_order >= 1) != 0);
       if (__pyx_t_7) {
 
-        /* "nbody/hamiltonian.pyx":110
+        /* "nbody/hamiltonian.pyx":122
  * 
  *             if order >= 1:
  *                 V += _potential_1pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
@@ -3194,7 +3290,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
  */
         __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_1pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
 
-        /* "nbody/hamiltonian.pyx":109
+        /* "nbody/hamiltonian.pyx":121
  *             V += _potential_0pn(bodies[i], bodies[j])
  * 
  *             if order >= 1:             # <<<<<<<<<<<<<<
@@ -3203,7 +3299,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
  */
       }
 
-      /* "nbody/hamiltonian.pyx":112
+      /* "nbody/hamiltonian.pyx":124
  *                 V += _potential_1pn(bodies[i], bodies[j])
  * 
  *             if order >= 2:             # <<<<<<<<<<<<<<
@@ -3213,7 +3309,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
       __pyx_t_7 = ((__pyx_v_order >= 2) != 0);
       if (__pyx_t_7) {
 
-        /* "nbody/hamiltonian.pyx":113
+        /* "nbody/hamiltonian.pyx":125
  * 
  *             if order >= 2:
  *                 V += _potential_2pn(bodies[i], bodies[j])             # <<<<<<<<<<<<<<
@@ -3222,7 +3318,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
  */
         __pyx_v_V = (__pyx_v_V + __pyx_f_5nbody_11hamiltonian__potential_2pn((__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j])));
 
-        /* "nbody/hamiltonian.pyx":112
+        /* "nbody/hamiltonian.pyx":124
  *                 V += _potential_1pn(bodies[i], bodies[j])
  * 
  *             if order >= 2:             # <<<<<<<<<<<<<<
@@ -3233,7 +3329,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
     }
   }
 
-  /* "nbody/hamiltonian.pyx":120
+  /* "nbody/hamiltonian.pyx":132
  * #    if order >= 4:
  * #        raise(NotImplementedError)
  *     return V             # <<<<<<<<<<<<<<
@@ -3243,7 +3339,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
   __pyx_r = __pyx_v_V;
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":100
+  /* "nbody/hamiltonian.pyx":112
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:             # <<<<<<<<<<<<<<
@@ -3256,7 +3352,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential(__pyx_t_5nbody_4body_
   return __pyx_r;
 }
 
-/* "nbody/hamiltonian.pyx":126
+/* "nbody/hamiltonian.pyx":138
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential_0pn(body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -3268,7 +3364,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_t_5nbody_4b
   long double __pyx_v_r;
   long double __pyx_r;
 
-  /* "nbody/hamiltonian.pyx":128
+  /* "nbody/hamiltonian.pyx":140
  * cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
  * 
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))             # <<<<<<<<<<<<<<
@@ -3277,7 +3373,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_t_5nbody_4b
  */
   __pyx_v_r = sqrt(__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_b1.q[0]) - (__pyx_v_b2.q[0])), ((__pyx_v_b1.q[1]) - (__pyx_v_b2.q[1])), ((__pyx_v_b1.q[2]) - (__pyx_v_b2.q[2]))));
 
-  /* "nbody/hamiltonian.pyx":130
+  /* "nbody/hamiltonian.pyx":142
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  * 
  *     return - 0.5*G*b1.mass*b2.mass/r             # <<<<<<<<<<<<<<
@@ -3287,7 +3383,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_t_5nbody_4b
   __pyx_r = ((((-0.5 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_b1.mass) * __pyx_v_b2.mass) / __pyx_v_r);
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":126
+  /* "nbody/hamiltonian.pyx":138
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential_0pn(body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -3300,7 +3396,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_t_5nbody_4b
   return __pyx_r;
 }
 
-/* "nbody/hamiltonian.pyx":136
+/* "nbody/hamiltonian.pyx":148
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential_1pn(body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -3323,35 +3419,35 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
   long double __pyx_t_1;
   long __pyx_t_2;
 
-  /* "nbody/hamiltonian.pyx":138
+  /* "nbody/hamiltonian.pyx":150
  * cdef long double _potential_1pn(body_t b1, body_t b2) nogil:
  * 
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))             # <<<<<<<<<<<<<<
- *     cdef long double V0 = -_potential_0pn(b1, b2)
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)
  *     cdef long double V = 0.0
  */
   __pyx_v_r = sqrt(__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_b1.q[0]) - (__pyx_v_b2.q[0])), ((__pyx_v_b1.q[1]) - (__pyx_v_b2.q[1])), ((__pyx_v_b1.q[2]) - (__pyx_v_b2.q[2]))));
 
-  /* "nbody/hamiltonian.pyx":139
+  /* "nbody/hamiltonian.pyx":151
  * 
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
- *     cdef long double V0 = -_potential_0pn(b1, b2)             # <<<<<<<<<<<<<<
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)             # <<<<<<<<<<<<<<
  *     cdef long double V = 0.0
  *     cdef long double m1 = b1.mass
  */
-  __pyx_v_V0 = (-__pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_v_b1, __pyx_v_b2));
+  __pyx_v_V0 = (-2. * __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_v_b1, __pyx_v_b2));
 
-  /* "nbody/hamiltonian.pyx":140
+  /* "nbody/hamiltonian.pyx":152
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
- *     cdef long double V0 = -_potential_0pn(b1, b2)
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)
  *     cdef long double V = 0.0             # <<<<<<<<<<<<<<
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass
  */
   __pyx_v_V = 0.0;
 
-  /* "nbody/hamiltonian.pyx":141
- *     cdef long double V0 = -_potential_0pn(b1, b2)
+  /* "nbody/hamiltonian.pyx":153
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)
  *     cdef long double V = 0.0
  *     cdef long double m1 = b1.mass             # <<<<<<<<<<<<<<
  *     cdef long double m2 = b2.mass
@@ -3360,7 +3456,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
   __pyx_t_1 = __pyx_v_b1.mass;
   __pyx_v_m1 = __pyx_t_1;
 
-  /* "nbody/hamiltonian.pyx":142
+  /* "nbody/hamiltonian.pyx":154
  *     cdef long double V = 0.0
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass             # <<<<<<<<<<<<<<
@@ -3370,7 +3466,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
   __pyx_t_1 = __pyx_v_b2.mass;
   __pyx_v_m2 = __pyx_t_1;
 
-  /* "nbody/hamiltonian.pyx":143
+  /* "nbody/hamiltonian.pyx":155
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass
  *     cdef long double m1m2 = m1*m2             # <<<<<<<<<<<<<<
@@ -3379,7 +3475,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m1m2 = (__pyx_v_m1 * __pyx_v_m2);
 
-  /* "nbody/hamiltonian.pyx":144
+  /* "nbody/hamiltonian.pyx":156
  *     cdef long double m2 = b2.mass
  *     cdef long double m1m2 = m1*m2
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -3388,7 +3484,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
  */
   __pyx_v_normal = ((long double *)malloc((3 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":145
+  /* "nbody/hamiltonian.pyx":157
  *     cdef long double m1m2 = m1*m2
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])             # <<<<<<<<<<<<<<
@@ -3397,7 +3493,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
  */
   __pyx_v_p12 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b1.p[0]), (__pyx_v_b1.p[1]), (__pyx_v_b1.p[2]));
 
-  /* "nbody/hamiltonian.pyx":147
+  /* "nbody/hamiltonian.pyx":159
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])
  * 
  *     cdef long double C2 = C*C             # <<<<<<<<<<<<<<
@@ -3406,7 +3502,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
  */
   __pyx_v_C2 = (__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C);
 
-  /* "nbody/hamiltonian.pyx":149
+  /* "nbody/hamiltonian.pyx":161
  *     cdef long double C2 = C*C
  * 
  *     for k in range(3):             # <<<<<<<<<<<<<<
@@ -3416,36 +3512,36 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
   for (__pyx_t_2 = 0; __pyx_t_2 < 3; __pyx_t_2+=1) {
     __pyx_v_k = __pyx_t_2;
 
-    /* "nbody/hamiltonian.pyx":150
+    /* "nbody/hamiltonian.pyx":162
  * 
  *     for k in range(3):
  *         normal[k] = (b1.q[k]-b2.q[k])/r             # <<<<<<<<<<<<<<
  * 
- *     V += ((1./8.)*(2.0*V0)*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
+ *     V += ((1./8.)*V0*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
  */
     (__pyx_v_normal[__pyx_v_k]) = (((__pyx_v_b1.q[__pyx_v_k]) - (__pyx_v_b2.q[__pyx_v_k])) / __pyx_v_r);
   }
 
-  /* "nbody/hamiltonian.pyx":152
+  /* "nbody/hamiltonian.pyx":164
  *         normal[k] = (b1.q[k]-b2.q[k])/r
  * 
- *     V += ((1./8.)*(2.0*V0)*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2             # <<<<<<<<<<<<<<
+ *     V += ((1./8.)*V0*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2             # <<<<<<<<<<<<<<
  * 
- *     V += (0.25*V0*G*(b1.mass + b2.mass)/r)/C2
+ *     V += (0.25*V0*G*(m1+ m2)/r)/C2
  */
-  __pyx_v_V = (__pyx_v_V + ((((1. / 8.) * (2.0 * __pyx_v_V0)) * ((((-12. * __pyx_v_p12) / __pyx_v_m1m2) + ((14.0 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_b1.p, __pyx_v_b2.p)) / __pyx_v_m1m2)) + (((2.0 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p)) / __pyx_v_m1m2))) / __pyx_v_C2));
+  __pyx_v_V = (__pyx_v_V + ((((1. / 8.) * __pyx_v_V0) * ((((-12. * __pyx_v_p12) / __pyx_v_m1m2) + ((14.0 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_b1.p, __pyx_v_b2.p)) / __pyx_v_m1m2)) + (((2.0 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p)) / __pyx_v_m1m2))) / __pyx_v_C2));
 
-  /* "nbody/hamiltonian.pyx":154
- *     V += ((1./8.)*(2.0*V0)*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
+  /* "nbody/hamiltonian.pyx":166
+ *     V += ((1./8.)*V0*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
  * 
- *     V += (0.25*V0*G*(b1.mass + b2.mass)/r)/C2             # <<<<<<<<<<<<<<
+ *     V += (0.25*V0*G*(m1+ m2)/r)/C2             # <<<<<<<<<<<<<<
  * 
  *     return V
  */
-  __pyx_v_V = (__pyx_v_V + (((((0.25 * __pyx_v_V0) * __pyx_v_5nbody_11hamiltonian_G) * (__pyx_v_b1.mass + __pyx_v_b2.mass)) / __pyx_v_r) / __pyx_v_C2));
+  __pyx_v_V = (__pyx_v_V + (((((0.25 * __pyx_v_V0) * __pyx_v_5nbody_11hamiltonian_G) * (__pyx_v_m1 + __pyx_v_m2)) / __pyx_v_r) / __pyx_v_C2));
 
-  /* "nbody/hamiltonian.pyx":156
- *     V += (0.25*V0*G*(b1.mass + b2.mass)/r)/C2
+  /* "nbody/hamiltonian.pyx":168
+ *     V += (0.25*V0*G*(m1+ m2)/r)/C2
  * 
  *     return V             # <<<<<<<<<<<<<<
  * 
@@ -3454,7 +3550,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
   __pyx_r = __pyx_v_V;
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":136
+  /* "nbody/hamiltonian.pyx":148
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential_1pn(body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -3467,7 +3563,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_1pn(__pyx_t_5nbody_4b
   return __pyx_r;
 }
 
-/* "nbody/hamiltonian.pyx":162
+/* "nbody/hamiltonian.pyx":174
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential_2pn(body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -3500,7 +3596,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   long double __pyx_t_1;
   long __pyx_t_2;
 
-  /* "nbody/hamiltonian.pyx":164
+  /* "nbody/hamiltonian.pyx":176
  * cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
  * 
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))             # <<<<<<<<<<<<<<
@@ -3509,7 +3605,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_r = sqrt(__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_b1.q[0]) - (__pyx_v_b2.q[0])), ((__pyx_v_b1.q[1]) - (__pyx_v_b2.q[1])), ((__pyx_v_b1.q[2]) - (__pyx_v_b2.q[2]))));
 
-  /* "nbody/hamiltonian.pyx":165
+  /* "nbody/hamiltonian.pyx":177
  * 
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  *     cdef long double r2 = r*r             # <<<<<<<<<<<<<<
@@ -3518,7 +3614,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_r2 = (__pyx_v_r * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":166
+  /* "nbody/hamiltonian.pyx":178
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  *     cdef long double r2 = r*r
  *     cdef long double m1 = b1.mass             # <<<<<<<<<<<<<<
@@ -3528,7 +3624,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   __pyx_t_1 = __pyx_v_b1.mass;
   __pyx_v_m1 = __pyx_t_1;
 
-  /* "nbody/hamiltonian.pyx":167
+  /* "nbody/hamiltonian.pyx":179
  *     cdef long double r2 = r*r
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass             # <<<<<<<<<<<<<<
@@ -3538,7 +3634,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   __pyx_t_1 = __pyx_v_b2.mass;
   __pyx_v_m2 = __pyx_t_1;
 
-  /* "nbody/hamiltonian.pyx":168
+  /* "nbody/hamiltonian.pyx":180
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass
  *     cdef long double m1m2 = m1*m2             # <<<<<<<<<<<<<<
@@ -3547,7 +3643,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m1m2 = (__pyx_v_m1 * __pyx_v_m2);
 
-  /* "nbody/hamiltonian.pyx":169
+  /* "nbody/hamiltonian.pyx":181
  *     cdef long double m2 = b2.mass
  *     cdef long double m1m2 = m1*m2
  *     cdef long double m1m2sq = m1m2*m1m2             # <<<<<<<<<<<<<<
@@ -3556,7 +3652,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m1m2sq = (__pyx_v_m1m2 * __pyx_v_m1m2);
 
-  /* "nbody/hamiltonian.pyx":170
+  /* "nbody/hamiltonian.pyx":182
  *     cdef long double m1m2 = m1*m2
  *     cdef long double m1m2sq = m1m2*m1m2
  *     cdef long double m1sq = m1*m1             # <<<<<<<<<<<<<<
@@ -3565,7 +3661,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m1sq = (__pyx_v_m1 * __pyx_v_m1);
 
-  /* "nbody/hamiltonian.pyx":171
+  /* "nbody/hamiltonian.pyx":183
  *     cdef long double m1m2sq = m1m2*m1m2
  *     cdef long double m1sq = m1*m1
  *     cdef long double m2sq = m2*m2             # <<<<<<<<<<<<<<
@@ -3574,7 +3670,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m2sq = (__pyx_v_m2 * __pyx_v_m2);
 
-  /* "nbody/hamiltonian.pyx":172
+  /* "nbody/hamiltonian.pyx":184
  *     cdef long double m1sq = m1*m1
  *     cdef long double m2sq = m2*m2
  *     cdef long double m1cu = m1*m1sq             # <<<<<<<<<<<<<<
@@ -3583,7 +3679,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m1cu = (__pyx_v_m1 * __pyx_v_m1sq);
 
-  /* "nbody/hamiltonian.pyx":173
+  /* "nbody/hamiltonian.pyx":185
  *     cdef long double m2sq = m2*m2
  *     cdef long double m1cu = m1*m1sq
  *     cdef long double m1qu = m1*m1cu             # <<<<<<<<<<<<<<
@@ -3592,7 +3688,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_m1qu = (__pyx_v_m1 * __pyx_v_m1cu);
 
-  /* "nbody/hamiltonian.pyx":175
+  /* "nbody/hamiltonian.pyx":187
  *     cdef long double m1qu = m1*m1cu
  * 
  *     cdef long double p1_p2 = _dot(b1.p,b2.p)             # <<<<<<<<<<<<<<
@@ -3601,7 +3697,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_p1_p2 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_b1.p, __pyx_v_b2.p);
 
-  /* "nbody/hamiltonian.pyx":176
+  /* "nbody/hamiltonian.pyx":188
  * 
  *     cdef long double p1_p2 = _dot(b1.p,b2.p)
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])             # <<<<<<<<<<<<<<
@@ -3610,7 +3706,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_p12 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b1.p[0]), (__pyx_v_b1.p[1]), (__pyx_v_b1.p[2]));
 
-  /* "nbody/hamiltonian.pyx":177
+  /* "nbody/hamiltonian.pyx":189
  *     cdef long double p1_p2 = _dot(b1.p,b2.p)
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])
  *     cdef long double p22 = _modulus(b2.p[0],b2.p[1],b2.p[2])             # <<<<<<<<<<<<<<
@@ -3619,34 +3715,34 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_p22 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b2.p[0]), (__pyx_v_b2.p[1]), (__pyx_v_b2.p[2]));
 
-  /* "nbody/hamiltonian.pyx":178
+  /* "nbody/hamiltonian.pyx":190
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])
  *     cdef long double p22 = _modulus(b2.p[0],b2.p[1],b2.p[2])
  *     cdef long double p14 = p12*p12             # <<<<<<<<<<<<<<
  * 
- *     cdef long double V0 = -_potential_0pn(b1, b2)
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)
  */
   __pyx_v_p14 = (__pyx_v_p12 * __pyx_v_p12);
 
-  /* "nbody/hamiltonian.pyx":180
+  /* "nbody/hamiltonian.pyx":192
  *     cdef long double p14 = p12*p12
  * 
- *     cdef long double V0 = -_potential_0pn(b1, b2)             # <<<<<<<<<<<<<<
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)             # <<<<<<<<<<<<<<
  *     cdef long double V = 0.0
  *     #cdef long double V = _potential_1pn(b1, b2)
  */
-  __pyx_v_V0 = (-__pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_v_b1, __pyx_v_b2));
+  __pyx_v_V0 = (-2. * __pyx_f_5nbody_11hamiltonian__potential_0pn(__pyx_v_b1, __pyx_v_b2));
 
-  /* "nbody/hamiltonian.pyx":181
+  /* "nbody/hamiltonian.pyx":193
  * 
- *     cdef long double V0 = -_potential_0pn(b1, b2)
+ *     cdef long double V0 = -2.*_potential_0pn(b1, b2)
  *     cdef long double V = 0.0             # <<<<<<<<<<<<<<
  *     #cdef long double V = _potential_1pn(b1, b2)
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
  */
   __pyx_v_V = 0.0;
 
-  /* "nbody/hamiltonian.pyx":183
+  /* "nbody/hamiltonian.pyx":195
  *     cdef long double V = 0.0
  *     #cdef long double V = _potential_1pn(b1, b2)
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -3655,7 +3751,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_normal = ((long double *)malloc((3 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":185
+  /* "nbody/hamiltonian.pyx":197
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
  * 
  *     cdef long double C2 = C*C             # <<<<<<<<<<<<<<
@@ -3664,7 +3760,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_C2 = (__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C);
 
-  /* "nbody/hamiltonian.pyx":186
+  /* "nbody/hamiltonian.pyx":198
  * 
  *     cdef long double C2 = C*C
  *     cdef long double C4 = C2*C2             # <<<<<<<<<<<<<<
@@ -3673,7 +3769,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
  */
   __pyx_v_C4 = (__pyx_v_C2 * __pyx_v_C2);
 
-  /* "nbody/hamiltonian.pyx":188
+  /* "nbody/hamiltonian.pyx":200
  *     cdef long double C4 = C2*C2
  * 
  *     for k in range(3):             # <<<<<<<<<<<<<<
@@ -3683,7 +3779,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   for (__pyx_t_2 = 0; __pyx_t_2 < 3; __pyx_t_2+=1) {
     __pyx_v_k = __pyx_t_2;
 
-    /* "nbody/hamiltonian.pyx":189
+    /* "nbody/hamiltonian.pyx":201
  * 
  *     for k in range(3):
  *         normal[k] = (b1.q[k]-b2.q[k])/r             # <<<<<<<<<<<<<<
@@ -3693,26 +3789,26 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
     (__pyx_v_normal[__pyx_v_k]) = (((__pyx_v_b1.q[__pyx_v_k]) - (__pyx_v_b2.q[__pyx_v_k])) / __pyx_v_r);
   }
 
-  /* "nbody/hamiltonian.pyx":191
+  /* "nbody/hamiltonian.pyx":203
  *         normal[k] = (b1.q[k]-b2.q[k])/r
  * 
  *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4             # <<<<<<<<<<<<<<
  * 
- *     V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C4
+ *     V += - ((1./8.)*V0*G*G*(m1sq+5.*m1m2+m2sq)/r2)/C4
  */
   __pyx_v_V = (__pyx_v_V + (((((1. / 8.) * __pyx_v_V0) * (((((((5. * __pyx_v_p14) / __pyx_v_m1qu) - ((((11. / 2.) * __pyx_v_p12) * __pyx_v_p22) / __pyx_v_m1m2sq)) - ((__pyx_v_p1_p2 * __pyx_v_p1_p2) / __pyx_v_m1m2sq)) + ((5. * ((__pyx_v_p12 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p))) / __pyx_v_m1m2sq)) - ((6. * ((__pyx_v_p1_p2 * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p))) / __pyx_v_m1m2sq)) - ((((3. / 2.) * (__pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p))) * (__pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p))) / __pyx_v_m1m2sq))) + (((1. / 4.) * (((__pyx_v_5nbody_11hamiltonian_G * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) / __pyx_v_r2)) * ((__pyx_v_m2 * (((10. * __pyx_v_p12) / __pyx_v_m1sq) + ((19. * __pyx_v_p22) / __pyx_v_m2sq))) - ((((1. / 2.) * (__pyx_v_m1 + __pyx_v_m2)) * ((27. * __pyx_v_p1_p2) + ((6. * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p)) * __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p)))) / __pyx_v_m1m2)))) / __pyx_v_C4));
 
-  /* "nbody/hamiltonian.pyx":193
+  /* "nbody/hamiltonian.pyx":205
  *     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
  * 
- *     V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C4             # <<<<<<<<<<<<<<
+ *     V += - ((1./8.)*V0*G*G*(m1sq+5.*m1m2+m2sq)/r2)/C4             # <<<<<<<<<<<<<<
  * 
  *     return V
  */
-  __pyx_v_V = (__pyx_v_V + ((-(((1. / 8.) * __pyx_v_V0) * (((__pyx_v_5nbody_11hamiltonian_G * __pyx_v_5nbody_11hamiltonian_G) * ((__pyx_v_m1sq + (5. * __pyx_v_m1m2)) + __pyx_v_m2sq)) / __pyx_v_r2))) / __pyx_v_C4));
+  __pyx_v_V = (__pyx_v_V + ((-((((((1. / 8.) * __pyx_v_V0) * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * ((__pyx_v_m1sq + (5. * __pyx_v_m1m2)) + __pyx_v_m2sq)) / __pyx_v_r2)) / __pyx_v_C4));
 
-  /* "nbody/hamiltonian.pyx":195
- *     V += - ((1./8.)*V0*(G*G*(m1sq+5.*m1m2+m2sq)/r2))/C4
+  /* "nbody/hamiltonian.pyx":207
+ *     V += - ((1./8.)*V0*G*G*(m1sq+5.*m1m2+m2sq)/r2)/C4
  * 
  *     return V             # <<<<<<<<<<<<<<
  * 
@@ -3721,7 +3817,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   __pyx_r = __pyx_v_V;
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":162
+  /* "nbody/hamiltonian.pyx":174
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef long double _potential_2pn(body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -3734,7 +3830,7 @@ static long double __pyx_f_5nbody_11hamiltonian__potential_2pn(__pyx_t_5nbody_4b
   return __pyx_r;
 }
 
-/* "nbody/hamiltonian.pyx":201
+/* "nbody/hamiltonian.pyx":213
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int order) nogil:             # <<<<<<<<<<<<<<
@@ -3758,7 +3854,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
   unsigned int __pyx_t_9;
   unsigned int __pyx_t_10;
 
-  /* "nbody/hamiltonian.pyx":204
+  /* "nbody/hamiltonian.pyx":216
  * 
  *     cdef unsigned int i,j,k
  *     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -3767,7 +3863,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
  */
   __pyx_v_tmp = ((long double *)malloc((6 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":206
+  /* "nbody/hamiltonian.pyx":218
  *     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
  * 
  *     for i in range(N):             # <<<<<<<<<<<<<<
@@ -3779,7 +3875,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
     __pyx_v_i = __pyx_t_3;
 
-    /* "nbody/hamiltonian.pyx":207
+    /* "nbody/hamiltonian.pyx":219
  * 
  *     for i in range(N):
  *         _gradient_free_particle(tmp, bodies[i])             # <<<<<<<<<<<<<<
@@ -3788,7 +3884,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
  */
     __pyx_f_5nbody_11hamiltonian__gradient_free_particle(__pyx_v_tmp, (__pyx_v_bodies[__pyx_v_i]));
 
-    /* "nbody/hamiltonian.pyx":208
+    /* "nbody/hamiltonian.pyx":220
  *     for i in range(N):
  *         _gradient_free_particle(tmp, bodies[i])
  *         for k in range(6):             # <<<<<<<<<<<<<<
@@ -3798,7 +3894,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
     for (__pyx_t_4 = 0; __pyx_t_4 < 6; __pyx_t_4+=1) {
       __pyx_v_k = __pyx_t_4;
 
-      /* "nbody/hamiltonian.pyx":209
+      /* "nbody/hamiltonian.pyx":221
  *         _gradient_free_particle(tmp, bodies[i])
  *         for k in range(6):
  *             out[i][k] += tmp[k]             # <<<<<<<<<<<<<<
@@ -3810,7 +3906,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
       ((__pyx_v_out[__pyx_t_5])[__pyx_t_6]) = (((__pyx_v_out[__pyx_t_5])[__pyx_t_6]) + (__pyx_v_tmp[__pyx_v_k]));
     }
 
-    /* "nbody/hamiltonian.pyx":210
+    /* "nbody/hamiltonian.pyx":222
  *         for k in range(6):
  *             out[i][k] += tmp[k]
  *         for j in range(N):             # <<<<<<<<<<<<<<
@@ -3822,7 +3918,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
       __pyx_v_j = __pyx_t_6;
 
-      /* "nbody/hamiltonian.pyx":211
+      /* "nbody/hamiltonian.pyx":223
  *             out[i][k] += tmp[k]
  *         for j in range(N):
  *             if i != j:             # <<<<<<<<<<<<<<
@@ -3832,7 +3928,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
       __pyx_t_7 = ((__pyx_v_i != __pyx_v_j) != 0);
       if (__pyx_t_7) {
 
-        /* "nbody/hamiltonian.pyx":212
+        /* "nbody/hamiltonian.pyx":224
  *         for j in range(N):
  *             if i != j:
  *                 _gradient(tmp, bodies[i], bodies[j], order)             # <<<<<<<<<<<<<<
@@ -3841,7 +3937,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
  */
         __pyx_f_5nbody_11hamiltonian__gradient(__pyx_v_tmp, (__pyx_v_bodies[__pyx_v_i]), (__pyx_v_bodies[__pyx_v_j]), __pyx_v_order);
 
-        /* "nbody/hamiltonian.pyx":213
+        /* "nbody/hamiltonian.pyx":225
  *             if i != j:
  *                 _gradient(tmp, bodies[i], bodies[j], order)
  *                 for k in range(6):             # <<<<<<<<<<<<<<
@@ -3851,7 +3947,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
         for (__pyx_t_8 = 0; __pyx_t_8 < 6; __pyx_t_8+=1) {
           __pyx_v_k = __pyx_t_8;
 
-          /* "nbody/hamiltonian.pyx":214
+          /* "nbody/hamiltonian.pyx":226
  *                 _gradient(tmp, bodies[i], bodies[j], order)
  *                 for k in range(6):
  *                     out[i][k] += tmp[k]             # <<<<<<<<<<<<<<
@@ -3863,7 +3959,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
           ((__pyx_v_out[__pyx_t_9])[__pyx_t_10]) = (((__pyx_v_out[__pyx_t_9])[__pyx_t_10]) + (__pyx_v_tmp[__pyx_v_k]));
         }
 
-        /* "nbody/hamiltonian.pyx":211
+        /* "nbody/hamiltonian.pyx":223
  *             out[i][k] += tmp[k]
  *         for j in range(N):
  *             if i != j:             # <<<<<<<<<<<<<<
@@ -3874,7 +3970,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
     }
   }
 
-  /* "nbody/hamiltonian.pyx":216
+  /* "nbody/hamiltonian.pyx":228
  *                     out[i][k] += tmp[k]
  * 
  *     free(tmp)             # <<<<<<<<<<<<<<
@@ -3883,7 +3979,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
  */
   free(__pyx_v_tmp);
 
-  /* "nbody/hamiltonian.pyx":218
+  /* "nbody/hamiltonian.pyx":230
  *     free(tmp)
  * 
  *     return             # <<<<<<<<<<<<<<
@@ -3892,7 +3988,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
  */
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":201
+  /* "nbody/hamiltonian.pyx":213
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int order) nogil:             # <<<<<<<<<<<<<<
@@ -3904,7 +4000,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
   __pyx_L0:;
 }
 
-/* "nbody/hamiltonian.pyx":220
+/* "nbody/hamiltonian.pyx":232
  *     return
  * 
  * cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:             # <<<<<<<<<<<<<<
@@ -3915,7 +4011,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradients(long double **__pyx_v_out, _
 static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __pyx_t_5nbody_4body_body_t __pyx_v_b1, __pyx_t_5nbody_4body_body_t __pyx_v_b2, int __pyx_v_order) {
   int __pyx_t_1;
 
-  /* "nbody/hamiltonian.pyx":222
+  /* "nbody/hamiltonian.pyx":234
  * cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
  * 
  *     _gradient_0pn(out, b1, b2)             # <<<<<<<<<<<<<<
@@ -3924,7 +4020,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
  */
   __pyx_f_5nbody_11hamiltonian__gradient_0pn(__pyx_v_out, __pyx_v_b1, __pyx_v_b2);
 
-  /* "nbody/hamiltonian.pyx":224
+  /* "nbody/hamiltonian.pyx":236
  *     _gradient_0pn(out, b1, b2)
  * 
  *     if order >= 1:             # <<<<<<<<<<<<<<
@@ -3934,7 +4030,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
   __pyx_t_1 = ((__pyx_v_order >= 1) != 0);
   if (__pyx_t_1) {
 
-    /* "nbody/hamiltonian.pyx":225
+    /* "nbody/hamiltonian.pyx":237
  * 
  *     if order >= 1:
  *         _gradient_1pn(out, b1, b2)             # <<<<<<<<<<<<<<
@@ -3943,7 +4039,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
  */
     __pyx_f_5nbody_11hamiltonian__gradient_1pn(__pyx_v_out, __pyx_v_b1, __pyx_v_b2);
 
-    /* "nbody/hamiltonian.pyx":224
+    /* "nbody/hamiltonian.pyx":236
  *     _gradient_0pn(out, b1, b2)
  * 
  *     if order >= 1:             # <<<<<<<<<<<<<<
@@ -3952,7 +4048,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
  */
   }
 
-  /* "nbody/hamiltonian.pyx":227
+  /* "nbody/hamiltonian.pyx":239
  *         _gradient_1pn(out, b1, b2)
  * 
  *     if order >= 2:             # <<<<<<<<<<<<<<
@@ -3962,7 +4058,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
   __pyx_t_1 = ((__pyx_v_order >= 2) != 0);
   if (__pyx_t_1) {
 
-    /* "nbody/hamiltonian.pyx":228
+    /* "nbody/hamiltonian.pyx":240
  * 
  *     if order >= 2:
  *         _gradient_2pn(out, b1, b2)             # <<<<<<<<<<<<<<
@@ -3971,7 +4067,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
  */
     __pyx_f_5nbody_11hamiltonian__gradient_2pn(__pyx_v_out, __pyx_v_b1, __pyx_v_b2);
 
-    /* "nbody/hamiltonian.pyx":227
+    /* "nbody/hamiltonian.pyx":239
  *         _gradient_1pn(out, b1, b2)
  * 
  *     if order >= 2:             # <<<<<<<<<<<<<<
@@ -3980,7 +4076,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
  */
   }
 
-  /* "nbody/hamiltonian.pyx":236
+  /* "nbody/hamiltonian.pyx":248
  * #        raise(NotImplementedError)
  * 
  *     return             # <<<<<<<<<<<<<<
@@ -3989,7 +4085,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
  */
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":220
+  /* "nbody/hamiltonian.pyx":232
  *     return
  * 
  * cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:             # <<<<<<<<<<<<<<
@@ -4001,7 +4097,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
   __pyx_L0:;
 }
 
-/* "nbody/hamiltonian.pyx":242
+/* "nbody/hamiltonian.pyx":254
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_free_particle(long double *out, body_t b1) nogil:             # <<<<<<<<<<<<<<
@@ -4011,7 +4107,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient(long double *__pyx_v_out, __p
 
 static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__pyx_v_out, CYTHON_UNUSED __pyx_t_5nbody_4body_body_t __pyx_v_b1) {
 
-  /* "nbody/hamiltonian.pyx":244
+  /* "nbody/hamiltonian.pyx":256
  * cdef void _gradient_free_particle(long double *out, body_t b1) nogil:
  *     # first 3 elements are the derivative wrt to q
  *     out[0] = 0.             # <<<<<<<<<<<<<<
@@ -4020,7 +4116,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   (__pyx_v_out[0]) = 0.;
 
-  /* "nbody/hamiltonian.pyx":245
+  /* "nbody/hamiltonian.pyx":257
  *     # first 3 elements are the derivative wrt to q
  *     out[0] = 0.
  *     out[1] = 0.             # <<<<<<<<<<<<<<
@@ -4029,7 +4125,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   (__pyx_v_out[1]) = 0.;
 
-  /* "nbody/hamiltonian.pyx":246
+  /* "nbody/hamiltonian.pyx":258
  *     out[0] = 0.
  *     out[1] = 0.
  *     out[2] = 0.             # <<<<<<<<<<<<<<
@@ -4038,7 +4134,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   (__pyx_v_out[2]) = 0.;
 
-  /* "nbody/hamiltonian.pyx":248
+  /* "nbody/hamiltonian.pyx":260
  *     out[2] = 0.
  *     # second 3 elements are the derivative wrt p
  *     out[3] = 0.             # <<<<<<<<<<<<<<
@@ -4047,7 +4143,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   (__pyx_v_out[3]) = 0.;
 
-  /* "nbody/hamiltonian.pyx":249
+  /* "nbody/hamiltonian.pyx":261
  *     # second 3 elements are the derivative wrt p
  *     out[3] = 0.
  *     out[4] = 0.             # <<<<<<<<<<<<<<
@@ -4056,7 +4152,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   (__pyx_v_out[4]) = 0.;
 
-  /* "nbody/hamiltonian.pyx":250
+  /* "nbody/hamiltonian.pyx":262
  *     out[3] = 0.
  *     out[4] = 0.
  *     out[5] = 0.             # <<<<<<<<<<<<<<
@@ -4065,7 +4161,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   (__pyx_v_out[5]) = 0.;
 
-  /* "nbody/hamiltonian.pyx":252
+  /* "nbody/hamiltonian.pyx":264
  *     out[5] = 0.
  * 
  *     return             # <<<<<<<<<<<<<<
@@ -4074,7 +4170,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
  */
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":242
+  /* "nbody/hamiltonian.pyx":254
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_free_particle(long double *out, body_t b1) nogil:             # <<<<<<<<<<<<<<
@@ -4086,7 +4182,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_free_particle(long double *__
   __pyx_L0:;
 }
 
-/* "nbody/hamiltonian.pyx":258
+/* "nbody/hamiltonian.pyx":270
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -4104,7 +4200,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   long double __pyx_v_prefactor;
   long __pyx_t_1;
 
-  /* "nbody/hamiltonian.pyx":260
+  /* "nbody/hamiltonian.pyx":272
  * cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
  * 
  *     cdef long double dx = b1.q[0]-b2.q[0]             # <<<<<<<<<<<<<<
@@ -4113,7 +4209,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_dx = ((__pyx_v_b1.q[0]) - (__pyx_v_b2.q[0]));
 
-  /* "nbody/hamiltonian.pyx":261
+  /* "nbody/hamiltonian.pyx":273
  * 
  *     cdef long double dx = b1.q[0]-b2.q[0]
  *     cdef long double dy = b1.q[1]-b2.q[1]             # <<<<<<<<<<<<<<
@@ -4122,7 +4218,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_dy = ((__pyx_v_b1.q[1]) - (__pyx_v_b2.q[1]));
 
-  /* "nbody/hamiltonian.pyx":262
+  /* "nbody/hamiltonian.pyx":274
  *     cdef long double dx = b1.q[0]-b2.q[0]
  *     cdef long double dy = b1.q[1]-b2.q[1]
  *     cdef long double dz = b1.q[2]-b2.q[2]             # <<<<<<<<<<<<<<
@@ -4131,7 +4227,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_dz = ((__pyx_v_b1.q[2]) - (__pyx_v_b2.q[2]));
 
-  /* "nbody/hamiltonian.pyx":263
+  /* "nbody/hamiltonian.pyx":275
  *     cdef long double dy = b1.q[1]-b2.q[1]
  *     cdef long double dz = b1.q[2]-b2.q[2]
  *     cdef long double r  = sqrt(_modulus(dx,dy,dz))             # <<<<<<<<<<<<<<
@@ -4140,7 +4236,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_r = sqrt(__pyx_f_5nbody_11hamiltonian__modulus(__pyx_v_dx, __pyx_v_dy, __pyx_v_dz));
 
-  /* "nbody/hamiltonian.pyx":264
+  /* "nbody/hamiltonian.pyx":276
  *     cdef long double dz = b1.q[2]-b2.q[2]
  *     cdef long double r  = sqrt(_modulus(dx,dy,dz))
  *     cdef long double r2 = r*r             # <<<<<<<<<<<<<<
@@ -4149,7 +4245,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_r2 = (__pyx_v_r * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":265
+  /* "nbody/hamiltonian.pyx":277
  *     cdef long double r  = sqrt(_modulus(dx,dy,dz))
  *     cdef long double r2 = r*r
  *     cdef long double r3 = r*r2             # <<<<<<<<<<<<<<
@@ -4158,7 +4254,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_r3 = (__pyx_v_r * __pyx_v_r2);
 
-  /* "nbody/hamiltonian.pyx":267
+  /* "nbody/hamiltonian.pyx":279
  *     cdef long double r3 = r*r2
  * 
  *     cdef long double prefactor = 0.5*G*b1.mass*b2.mass/r3             # <<<<<<<<<<<<<<
@@ -4167,7 +4263,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   __pyx_v_prefactor = ((((0.5 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_b1.mass) * __pyx_v_b2.mass) / __pyx_v_r3);
 
-  /* "nbody/hamiltonian.pyx":271
+  /* "nbody/hamiltonian.pyx":283
  * 
  *     # first 3 elements are the derivative wrt to q
  *     out[0] += prefactor*dx             # <<<<<<<<<<<<<<
@@ -4177,7 +4273,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_t_1 = 0;
   (__pyx_v_out[__pyx_t_1]) = ((__pyx_v_out[__pyx_t_1]) + (__pyx_v_prefactor * __pyx_v_dx));
 
-  /* "nbody/hamiltonian.pyx":272
+  /* "nbody/hamiltonian.pyx":284
  *     # first 3 elements are the derivative wrt to q
  *     out[0] += prefactor*dx
  *     out[1] += prefactor*dy             # <<<<<<<<<<<<<<
@@ -4187,7 +4283,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_t_1 = 1;
   (__pyx_v_out[__pyx_t_1]) = ((__pyx_v_out[__pyx_t_1]) + (__pyx_v_prefactor * __pyx_v_dy));
 
-  /* "nbody/hamiltonian.pyx":273
+  /* "nbody/hamiltonian.pyx":285
  *     out[0] += prefactor*dx
  *     out[1] += prefactor*dy
  *     out[2] += prefactor*dz             # <<<<<<<<<<<<<<
@@ -4197,7 +4293,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_t_1 = 2;
   (__pyx_v_out[__pyx_t_1]) = ((__pyx_v_out[__pyx_t_1]) + (__pyx_v_prefactor * __pyx_v_dz));
 
-  /* "nbody/hamiltonian.pyx":275
+  /* "nbody/hamiltonian.pyx":287
  *     out[2] += prefactor*dz
  *     # second 3 elements are the derivative wrt p
  *     out[3] += b1.p[0]/b1.mass             # <<<<<<<<<<<<<<
@@ -4207,7 +4303,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_t_1 = 3;
   (__pyx_v_out[__pyx_t_1]) = ((__pyx_v_out[__pyx_t_1]) + ((__pyx_v_b1.p[0]) / __pyx_v_b1.mass));
 
-  /* "nbody/hamiltonian.pyx":276
+  /* "nbody/hamiltonian.pyx":288
  *     # second 3 elements are the derivative wrt p
  *     out[3] += b1.p[0]/b1.mass
  *     out[4] += b1.p[1]/b1.mass             # <<<<<<<<<<<<<<
@@ -4217,7 +4313,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_t_1 = 4;
   (__pyx_v_out[__pyx_t_1]) = ((__pyx_v_out[__pyx_t_1]) + ((__pyx_v_b1.p[1]) / __pyx_v_b1.mass));
 
-  /* "nbody/hamiltonian.pyx":277
+  /* "nbody/hamiltonian.pyx":289
  *     out[3] += b1.p[0]/b1.mass
  *     out[4] += b1.p[1]/b1.mass
  *     out[5] += b1.p[2]/b1.mass             # <<<<<<<<<<<<<<
@@ -4227,7 +4323,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_t_1 = 5;
   (__pyx_v_out[__pyx_t_1]) = ((__pyx_v_out[__pyx_t_1]) + ((__pyx_v_b1.p[2]) / __pyx_v_b1.mass));
 
-  /* "nbody/hamiltonian.pyx":279
+  /* "nbody/hamiltonian.pyx":291
  *     out[5] += b1.p[2]/b1.mass
  * 
  *     return             # <<<<<<<<<<<<<<
@@ -4236,7 +4332,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
  */
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":258
+  /* "nbody/hamiltonian.pyx":270
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -4248,7 +4344,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_0pn(long double *__pyx_v_out,
   __pyx_L0:;
 }
 
-/* "nbody/hamiltonian.pyx":286
+/* "nbody/hamiltonian.pyx":298
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -4282,7 +4378,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
   unsigned int __pyx_t_3;
   long __pyx_t_4;
 
-  /* "nbody/hamiltonian.pyx":293
+  /* "nbody/hamiltonian.pyx":305
  * 
  *     cdef unsigned int k
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))             # <<<<<<<<<<<<<<
@@ -4291,7 +4387,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_r = sqrt(__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_b1.q[0]) - (__pyx_v_b2.q[0])), ((__pyx_v_b1.q[1]) - (__pyx_v_b2.q[1])), ((__pyx_v_b1.q[2]) - (__pyx_v_b2.q[2]))));
 
-  /* "nbody/hamiltonian.pyx":294
+  /* "nbody/hamiltonian.pyx":306
  *     cdef unsigned int k
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  *     cdef long double r2 = r*r             # <<<<<<<<<<<<<<
@@ -4300,7 +4396,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_r2 = (__pyx_v_r * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":295
+  /* "nbody/hamiltonian.pyx":307
  *     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  *     cdef long double r2 = r*r
  *     cdef long double r3 = r2*r             # <<<<<<<<<<<<<<
@@ -4309,7 +4405,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_r3 = (__pyx_v_r2 * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":296
+  /* "nbody/hamiltonian.pyx":308
  *     cdef long double r2 = r*r
  *     cdef long double r3 = r2*r
  *     cdef long double r4 = r3*r             # <<<<<<<<<<<<<<
@@ -4318,7 +4414,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_r4 = (__pyx_v_r3 * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":297
+  /* "nbody/hamiltonian.pyx":309
  *     cdef long double r3 = r2*r
  *     cdef long double r4 = r3*r
  *     cdef long double *dq = <long double *>malloc(3*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -4327,7 +4423,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_dq = ((long double *)malloc((3 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":298
+  /* "nbody/hamiltonian.pyx":310
  *     cdef long double r4 = r3*r
  *     cdef long double *dq = <long double *>malloc(3*sizeof(long double))
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -4336,37 +4432,37 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_normal = ((long double *)malloc((3 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":300
+  /* "nbody/hamiltonian.pyx":312
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
  * 
  *     for k in range(3):             # <<<<<<<<<<<<<<
  *         dq[k]     = b1.q[k]-b2.q[k]
- *         normal[k] = dq[k]/r
+ * 
  */
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_k = __pyx_t_1;
 
-    /* "nbody/hamiltonian.pyx":301
+    /* "nbody/hamiltonian.pyx":313
  * 
  *     for k in range(3):
  *         dq[k]     = b1.q[k]-b2.q[k]             # <<<<<<<<<<<<<<
- *         normal[k] = dq[k]/r
  * 
+ *         #normal without normalization...why? cause in the following expression the every member is explicit and so the factor 1/r is already counted there
  */
     (__pyx_v_dq[__pyx_v_k]) = ((__pyx_v_b1.q[__pyx_v_k]) - (__pyx_v_b2.q[__pyx_v_k]));
 
-    /* "nbody/hamiltonian.pyx":302
- *     for k in range(3):
- *         dq[k]     = b1.q[k]-b2.q[k]
- *         normal[k] = dq[k]/r             # <<<<<<<<<<<<<<
+    /* "nbody/hamiltonian.pyx":316
+ * 
+ *         #normal without normalization...why? cause in the following expression the every member is explicit and so the factor 1/r is already counted there
+ *         normal[k] = dq[k] # /r             # <<<<<<<<<<<<<<
  * 
  *     cdef long double m1 = b1.mass
  */
-    (__pyx_v_normal[__pyx_v_k]) = ((__pyx_v_dq[__pyx_v_k]) / __pyx_v_r);
+    (__pyx_v_normal[__pyx_v_k]) = (__pyx_v_dq[__pyx_v_k]);
   }
 
-  /* "nbody/hamiltonian.pyx":304
- *         normal[k] = dq[k]/r
+  /* "nbody/hamiltonian.pyx":318
+ *         normal[k] = dq[k] # /r
  * 
  *     cdef long double m1 = b1.mass             # <<<<<<<<<<<<<<
  *     cdef long double m2 = b2.mass
@@ -4375,7 +4471,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
   __pyx_t_2 = __pyx_v_b1.mass;
   __pyx_v_m1 = __pyx_t_2;
 
-  /* "nbody/hamiltonian.pyx":305
+  /* "nbody/hamiltonian.pyx":319
  * 
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass             # <<<<<<<<<<<<<<
@@ -4385,7 +4481,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
   __pyx_t_2 = __pyx_v_b2.mass;
   __pyx_v_m2 = __pyx_t_2;
 
-  /* "nbody/hamiltonian.pyx":307
+  /* "nbody/hamiltonian.pyx":321
  *     cdef long double m2 = b2.mass
  * 
  *     cdef long double m1sq = m1*m1             # <<<<<<<<<<<<<<
@@ -4394,7 +4490,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_m1sq = (__pyx_v_m1 * __pyx_v_m1);
 
-  /* "nbody/hamiltonian.pyx":308
+  /* "nbody/hamiltonian.pyx":322
  * 
  *     cdef long double m1sq = m1*m1
  *     cdef long double m1cu = m1*m1sq             # <<<<<<<<<<<<<<
@@ -4403,7 +4499,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_m1cu = (__pyx_v_m1 * __pyx_v_m1sq);
 
-  /* "nbody/hamiltonian.pyx":310
+  /* "nbody/hamiltonian.pyx":324
  *     cdef long double m1cu = m1*m1sq
  * 
  *     cdef long double m1m2 = m1*m2             # <<<<<<<<<<<<<<
@@ -4412,7 +4508,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_m1m2 = (__pyx_v_m1 * __pyx_v_m2);
 
-  /* "nbody/hamiltonian.pyx":312
+  /* "nbody/hamiltonian.pyx":326
  *     cdef long double m1m2 = m1*m2
  * 
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])             # <<<<<<<<<<<<<<
@@ -4421,7 +4517,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_p12 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b1.p[0]), (__pyx_v_b1.p[1]), (__pyx_v_b1.p[2]));
 
-  /* "nbody/hamiltonian.pyx":313
+  /* "nbody/hamiltonian.pyx":327
  * 
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])
  *     cdef long double p22 = _modulus(b2.p[0],b2.p[1],b2.p[2])             # <<<<<<<<<<<<<<
@@ -4430,7 +4526,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_p22 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b2.p[0]), (__pyx_v_b2.p[1]), (__pyx_v_b2.p[2]));
 
-  /* "nbody/hamiltonian.pyx":317
+  /* "nbody/hamiltonian.pyx":331
  *     #cdef long double prefactor = 0.5*G*m1*m2/r3
  * 
  *     cdef long double C2 = C*C             # <<<<<<<<<<<<<<
@@ -4439,7 +4535,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_C2 = (__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C);
 
-  /* "nbody/hamiltonian.pyx":319
+  /* "nbody/hamiltonian.pyx":333
  *     cdef long double C2 = C*C
  * 
  *     cdef long double n_p1 = _dot(normal,b1.p)             # <<<<<<<<<<<<<<
@@ -4448,7 +4544,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_n_p1 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p);
 
-  /* "nbody/hamiltonian.pyx":320
+  /* "nbody/hamiltonian.pyx":334
  * 
  *     cdef long double n_p1 = _dot(normal,b1.p)
  *     cdef long double n_p2 = _dot(normal,b2.p)             # <<<<<<<<<<<<<<
@@ -4457,7 +4553,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_n_p2 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p);
 
-  /* "nbody/hamiltonian.pyx":321
+  /* "nbody/hamiltonian.pyx":335
  *     cdef long double n_p1 = _dot(normal,b1.p)
  *     cdef long double n_p2 = _dot(normal,b2.p)
  *     cdef long double dq_p1 = _dot(dq,b1.p)             # <<<<<<<<<<<<<<
@@ -4466,7 +4562,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_dq_p1 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_dq, __pyx_v_b1.p);
 
-  /* "nbody/hamiltonian.pyx":322
+  /* "nbody/hamiltonian.pyx":336
  *     cdef long double n_p2 = _dot(normal,b2.p)
  *     cdef long double dq_p1 = _dot(dq,b1.p)
  *     cdef long double dq_p2 = _dot(dq,b2.p)             # <<<<<<<<<<<<<<
@@ -4475,7 +4571,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_dq_p2 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_dq, __pyx_v_b2.p);
 
-  /* "nbody/hamiltonian.pyx":323
+  /* "nbody/hamiltonian.pyx":337
  *     cdef long double dq_p1 = _dot(dq,b1.p)
  *     cdef long double dq_p2 = _dot(dq,b2.p)
  *     cdef long double p1_p2 = _dot(b1.p,b2.p)             # <<<<<<<<<<<<<<
@@ -4484,7 +4580,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   __pyx_v_p1_p2 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_b1.p, __pyx_v_b2.p);
 
-  /* "nbody/hamiltonian.pyx":325
+  /* "nbody/hamiltonian.pyx":339
  *     cdef long double p1_p2 = _dot(b1.p,b2.p)
  * 
  *     for k in range(3):             # <<<<<<<<<<<<<<
@@ -4494,7 +4590,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_k = __pyx_t_1;
 
-    /* "nbody/hamiltonian.pyx":330
+    /* "nbody/hamiltonian.pyx":344
  *         #out[k] += ( - 0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*( 14*p1_p2/m1m2 + 2*(n_p1)*(n_p2)/(m1m2*r2) + (-12*p12)/m1sq)/r3 + 0.25*G*m1m2*(b1.p[k]*(n_p2)/(m1m2*r2) + 2*b2.p[k]*(n_p1)/(m1m2*r2) - 4*dq[k]*(n_p1)*(n_p2)/(m1m2*r4))/r)/C2 # 1PN order
  * 
  *         out[k] += ( -0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.125*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2             # <<<<<<<<<<<<<<
@@ -4504,9 +4600,9 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
     __pyx_t_3 = __pyx_v_k;
     (__pyx_v_out[__pyx_t_3]) = ((__pyx_v_out[__pyx_t_3]) + (((((((((-0.5 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (__pyx_v_m1 + __pyx_v_m2)) * (__pyx_v_dq[__pyx_v_k])) / __pyx_v_r4) - (((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (__pyx_v_dq[__pyx_v_k])) * ((((14.0 * __pyx_v_p1_p2) / __pyx_v_m1m2) + (((2.0 * __pyx_v_n_p1) * __pyx_v_n_p2) / (__pyx_v_m1m2 * __pyx_v_r2))) - ((12. * __pyx_v_p12) / __pyx_v_m1sq))) / __pyx_v_r3)) + ((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (((((2.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_n_p2) / (__pyx_v_m1m2 * __pyx_v_r2)) + (((2.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_n_p1) / (__pyx_v_m1m2 * __pyx_v_r2))) - ((((4. * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p2) / (__pyx_v_m1m2 * __pyx_v_r4)))) / __pyx_v_r)) / __pyx_v_C2));
 
-    /* "nbody/hamiltonian.pyx":334
- *         # derivative wrt p
+    /* "nbody/hamiltonian.pyx":349
  *         #out[3+k] +=  (0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*(n_p2)/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*(p12)/m1cu )/C2 #1PN order
+ * 
  *         out[k+3] += ( 0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*p12/m1cu )/C2             # <<<<<<<<<<<<<<
  * 
  * 
@@ -4515,7 +4611,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
     (__pyx_v_out[__pyx_t_4]) = ((__pyx_v_out[__pyx_t_4]) + ((((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * ((((14.0 * (__pyx_v_b2.p[__pyx_v_k])) / __pyx_v_m1m2) + (((2.0 * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_n_p2) / (__pyx_v_m1m2 * __pyx_v_r2))) - ((24.0 * (__pyx_v_b1.p[__pyx_v_k])) / __pyx_v_m1sq))) / __pyx_v_r) - (((0.5 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_p12) / __pyx_v_m1cu)) / __pyx_v_C2));
   }
 
-  /* "nbody/hamiltonian.pyx":338
+  /* "nbody/hamiltonian.pyx":353
  * 
  * 
  *     return             # <<<<<<<<<<<<<<
@@ -4524,7 +4620,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
  */
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":286
+  /* "nbody/hamiltonian.pyx":298
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -4536,7 +4632,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_1pn(long double *__pyx_v_out,
   __pyx_L0:;
 }
 
-/* "nbody/hamiltonian.pyx":344
+/* "nbody/hamiltonian.pyx":359
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -4575,7 +4671,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
   unsigned int __pyx_t_3;
   long __pyx_t_4;
 
-  /* "nbody/hamiltonian.pyx":347
+  /* "nbody/hamiltonian.pyx":362
  * 
  *     cdef unsigned int k
  *     cdef long double r = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))             # <<<<<<<<<<<<<<
@@ -4584,7 +4680,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_r = sqrt(__pyx_f_5nbody_11hamiltonian__modulus(((__pyx_v_b1.q[0]) - (__pyx_v_b2.q[0])), ((__pyx_v_b1.q[1]) - (__pyx_v_b2.q[1])), ((__pyx_v_b1.q[2]) - (__pyx_v_b2.q[2]))));
 
-  /* "nbody/hamiltonian.pyx":348
+  /* "nbody/hamiltonian.pyx":363
  *     cdef unsigned int k
  *     cdef long double r = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  *     cdef long double r2 = r*r             # <<<<<<<<<<<<<<
@@ -4593,7 +4689,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_r2 = (__pyx_v_r * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":349
+  /* "nbody/hamiltonian.pyx":364
  *     cdef long double r = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
  *     cdef long double r2 = r*r
  *     cdef long double r3 = r2*r             # <<<<<<<<<<<<<<
@@ -4602,7 +4698,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_r3 = (__pyx_v_r2 * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":350
+  /* "nbody/hamiltonian.pyx":365
  *     cdef long double r2 = r*r
  *     cdef long double r3 = r2*r
  *     cdef long double r4 = r3*r             # <<<<<<<<<<<<<<
@@ -4611,7 +4707,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_r4 = (__pyx_v_r3 * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":351
+  /* "nbody/hamiltonian.pyx":366
  *     cdef long double r3 = r2*r
  *     cdef long double r4 = r3*r
  *     cdef long double r5 = r4*r             # <<<<<<<<<<<<<<
@@ -4620,7 +4716,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_r5 = (__pyx_v_r4 * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":352
+  /* "nbody/hamiltonian.pyx":367
  *     cdef long double r4 = r3*r
  *     cdef long double r5 = r4*r
  *     cdef long double r6 = r5*r             # <<<<<<<<<<<<<<
@@ -4629,7 +4725,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_r6 = (__pyx_v_r5 * __pyx_v_r);
 
-  /* "nbody/hamiltonian.pyx":353
+  /* "nbody/hamiltonian.pyx":368
  *     cdef long double r5 = r4*r
  *     cdef long double r6 = r5*r
  *     cdef long double *dq = <long double *>malloc(3*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -4638,7 +4734,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_dq = ((long double *)malloc((3 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":354
+  /* "nbody/hamiltonian.pyx":369
  *     cdef long double r6 = r5*r
  *     cdef long double *dq = <long double *>malloc(3*sizeof(long double))
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))             # <<<<<<<<<<<<<<
@@ -4647,37 +4743,37 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_normal = ((long double *)malloc((3 * (sizeof(long double)))));
 
-  /* "nbody/hamiltonian.pyx":356
+  /* "nbody/hamiltonian.pyx":371
  *     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
  * 
  *     for k in range(3):             # <<<<<<<<<<<<<<
  *         dq[k] = b1.q[k]-b2.q[k]
- *         normal[k] = (b1.q[k]-b2.q[k])/r
+ * 
  */
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_k = __pyx_t_1;
 
-    /* "nbody/hamiltonian.pyx":357
+    /* "nbody/hamiltonian.pyx":372
  * 
  *     for k in range(3):
  *         dq[k] = b1.q[k]-b2.q[k]             # <<<<<<<<<<<<<<
- *         normal[k] = (b1.q[k]-b2.q[k])/r
  * 
+ *         #normal without normalization...why? cause in the following expression the every member is explicit and so the factor 1/r is already counted there
  */
     (__pyx_v_dq[__pyx_v_k]) = ((__pyx_v_b1.q[__pyx_v_k]) - (__pyx_v_b2.q[__pyx_v_k]));
 
-    /* "nbody/hamiltonian.pyx":358
- *     for k in range(3):
- *         dq[k] = b1.q[k]-b2.q[k]
- *         normal[k] = (b1.q[k]-b2.q[k])/r             # <<<<<<<<<<<<<<
+    /* "nbody/hamiltonian.pyx":375
+ * 
+ *         #normal without normalization...why? cause in the following expression the every member is explicit and so the factor 1/r is already counted there
+ *         normal[k] = dq[k] #/r             # <<<<<<<<<<<<<<
  * 
  *     cdef long double m1 = b1.mass
  */
-    (__pyx_v_normal[__pyx_v_k]) = (((__pyx_v_b1.q[__pyx_v_k]) - (__pyx_v_b2.q[__pyx_v_k])) / __pyx_v_r);
+    (__pyx_v_normal[__pyx_v_k]) = (__pyx_v_dq[__pyx_v_k]);
   }
 
-  /* "nbody/hamiltonian.pyx":360
- *         normal[k] = (b1.q[k]-b2.q[k])/r
+  /* "nbody/hamiltonian.pyx":377
+ *         normal[k] = dq[k] #/r
  * 
  *     cdef long double m1 = b1.mass             # <<<<<<<<<<<<<<
  *     cdef long double m2 = b2.mass
@@ -4686,7 +4782,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
   __pyx_t_2 = __pyx_v_b1.mass;
   __pyx_v_m1 = __pyx_t_2;
 
-  /* "nbody/hamiltonian.pyx":361
+  /* "nbody/hamiltonian.pyx":378
  * 
  *     cdef long double m1 = b1.mass
  *     cdef long double m2 = b2.mass             # <<<<<<<<<<<<<<
@@ -4696,7 +4792,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
   __pyx_t_2 = __pyx_v_b2.mass;
   __pyx_v_m2 = __pyx_t_2;
 
-  /* "nbody/hamiltonian.pyx":363
+  /* "nbody/hamiltonian.pyx":380
  *     cdef long double m2 = b2.mass
  * 
  *     cdef long double m1sq = m1*m1             # <<<<<<<<<<<<<<
@@ -4705,7 +4801,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m1sq = (__pyx_v_m1 * __pyx_v_m1);
 
-  /* "nbody/hamiltonian.pyx":364
+  /* "nbody/hamiltonian.pyx":381
  * 
  *     cdef long double m1sq = m1*m1
  *     cdef long double m2sq = m2*m2             # <<<<<<<<<<<<<<
@@ -4714,7 +4810,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m2sq = (__pyx_v_m2 * __pyx_v_m2);
 
-  /* "nbody/hamiltonian.pyx":365
+  /* "nbody/hamiltonian.pyx":382
  *     cdef long double m1sq = m1*m1
  *     cdef long double m2sq = m2*m2
  *     cdef long double m1cu = m1*m1sq             # <<<<<<<<<<<<<<
@@ -4723,7 +4819,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m1cu = (__pyx_v_m1 * __pyx_v_m1sq);
 
-  /* "nbody/hamiltonian.pyx":366
+  /* "nbody/hamiltonian.pyx":383
  *     cdef long double m2sq = m2*m2
  *     cdef long double m1cu = m1*m1sq
  *     cdef long double m1qu = m1*m1cu             # <<<<<<<<<<<<<<
@@ -4732,7 +4828,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m1qu = (__pyx_v_m1 * __pyx_v_m1cu);
 
-  /* "nbody/hamiltonian.pyx":367
+  /* "nbody/hamiltonian.pyx":384
  *     cdef long double m1cu = m1*m1sq
  *     cdef long double m1qu = m1*m1cu
  *     cdef long double m1fi = m1*m1qu             # <<<<<<<<<<<<<<
@@ -4741,7 +4837,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m1fi = (__pyx_v_m1 * __pyx_v_m1qu);
 
-  /* "nbody/hamiltonian.pyx":369
+  /* "nbody/hamiltonian.pyx":386
  *     cdef long double m1fi = m1*m1qu
  * 
  *     cdef double m1m2 = m1*m2             # <<<<<<<<<<<<<<
@@ -4750,7 +4846,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m1m2 = (__pyx_v_m1 * __pyx_v_m2);
 
-  /* "nbody/hamiltonian.pyx":370
+  /* "nbody/hamiltonian.pyx":387
  * 
  *     cdef double m1m2 = m1*m2
  *     cdef double m1m2sq = m1m2*m1m2             # <<<<<<<<<<<<<<
@@ -4759,7 +4855,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_m1m2sq = (__pyx_v_m1m2 * __pyx_v_m1m2);
 
-  /* "nbody/hamiltonian.pyx":372
+  /* "nbody/hamiltonian.pyx":389
  *     cdef double m1m2sq = m1m2*m1m2
  * 
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])             # <<<<<<<<<<<<<<
@@ -4768,7 +4864,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_p12 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b1.p[0]), (__pyx_v_b1.p[1]), (__pyx_v_b1.p[2]));
 
-  /* "nbody/hamiltonian.pyx":373
+  /* "nbody/hamiltonian.pyx":390
  * 
  *     cdef long double p12 = _modulus(b1.p[0],b1.p[1],b1.p[2])
  *     cdef long double p22 = _modulus(b2.p[0],b2.p[1],b2.p[2])             # <<<<<<<<<<<<<<
@@ -4777,7 +4873,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_p22 = __pyx_f_5nbody_11hamiltonian__modulus((__pyx_v_b2.p[0]), (__pyx_v_b2.p[1]), (__pyx_v_b2.p[2]));
 
-  /* "nbody/hamiltonian.pyx":377
+  /* "nbody/hamiltonian.pyx":394
  *     #cdef long double prefactor = 0.5*G*m1*m2/r3
  * 
  *     cdef long double C2 = C*C             # <<<<<<<<<<<<<<
@@ -4786,7 +4882,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_C2 = (__pyx_v_5nbody_11hamiltonian_C * __pyx_v_5nbody_11hamiltonian_C);
 
-  /* "nbody/hamiltonian.pyx":378
+  /* "nbody/hamiltonian.pyx":395
  * 
  *     cdef long double C2 = C*C
  *     cdef long double C4 = C2*C2             # <<<<<<<<<<<<<<
@@ -4795,7 +4891,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_C4 = (__pyx_v_C2 * __pyx_v_C2);
 
-  /* "nbody/hamiltonian.pyx":380
+  /* "nbody/hamiltonian.pyx":397
  *     cdef long double C4 = C2*C2
  * 
  *     cdef long double n_p1 = _dot(normal,b1.p)             # <<<<<<<<<<<<<<
@@ -4804,7 +4900,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_n_p1 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b1.p);
 
-  /* "nbody/hamiltonian.pyx":381
+  /* "nbody/hamiltonian.pyx":398
  * 
  *     cdef long double n_p1 = _dot(normal,b1.p)
  *     cdef long double n_p2 = _dot(normal,b2.p)             # <<<<<<<<<<<<<<
@@ -4813,7 +4909,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_n_p2 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_normal, __pyx_v_b2.p);
 
-  /* "nbody/hamiltonian.pyx":382
+  /* "nbody/hamiltonian.pyx":399
  *     cdef long double n_p1 = _dot(normal,b1.p)
  *     cdef long double n_p2 = _dot(normal,b2.p)
  *     cdef long double p1_p2 = _dot(b1.p,b2.p)             # <<<<<<<<<<<<<<
@@ -4822,7 +4918,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
  */
   __pyx_v_p1_p2 = __pyx_f_5nbody_11hamiltonian__dot(__pyx_v_b1.p, __pyx_v_b2.p);
 
-  /* "nbody/hamiltonian.pyx":385
+  /* "nbody/hamiltonian.pyx":402
  * 
  * 
  *     for k in range(3):             # <<<<<<<<<<<<<<
@@ -4832,7 +4928,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
   for (__pyx_t_1 = 0; __pyx_t_1 < 3; __pyx_t_1+=1) {
     __pyx_v_k = __pyx_t_1;
 
-    /* "nbody/hamiltonian.pyx":391
+    /* "nbody/hamiltonian.pyx":408
  *         #out[k] += ( 0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*(19*p22/m2sq + 10*p12/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*n_p1*n_p2/r2)/m1m2)/r4 - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*n_p2/r2 + 6*b2.p[k]*n_p1/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*p12*n_p2*n_p2/(m1m2sq*r2) - 5.5*p12*p22/m1m2sq - p1_p2*p1_p2/m1m2sq - 6*p1_p2*n_p1*n_p2/m1m2sq - 1.5*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.0*b1.p[k]*n_p1*n_p2*n_p2/(m1m2sq*r2) + 10*b2.p[k]*p12*p12*n_p2/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*n_p1/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*n_p2/(m1m2sq*r4) + 6.*dq[k]*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10.*dq[k]*p12*p12*n_p2*n_p2/(m1m2sq*r4) + 12.*dq[k]*p1_p2*n_p1*n_p2/(m1m2sq*r4))/r )/C4
  * 
  *         out[k] += ( 0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*(19.*p22/m2sq + 10*p12/m1sq) - 0.5*(m1+m2)*(27*p1_p2 + 6*n_p1*n_p2/r2)/m1m2)/r4 - 0.125*G*G*(m1 + m2)*(6*b1.p[k]*n_p2/r2 + 6*b2.p[k]*n_p1/r2 -12.*dq[k]*n_p1*n_p2/r4 )/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - 5.5*p12*p22/m1m2sq - p1_p2*p1_p2/m1m2sq - 6*p1_p2*n_p1*n_p2/(m1m2sq*r2) - 1.5*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r4) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.0*b1.p[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 10*b2.p[k]*p12*p12*n_p2/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*n_p1/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*n_p2/(m1m2sq*r4) + 6.*dq[k]*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10.*dq[k]*p12*p12*p22*p22/(m1m2sq*r4) + 12.*dq[k]*p1_p2*n_p1*n_p2/(m1m2sq*r4))/r )/C4             # <<<<<<<<<<<<<<
@@ -4842,7 +4938,7 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
     __pyx_t_3 = __pyx_v_k;
     (__pyx_v_out[__pyx_t_3]) = ((__pyx_v_out[__pyx_t_3]) + (((((((((((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * 3.0) * (__pyx_v_dq[__pyx_v_k])) * ((__pyx_v_m1sq + (5.0 * __pyx_v_m1m2)) + __pyx_v_m2sq)) / __pyx_v_r5) - ((((((0.5 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (__pyx_v_dq[__pyx_v_k])) * ((__pyx_v_m2 * (((19. * __pyx_v_p22) / __pyx_v_m2sq) + ((10.0 * __pyx_v_p12) / __pyx_v_m1sq))) - (((0.5 * (__pyx_v_m1 + __pyx_v_m2)) * ((27.0 * __pyx_v_p1_p2) + (((6.0 * __pyx_v_n_p1) * __pyx_v_n_p2) / __pyx_v_r2))) / ((long double)__pyx_v_m1m2)))) / __pyx_v_r4)) - (((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * (__pyx_v_m1 + __pyx_v_m2)) * (((((6.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_n_p2) / __pyx_v_r2) + (((6.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_n_p1) / __pyx_v_r2)) - ((((12. * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p2) / __pyx_v_r4))) / __pyx_v_r2)) - (((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (__pyx_v_dq[__pyx_v_k])) * (((((((((5.0 * __pyx_v_p12) * __pyx_v_n_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2)) - (((5.5 * __pyx_v_p12) * __pyx_v_p22) / ((long double)__pyx_v_m1m2sq))) - ((__pyx_v_p1_p2 * __pyx_v_p1_p2) / ((long double)__pyx_v_m1m2sq))) - ((((6.0 * __pyx_v_p1_p2) * __pyx_v_n_p1) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2))) - (((((1.5 * __pyx_v_n_p1) * __pyx_v_n_p1) * __pyx_v_n_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r4))) + (((5.0 * __pyx_v_p12) * __pyx_v_p12) / __pyx_v_m1qu))) / __pyx_v_r3)) + ((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (((((((((((-6.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_p1_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2)) - (((((3.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r4))) + (((((10.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_p12) * __pyx_v_p12) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2))) - ((((6.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_p1_p2) * __pyx_v_n_p1) / (__pyx_v_m1m2sq * __pyx_v_r2))) - (((((3.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p1) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r4))) + ((((((6. * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p1) * __pyx_v_n_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r6))) - ((((((10. * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_p12) * __pyx_v_p12) * __pyx_v_p22) * __pyx_v_p22) / (__pyx_v_m1m2sq * __pyx_v_r4))) + (((((12. * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_p1_p2) * __pyx_v_n_p1) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r4)))) / __pyx_v_r)) / __pyx_v_C4));
 
-    /* "nbody/hamiltonian.pyx":397
+    /* "nbody/hamiltonian.pyx":414
  *         #out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(20.0*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.*b1.p[k]*p12/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq -6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r2) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
  * 
  *         out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*n_p2/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(10*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.0*b1.p[k]*p22/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq - 6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4             # <<<<<<<<<<<<<<
@@ -4853,14 +4949,14 @@ static void __pyx_f_5nbody_11hamiltonian__gradient_2pn(long double *__pyx_v_out,
     (__pyx_v_out[__pyx_t_4]) = ((__pyx_v_out[__pyx_t_4]) + ((((((((0.25 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * ((((-((0.5 * __pyx_v_m1) + (0.5 * __pyx_v_m2))) * ((27.0 * (__pyx_v_b2.p[__pyx_v_k])) + (((6.0 * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_n_p2) / __pyx_v_r2))) / ((long double)__pyx_v_m1m2)) + (((20.0 * __pyx_v_m2) * (__pyx_v_b1.p[__pyx_v_k])) / __pyx_v_m1sq))) / __pyx_v_r2) + ((((0.125 * __pyx_v_5nbody_11hamiltonian_G) * __pyx_v_m1m2) * (((((((((((10.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_p12) * __pyx_v_n_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2)) - (((11.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_p22) / ((long double)__pyx_v_m1m2sq))) - (((2.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_p1_p2) / ((long double)__pyx_v_m1m2sq))) - ((((6.0 * (__pyx_v_b2.p[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2))) - ((((6.0 * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_p1_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r2))) - (((((3. * (__pyx_v_dq[__pyx_v_k])) * __pyx_v_n_p1) * __pyx_v_n_p2) * __pyx_v_n_p2) / (__pyx_v_m1m2sq * __pyx_v_r4))) + (((20.0 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_p12) / __pyx_v_m1qu))) / __pyx_v_r)) + ((((0.375 * (__pyx_v_b1.p[__pyx_v_k])) * __pyx_v_p12) * __pyx_v_p12) / __pyx_v_m1fi)) / __pyx_v_C4));
   }
 
-  /* "nbody/hamiltonian.pyx":399
+  /* "nbody/hamiltonian.pyx":416
  *         out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*n_p2/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(10*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.0*b1.p[k]*p22/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq - 6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
  * 
  *     return             # <<<<<<<<<<<<<<
  */
   goto __pyx_L0;
 
-  /* "nbody/hamiltonian.pyx":344
+  /* "nbody/hamiltonian.pyx":359
  * @cython.nonecheck(False)
  * @cython.cdivision(True)
  * cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:             # <<<<<<<<<<<<<<
@@ -20345,7 +20441,7 @@ if (!__Pyx_RefNanny) {
  * cdef long double Msun = 2e30
  * cdef long double GM = 1.32712440018e20             # <<<<<<<<<<<<<<
  * 
- * cdef inline long double _modulus(long double x, long double y, long double z) nogil:
+ * cdef long double _modulus(long double x, long double y, long double z) nogil:
  */
   __pyx_v_5nbody_11hamiltonian_GM = 1.32712440018e20;
 

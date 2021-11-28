@@ -5,8 +5,8 @@ from sympy.simplify.radsimp import rad_rationalize
 x1, y1, z1, px1, py1, pz1, x2, y2, z2, px2, py2, pz2, m1, m2, G = symbols('x1 y1 z1 px1 py1 pz1 x2 y2 z2 px2 py2 pz2 m1 m2 G')
 
 r = sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
-p1_2 = px1**2+py1**2+pz1**2
-p2_2 = px2**2+py2**2+pz2**2
+p1_2 = px1**2 + py1**2 + pz1**2
+p2_2 = px2**2 + py2**2 + pz2**2
 H_N = p1_2/(2*m1)-(1/2)*G*m1*m2/r
 
 print('d0PN/dx := \n', H_N.diff(x1))

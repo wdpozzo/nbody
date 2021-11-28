@@ -9,8 +9,8 @@ NB. --> the behaviour also depends on dt: the right dynamic will be achieved onl
 '''
 
 #hand compile (for now) with the charateristichs of the simulation
-N = 4000000
-dt = 0.5
+N = 5000000
+dt = 0.2
 
 Neff = N//10
 nbodies = 2
@@ -35,15 +35,15 @@ if 1:
     np.random.seed(129)
 
 #initial conditions (randomized)
-m = np.random.uniform(1e0, 1e1,size = nbodies).astype(np.longdouble)
+m = np.random.uniform(1e0, 5e1,size = nbodies).astype(np.longdouble)
 
-x = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-y = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-z = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
+x = np.random.uniform(- 600.0, 600.0,size = nbodies).astype(np.longdouble)
+y = np.random.uniform(- 600.0, 600.0,size = nbodies).astype(np.longdouble)
+z = np.random.uniform(- 600.0, 600.0,size = nbodies).astype(np.longdouble)
 
-vx = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
-vy = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
-vz = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+vx = np.random.uniform(-0.1, 0.1,size = nbodies).astype(np.longdouble)
+vy = np.random.uniform(-0.1, 0.1,size = nbodies).astype(np.longdouble)
+vz = np.random.uniform(-0.1, 0.1,size = nbodies).astype(np.longdouble)
 
 sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
@@ -182,6 +182,7 @@ f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/
 
 f = plt.figure(figsize=(6,4))
 ax = f.add_subplot(111, projection = '3d')
+#ax.title(r'$m_1 =$ {}, $m_2 =$ {}'.format(m[0], m[1]))
 #colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))    
 ax.plot(q_N[:,0], q_N[:,1], q_N[:,2], label= "Newtonian", alpha=1, lw=1)
 ax.plot(q_1PN[:,0], q_1PN[:,1], q_1PN[:,2], label= "1PN", alpha=1, lw=1)
