@@ -70,16 +70,16 @@ def plot_solutions(t, x1, x2, x1_e, x2_e):
     
     fig, (ax, d) = plt.subplots(2,1, sharex = True, gridspec_kw={'height_ratios': [2, 1]})
     
-    ax.plot(t, x1, color = 'r', lw = 0.5, label = '$m_{1,\ num}$')
-    ax.plot(t, x2, color = 'g', lw = 0.5, label = '$m_{2,\ num}$')
-    ax.plot(t, x1_e, color = 'r', lw = 0.5, ls = '--', label = '$m_{1,\ exact}$')
-    ax.plot(t, x2_e, color = 'g', lw = 0.5, ls = '--', label = '$m_{2,\ exact}$')
+    ax.plot(t, x1, color = 'r', lw = 0.5, label = '$m_{1,num}$')
+    ax.plot(t, x2, color = 'g', lw = 0.5, label = '$m_{2,num}$')
+    ax.plot(t, x1_e, color = 'r', lw = 0.5, ls = '--', label = '$m_{1,exact}$')
+    ax.plot(t, x2_e, color = 'g', lw = 0.5, ls = '--', label = '$m_{2,exact}$')
     
     d.plot(t, x1-x1_e, color = 'r', ls = '--', lw = 0.5)
     d.plot(t, x2-x2_e, color = 'g', ls = '--', lw = 0.5)
     
     ax.set_ylabel('$x(t)$')
-    d.set_ylabel('$x_{sim}(t)-x_{exact}(t)$')
+    d.set_ylabel('$x_{num}(t)-x_{exact}(t)$')
     d.set_xlabel('$t/T$')
     
     ax.grid(True,dashes=(1,3))
