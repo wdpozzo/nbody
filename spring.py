@@ -115,8 +115,6 @@ if __name__ == '__main__':
     dt = (2*np.pi/(np.sqrt(k/m)))/(nsteps/4)
     T  = 2*np.pi/(np.sqrt(k/m))
     
-    thinning = 10
-    
     q0 = np.array([-0.7, 0.7])
     p0 = np.array([0., 0.])
     
