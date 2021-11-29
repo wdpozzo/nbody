@@ -35,7 +35,7 @@ def one_step(q, p, dt, m, k, l):
     mid_q = q
     mid_p = p
     
-    for _ in range(3):
+    for _ in range(7):
         g_q, g_p = gradient(mid_q, mid_p, m, k, l)
     
         new_q = q + g_p*dt2
@@ -132,8 +132,8 @@ if __name__ == '__main__':
     p0 = np.array([-v0, v0])
     
     # Integrator settings
-    nsteps = 1000000
-    n_periods = 4
+    nsteps = 100000
+    n_periods = 40
     
     # Quantities
     omega = np.sqrt(k/(2*m))
