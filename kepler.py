@@ -51,13 +51,13 @@ def gradient(q, p, m):
     return np.array([K*dx, K*dy, K*dz, -K*dx, -K*dy, -K*dz]), np.array([p[0]/m[0], p[1]/m[0], p[2]/m[0], p[3]/m[1], p[4]/m[1], p[5]/m[1]])
 
 @jit
-def one_step(q, p, dt, m):
+def one_step(q, p, dt, m, order):
 
     dt2 = dt/2.
     mid_q = q
     mid_p = p
     
-    for _ in range(3):
+    for _ in range(order):
         g_q, g_p = gradient(mid_q, mid_p, m)
         
         new_q = q + g_p*dt2
@@ -68,7 +68,7 @@ def one_step(q, p, dt, m):
 
     return new_q, new_p
 
-def run(nsteps, dt, q0, p0, m):
+def run(nsteps, dt, q0, p0, m, order):
     
     q = q0
     p = p0
@@ -80,7 +80,7 @@ def run(nsteps, dt, q0, p0, m):
     H[0]        = hamiltonian(q, p, m)
     
     for i in tqdm(range(0,nsteps)):
-        q, p = one_step(q, p, dt, m)
+        q, p = one_step(q, p, dt, m, order)
         solution[i+1] = q
         H[i+1]        = hamiltonian(q, p, m)
     
@@ -124,6 +124,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--nyears', default = 5, type = 'int', help = "Number of years")
     parser.add_option('--cm', default = False, action = 'store_true', help = "Set center of mass velocity to 0")
+    parser.add_option('--cn_order', default = 3, type = 'int', help = "Crank-Nicolson integrator order"
 
     (opts,args) = parser.parse_args()
     
@@ -135,23 +136,27 @@ if __name__ == '__main__':
 
     # Initial conditions
     q0 = np.array([float(sun[0].x.value*AU), float(sun[0].y.value*AU), float(sun[0].z.value*AU), float(earth[0].x.value*AU), float(earth[0].y.value*AU), float(earth[0].z.value*AU)])
-    p0 = np.array([float(sun[1].x.value*AU/day)*m[0], float(sun[1].y.value*AU/day)*m[0], float(sun[1].z.value*AU/day)*m[0], float(earth[1].x.value*AU/day)*m[1], float(earth[1].y.value*AU/day)*m[1], float(earth[1].z.value*AU/day)*m[1]])
+    v0 = np.array([float(sun[1].x.value*AU/day), float(sun[1].y.value*AU/day), float(sun[1].z.value*AU/day), float(earth[1].x.value*AU/day), float(earth[1].y.value*AU/day), float(earth[1].z.value*AU/day)])
     
     if opts.cm:
-        p_cm = p0[:3]*m[0] + p0[3:]
-        p0[0] -= p_cm[0]
-        p0[1] -= p_cm[1]
-        p0[2] -= p_cm[2]
-        p0[3] -= p_cm[0]
-        p0[4] -= p_cm[1]
-        p0[5] -= p_cm[2]
+        v_cm = (v0[:3]*m[0] + v0[3:]*m[1])/np.sum(m)
+        v0[0] -= v_cm[0]
+        v0[1] -= v_cm[1]
+        v0[2] -= v_cm[2]
+        v0[3] -= v_cm[0]
+        v0[4] -= v_cm[1]
+        v0[5] -= v_cm[2]
+    
+    p0 = np.concatenate((v0[:3]*m[0], v0[3:]*m[1]))
     
     # Integrator settings
     n_years = opts.nyears
     nsteps = 365*2*n_years
     dt = day
     
-    s, H = run(nsteps, dt, q0, p0, m)
+    order = int(opts.cn_order)
+    
+    s, H = run(nsteps, dt, q0, p0, m, order)
 
     x1 = np.array([si[:3] for si in s])
     x2 = np.array([si[3:] for si in s])
