@@ -124,7 +124,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--nyears', default = 5, type = 'int', help = "Number of years")
     parser.add_option('--cm', default = False, action = 'store_true', help = "Set center of mass velocity to 0")
-    parser.add_option('--cn_order', default = 3, type = 'int', help = "Crank-Nicolson integrator order"
+    parser.add_option('--cn_order', default = 3, type = 'int', help = "Crank-Nicolson integrator order")
 
     (opts,args) = parser.parse_args()
     
