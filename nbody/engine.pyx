@@ -154,12 +154,18 @@ def run(unsigned int nsteps, long double dt, int order,
     cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
     cdef list solution = []
     cdef list H = []
+    cdef list V = []
+    cdef list T = []
+    cdef long double h, t, v
     
     
     _initialise(bodies, n, mass, x, y, z,
                 px, py, pz, sx, sy, sz)
     solution.append([bodies[i] for i in range(n)])
-    H.append(_hamiltonian(bodies, n, order))
+    h, t, v = _hamiltonian(bodies, n, order)
+    H.append(h)
+    T.append(t)
+    V.append(v)
 
     for i in tqdm(range(1,nsteps)):
         # check for mergers
@@ -168,6 +174,9 @@ def run(unsigned int nsteps, long double dt, int order,
         _one_step(bodies, n, dt, order)
         # store 1 every 10 steps
         solution.append([bodies[i] for i in range(n)])
-        H.append(_hamiltonian(bodies, n, order))
+        h, t, v = _hamiltonian(bodies, n, order)
+        H.append(h)
+        T.append(t)
+        V.append(v)
                      
-    return solution,H
+    return solution,H, T, V

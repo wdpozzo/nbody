@@ -28,7 +28,7 @@ cdef long double _dot(long double *v1, long double *v2) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
+cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
 
     cdef unsigned int i, j, k
     cdef long double T = 0.0
@@ -49,9 +49,8 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
         
         
         H = T + V
-        with gil:
-            print(T, V, H)
-        return H
+
+        return (H, T, V)
 
     if order == 1: 
         # compute the kinetic part
@@ -75,7 +74,7 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
                 
         H = T + V
         
-        return H
+        return (H, T, V)
 
     if order == 2:
         # compute the kinetic part
@@ -99,7 +98,7 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
                 
         H = T + V
         
-        return H
+        return (H, T, V)
 
  
 cdef inline long double _kinetic_energy(body_t b) nogil:
