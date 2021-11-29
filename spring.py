@@ -128,12 +128,12 @@ if __name__ == '__main__':
     # Initial conditions
     dx = opts.dx
     v0 = opts.v0
-    q0 = np.array([-l/2.-dx, l/2.+dx])
-    p0 = np.array([-v0, v0])
+    q0 = np.array([-l/2.-dx, l/2.+dx], dtype = np.float64)
+    p0 = np.array([-v0, v0], dtype = np.float64)
     
     # Integrator settings
     nsteps = 100000
-    n_periods = 40
+    n_periods = 40.
     
     # Quantities
     omega = np.sqrt(k/(2*m))
