@@ -2,6 +2,13 @@ import numpy as np
 from nbody.engine import run
 import pickle
 
+G = 6.67e-11
+c = 3.0e8
+Msun = np.longdouble(2e30)
+AU = np.longdouble(1.5e11) #astronomical unit
+GM = 1.32712440018e20 # G*Msun
+day = np.longdouble(86400) # s
+
 '''
 File to test the behaviour of the integrator for all implemented orders so far.
 
@@ -9,7 +16,7 @@ NB. --> the behaviour also depends on dt: the right dynamic will be achieved onl
 '''
 
 #hand compile (for now) with the charateristichs of the simulation
-N = 4000000
+N = 40000
 dt = 0.5
 
 Neff = N//10
@@ -35,15 +42,15 @@ if 1:
     np.random.seed(129)
 
 #initial conditions (randomized)
-m = np.random.uniform(1e0, 1e1,size = nbodies).astype(np.longdouble)
+m = np.random.uniform(1e0*Msun, 5e1*Msun,size = nbodies).astype(np.longdouble)
 
-x = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-y = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-z = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
+x = np.random.uniform(- 1000.0*AU, 1000.0*AU,size = nbodies).astype(np.longdouble)
+y = np.random.uniform(- 1000.0*AU, 1000.0*AU,size = nbodies).astype(np.longdouble)
+z = np.random.uniform(- 1000.0*AU, 1000.0*AU,size = nbodies).astype(np.longdouble)
 
-vx = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
-vy = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
-vz = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+vx = np.random.uniform(-0.1*AU/day, 0.1*AU/day,size = nbodies).astype(np.longdouble)
+vy = np.random.uniform(-0.1*AU/day, 0.1*AU/day,size = nbodies).astype(np.longdouble)
+vz = np.random.uniform(-0.1*AU/day, 0.1*AU/day,size = nbodies).astype(np.longdouble)
 
 sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
@@ -103,7 +110,7 @@ ax.set_ylabel('Hamiltonian')
 ax.grid()
 ax.legend()
 #colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
-f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonian.pdf', bbox_inches='tight')
+f.savefig('./SimulationsHamiltonian.pdf', bbox_inches='tight')
 
 H_1PN_N = []
 H_2PN_N = []
@@ -126,7 +133,7 @@ ax.set_ylabel('Normalized Hamiltonian')
 ax.grid()
 ax.legend()
 #colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
-f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonianNorm.pdf', bbox_inches='tight')
+f.savefig('./SimulationsHamiltonianNorm.pdf', bbox_inches='tight')
 
 #prepare data to evaluate the radius
 qs_N = [[] for x in range(nbodies)]
@@ -178,7 +185,7 @@ ax.set_ylabel('Orbital radius')
 ax.grid()
 ax.legend()
 #colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
-f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsOrbRadius.pdf', bbox_inches='tight')
+f.savefig('./SimulationsOrbRadius.pdf', bbox_inches='tight')
 
 f = plt.figure(figsize=(6,4))
 ax = f.add_subplot(111, projection = '3d')
@@ -191,6 +198,6 @@ ax.set_ylabel('y [km]')
 ax.set_zlabel('z [km]')
 ax.legend()
 
-f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsOrbits.pdf', bbox_inches='tight')
+f.savefig('./SimulationsOrbits.pdf', bbox_inches='tight')
 
 plt.show()

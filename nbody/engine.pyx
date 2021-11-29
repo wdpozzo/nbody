@@ -170,5 +170,4 @@ def run(unsigned int nsteps, long double dt, int order,
         if i%10 == 0:
             solution.append([bodies[i] for i in range(n)])
             H.append(_hamiltonian(bodies, n, order))
-                     
     return solution,H

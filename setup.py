@@ -5,6 +5,13 @@ from setuptools.command.build_ext import build_ext as _build_ext
 from Cython.Build import cythonize
 import os
 
+# Thanks to @tryptofame for proposing an updated snippet
+from Cython.Compiler.Options import get_directive_defaults
+directive_defaults = get_directive_defaults()
+
+directive_defaults['linetrace'] = True
+directive_defaults['binding'] = True
+
 # see https://stackoverflow.com/a/21621689/1862861 for why this is here
 class build_ext(_build_ext):
     def finalize_options(self):

@@ -40,14 +40,14 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
         # compute the kinetic part
         for i in range(N):
             T += _kinetic_energy(bodies[i])
+
             # and the potential
             for j in range(i+1,N):
             
                 V += _potential_0pn(bodies[i], bodies[j])
-                
-            H = T + V
-            
-            return H 
+        H = T + V
+        
+        return H 
 
     if order == 1:
         # compute the kinetic part
@@ -65,9 +65,9 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
                 V += _potential_0pn(bodies[i], bodies[j])
                 V += _potential_1pn(bodies[i], bodies[j])
                 
-            H = T + V
-            
-            return H 
+        H = T + V
+        
+        return H
 
     if order == 2:
         # compute the kinetic part
@@ -85,9 +85,9 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
                 V += _potential_1pn(bodies[i], bodies[j])                
                 V += _potential_2pn(bodies[i], bodies[j])
                 
-            H = T + V
-            
-            return H 
+        H = T + V
+        
+        return H
 
  
 cdef inline long double _kinetic_energy(body_t b) nogil:
