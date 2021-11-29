@@ -5,8 +5,10 @@ from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
 from nbody.body cimport body_t, merger, _merge_bodies
 
-cdef long double G = 1.0 #6.67e-11
-cdef long double C = 1.0 #3.0e8
+import astropy.units as u
+
+cdef long double G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #* (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
+cdef long double C = 3.0e8
 cdef long double Msun = 2e30
 cdef long double GM = 1.32712440018e20
 
@@ -42,16 +44,14 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
             T += _kinetic_energy(bodies[i])
             # and the potential
             
-            for j in range (N):
-            
-                if (i==j):               
-                    V += 0
-                else:
-                    V += _potential_0pn(bodies[i], bodies[j])  
-              
-            H = T + V
-            
-            return H 
+            for j in range (i+1,N):
+                V += _potential_0pn(bodies[i], bodies[j])
+        
+        
+        H = T + V
+        with gil:
+            print(T, V, H)
+        return H
 
     if order == 1: 
         # compute the kinetic part
@@ -73,9 +73,9 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
                   V += _potential_0pn(bodies[i], bodies[j])
                   V += _potential_1pn(bodies[i], bodies[j])
                 
-            H = T + V
-            
-            return H 
+        H = T + V
+        
+        return H
 
     if order == 2:
         # compute the kinetic part
@@ -97,9 +97,9 @@ cdef long double _hamiltonian(body_t *bodies, unsigned int N, int order) nogil:
                     V += _potential_1pn(bodies[i], bodies[j])                
                     V += _potential_2pn(bodies[i], bodies[j])
                 
-            H = T + V
-            
-            return H 
+        H = T + V
+        
+        return H
 
  
 cdef inline long double _kinetic_energy(body_t b) nogil:
@@ -139,7 +139,7 @@ cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
     
-    return - 0.5*G*b1.mass*b2.mass/r
+    return - G*b1.mass*b2.mass/r
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -223,7 +223,7 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
             if i != j:
                 _gradient(tmp, bodies[i], bodies[j], order)
                 for k in range(6):
-                    out[i][k] += tmp[k] 
+                    out[i][k] += tmp[k]
      
     free(tmp)
       
@@ -276,7 +276,7 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r2 = r*r
     cdef long double r3 = r*r2
     
-    cdef long double prefactor = 0.5*G*b1.mass*b2.mass/r3
+    cdef long double prefactor = G*b1.mass*b2.mass/r3
     
     
     # first 3 elements are the derivative wrt to q

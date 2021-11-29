@@ -4,8 +4,10 @@ from libc.stdlib cimport malloc, free, realloc
 from libc.stdio cimport printf
 from nbody.hamiltonian cimport _modulus
 
-cdef long double G = 1.0#6.67e-11
-cdef long double C = 1.0#3.0e8
+import astropy.units as u
+
+cdef long double G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value
+cdef long double C = 3.0e8 * (86400) / 1.5e11
 cdef long double Msun = 2e30
 cdef long double GM = 1.32712440018e20
 

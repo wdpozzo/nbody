@@ -167,8 +167,7 @@ def run(unsigned int nsteps, long double dt, int order,
         # evolve forward in time
         _one_step(bodies, n, dt, order)
         # store 1 every 10 steps
-        if i%10 == 0:
-            solution.append([bodies[i] for i in range(n)])
-            H.append(_hamiltonian(bodies, n, order))
+        solution.append([bodies[i] for i in range(n)])
+        H.append(_hamiltonian(bodies, n, order))
                      
     return solution,H
