@@ -75,14 +75,14 @@ if __name__ == '__main__':
     (opts,args) = parser.parse_args()
     
     
-    t = Time('2021-06-21T00:00:00')#datetime.now())
+    t = Time(datetime.now())#'2021-06-21T00:00:00')
 
-    m = np.array([1.5*Msun, (M_earth/M_sun).value*Msun]).astype(np.longdouble)
+    m = np.array([1*Msun, (M_earth/M_sun).value*Msun]).astype(np.longdouble)
     
     
     earth = get_body_barycentric_posvel('earth', t)
     sun   = get_body_barycentric_posvel('sun', t)
-    print(earth)
+
     x = np.array([sun[0].x.value*AU, earth[0].x.value*AU]).astype(np.longdouble)
     y = np.array([sun[0].y.value*AU, earth[0].y.value*AU]).astype(np.longdouble)
     z = np.array([sun[0].z.value*AU, earth[0].z.value*AU]).astype(np.longdouble)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     v1 = np.sqrt(vx[1]**2+vy[1]**2+vz[1]**2)
     d  = np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2+(z[1]-z[0])**2)
     
-    E = 0.5*(v0**2*m[0] + v1**2*m[1])- G*m[1]*m[0]/d
+    E = 0.5*(v0**2*m[0] + v1**2*m[1]) - G*m[1]*m[0]/d
     print(E)
 
     dt = opts.dt

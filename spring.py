@@ -1,8 +1,11 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
+from optparse import OptionParser
+
 from numba import jit
 from tqdm import tqdm
 
+import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from distutils.spawn import find_executable
 
@@ -19,11 +22,11 @@ rcParams["grid.alpha"] = 0.6
 
 @jit
 def hamiltonian(q, p, m, k, l):
-    return np.sum(p**2/(2*m)) + k*((q[1] - q[0]) - l)**2
+    return np.sum(p**2/(2*m)) + 0.5*k*((q[1] - q[0]) - l)**2
 
 @jit
 def gradient(q, p, m, k, l):
-    return np.array([-2*k*(q[1] - q[0] - l), 2*k*(q[1] - q[0] - l)]), p/m
+    return np.array([-k*(q[1] - q[0] - l), k*(q[1] - q[0] - l)]), p/m
 
 @jit
 def one_step(q, p, dt, m, k, l):
@@ -62,8 +65,8 @@ def run(nsteps, dt, q0, p0, m, k, l):
     return np.array(solution), np.array(H)
 
 def exact_solution(t, q0, p0, m, k, l):
-    omega = np.sqrt(k/m)
-    x2 = (q0[1] - q0[0] - l)*np.cos(omega*t)/2. + (p0[1] - p0[0])*np.sin(omega*t)/(2*omega) + l/2.
+    omega = np.sqrt(k/(2*m))
+    x2 = (q0[1] - q0[0] - l)*np.cos(omega*t)/2. + (p0[1] - p0[0])*np.sin(omega*t)/(4*m*omega) + l/2.
     return -x2, x2
 
 def plot_solutions(t, x1, x2, x1_e, x2_e):
@@ -107,16 +110,35 @@ def plot_hamiltonian(t, H):
 
 if __name__ == '__main__':
     
-    k = 65
-    m = 0.68
-    l = 1
-
-    nsteps = 1000000
-    dt = (2*np.pi/(np.sqrt(k/m)))/(nsteps/4)
-    T  = 2*np.pi/(np.sqrt(k/m))
+    parser = OptionParser()
+    parser.add_option('--steps', default = 1000000, type = 'int', help = "Number of steps to compute")
+    parser.add_option('--periods', default = 4, type = 'int', help = "Number of oscillations")
+    parser.add_option('-k', default = 65, type = 'float', help = "Spring stiffness")
+    parser.add_option('-m', default = 1, type = 'float', help = "Mass of a single particle (equal masses)")
+    parser.add_option('--l0', default = 1, type = 'float', help = "Spring length")
+    parser.add_option('--dx', default = 0, type = 'float', help = "Initial deformation")
+    parser.add_option('--v0', default = 4, type = 'float', help = "Initial velocity")
+    (opts,args) = parser.parse_args()
     
-    q0 = np.array([-0.7, 0.7])
-    p0 = np.array([0., 0.])
+    # System parameters
+    k = opts.k
+    m = opts.m
+    l = opts.l0
+    
+    # Initial conditions
+    dx = opts.dx
+    v0 = opts.v0
+    q0 = np.array([-l/2.-dx, l/2.+dx])
+    p0 = np.array([-v0, v0])
+    
+    # Integrator settings
+    nsteps = 1000000
+    n_periods = 4
+    
+    # Quantities
+    omega = np.sqrt(k/(2*m))
+    T  = 2*np.pi/omega
+    dt = n_periods*T/(nsteps)
     
     s, H = run(nsteps, dt, q0, p0, m, k, l)
 
@@ -127,5 +149,5 @@ if __name__ == '__main__':
     
     x1_exact, x2_exact = exact_solution(t, q0, p0, m, k, l)
     
-    plot_solutions(t/T, x1, x2, x1_exact, x2_exact)
-    plot_hamiltonian(t/T, H)
+    plot_solutions(t, x1, x2, x1_exact, x2_exact)
+    plot_hamiltonian(t, H)
