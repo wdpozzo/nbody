@@ -8,7 +8,7 @@ from tqdm import tqdm
 from datetime import datetime
 from astropy.time import Time
 from astropy.coordinates import get_body_barycentric_posvel
-from astropy.constants import M_earth, M_sun, au
+from astropy.constants import M_earth, M_sun, au, M_jup
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -38,7 +38,9 @@ def hamiltonian(q, p, m):
     dy = q[1] - q[4]
     dz = q[2] - q[5]
     r  = np.sqrt(dx**2 + dy**2 + dz**2)
-    return np.sum(p[:3]**2/(2*m[0])) + np.sum(p[3:]**2/(2*m[1])) - G*np.prod(m)/r
+    T = np.sum(p[:3]**2/(2*m[0])) + np.sum(p[3:]**2/(2*m[1]))
+    V = - G*np.prod(m)/r
+    return T + V, V, T
 
 @jit
 def gradient(q, p, m):
@@ -73,23 +75,26 @@ def run(nsteps, dt, q0, p0, m, order):
     q = q0
     p = p0
     
-    solution = np.empty(nsteps+1, dtype = np.ndarray)
-    H        = np.empty(nsteps+1, dtype = np.ndarray)
+    solution = np.empty(nsteps, dtype = np.ndarray)
+    H        = np.empty(nsteps, dtype = np.ndarray)
+    V        = np.empty(nsteps, dtype = np.ndarray)
+    T        = np.empty(nsteps, dtype = np.ndarray)
     
-    solution[0] = q
-    H[0]        = hamiltonian(q, p, m)
+    solution[0]      = q
+    H[0], V[0], T[0] = hamiltonian(q, p, m)
     
-    for i in tqdm(range(0,nsteps)):
-        q, p = one_step(q, p, dt, m, order)
-        solution[i+1] = q
-        H[i+1]        = hamiltonian(q, p, m)
+    for i in tqdm(range(1,nsteps)):
+        q, p             = one_step(q, p, dt, m, order)
+        solution[i]      = q
+        H[i], V[i], T[i] = hamiltonian(q, p, m)
     
-    return solution, np.array(H)
+    return solution, H, V, T
 
-#def exact_solution(t, q0, p0):
-#    omega = np.sqrt(k/(2*m))
-#    x2 = (q0[1] - q0[0] - l)*np.cos(omega*t)/2. + (p0[1] - p0[0])*np.sin(omega*t)/(4*m*omega) + l/2.
-#    return -x2, x2
+def distance(v1, v2):
+    d = np.zeros(len(v1))
+    for i, (a,b) in enumerate(zip(v1, v2)):
+        d[i] = np.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2)
+    return d
 
 def plot_solutions(x1, x2):
 
@@ -104,14 +109,20 @@ def plot_solutions(x1, x2):
 
     f.savefig('./two_bodies.pdf', bbox_inches = 'tight')
     
-def plot_hamiltonian(t, H):
+def plot_hamiltonian(t, H, V, T, dist):
 
-    fig, ax = plt.subplots()
+    fig, (ax, e, d) = plt.subplots(3,1, sharex = True, gridspec_kw={'height_ratios': [2, 2, 1]})
+    fig.subplots_adjust(hspace=.0)
     
-    ax.plot(t, H, lw = 0.5)
-    ax.plot(t, np.ones(len(H))*H[0], lw = 0.1, ls = '--', label = '$H(0)$')
+    ax.plot(t, H, lw = 0.1, color = 'b', label = '$H$')
+    e.plot(t, T, lw = 0.1, color = 'g', label = '$T$')
+    e.plot(t, V, lw = 0.1, color = 'r', label = '$V$')
+    ax.plot(t, np.ones(len(H))*H[0], lw = 0.5, ls = '--', color = 'k', label = '$H(0)$')
+    d.plot(t, dist/AU, lw = 0.5, color = 'g')
     
-    ax.set_xlabel('$t\ [yr]$')
+    e.set_ylabel('$E(t)$')
+    d.set_xlabel('$t\ [yr]$')
+    d.set_ylabel('$d(t)$')
     ax.set_ylabel('$H(t)$')
     
     ax.grid(True,dashes=(1,3))
@@ -124,7 +135,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--nyears', default = 5, type = 'int', help = "Number of years")
     parser.add_option('--cm', default = False, action = 'store_true', help = "Set center of mass velocity to 0")
-    parser.add_option('--cn_order', default = 3, type = 'int', help = "Crank-Nicolson integrator order")
+    parser.add_option('--cn_order', default = 7, type = 'int', help = "Crank-Nicolson integrator order")
 
     (opts,args) = parser.parse_args()
     
@@ -156,12 +167,16 @@ if __name__ == '__main__':
     
     order = int(opts.cn_order)
     
-    s, H = run(nsteps, dt, q0, p0, m, order)
+    s, H, V, T = run(nsteps, dt, q0, p0, m, order)
+    print(np.max(T) - np.min(T), np.max(V)-np.min(V))
 
     x1 = np.array([si[:3] for si in s])
     x2 = np.array([si[3:] for si in s])
     
     t = np.arange(len(s))*dt
-
+    d = distance(x1, x2)
+    
     plot_solutions(x1, x2)
-    plot_hamiltonian(t/(2*365*day), H)
+    plot_hamiltonian(t/(2*365*day), H, V, T, d)
+    
+    
