@@ -115,8 +115,8 @@ def plot_hamiltonian(t, H, V, T, dist):
     fig.subplots_adjust(hspace=.0)
     
     ax.plot(t, H, lw = 0.1, color = 'b', label = '$H$')
-    e.plot(t, T, lw = 0.1, color = 'g', label = '$T$')
-    e.plot(t, V, lw = 0.1, color = 'r', label = '$V$')
+    e.plot(t, T - np.mean(T), lw = 0.1, color = 'g', label = '$T$')
+    e.plot(t, V - np.mean(V), lw = 0.1, color = 'r', label = '$V$')
     ax.plot(t, np.ones(len(H))*H[0], lw = 0.5, ls = '--', color = 'k', label = '$H(0)$')
     d.plot(t, dist/AU, lw = 0.5, color = 'g')
     
@@ -127,6 +127,9 @@ def plot_hamiltonian(t, H, V, T, dist):
     
     ax.grid(True,dashes=(1,3))
     ax.legend(loc=0,frameon=False,fontsize=10)
+    e.grid(True,dashes=(1,3))
+    e.legend(loc=0,frameon=False,fontsize=10)
+    d.grid(True,dashes=(1,3))
     
     fig.savefig('./kepler_hamiltonian.pdf', bbox_inches = 'tight')
 
@@ -168,7 +171,7 @@ if __name__ == '__main__':
     order = int(opts.cn_order)
     
     s, H, V, T = run(nsteps, dt, q0, p0, m, order)
-    print(np.max(T) - np.min(T), np.max(V)-np.min(V))
+#    print(np.max(T) - np.min(T), np.max(V)-np.min(V))
 
     x1 = np.array([si[:3] for si in s])
     x2 = np.array([si[3:] for si in s])
