@@ -45,7 +45,7 @@ def gradient(q, p, m):
     dx = q[0] - q[3]
     dy = q[1] - q[4]
     dz = q[2] - q[5]
-    r3 = np.sqrt(dx**2 + dy**2 + dz**2)**3 + 1e7
+    r3 = np.sqrt(dx**2 + dy**2 + dz**2)**3
     M = np.prod(m)
     K = G*M/r3
     return np.array([K*dx, K*dy, K*dz, -K*dx, -K*dy, -K*dz]), np.array([p[0]/m[0], p[1]/m[0], p[2]/m[0], p[3]/m[1], p[4]/m[1], p[5]/m[1]])
@@ -109,7 +109,7 @@ def plot_hamiltonian(t, H):
     fig, ax = plt.subplots()
     
     ax.plot(t, H, lw = 0.5)
-    ax.plot(t, np.ones(len(H))*H[0], lw = 0.5, ls = '--', label = '$H(0)$')
+    ax.plot(t, np.ones(len(H))*H[0], lw = 0.1, ls = '--', label = '$H(0)$')
     
     ax.set_xlabel('$t\ [yr]$')
     ax.set_ylabel('$H(t)$')
