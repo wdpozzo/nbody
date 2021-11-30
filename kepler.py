@@ -30,7 +30,7 @@ rcParams["grid.alpha"] = 0.6
 G = 6.67e-11
 Msun = 2e30
 AU = 1.5e11
-day = 86400.
+day = 86400
 
 @jit
 def hamiltonian(q, p, m):
@@ -47,9 +47,9 @@ def gradient(q, p, m):
     dx = q[0] - q[3]
     dy = q[1] - q[4]
     dz = q[2] - q[5]
-    r3 = np.sqrt(dx**2 + dy**2 + dz**2)**3
+    r = np.sqrt(dx**2 + dy**2 + dz**2)
     M = np.prod(m)
-    K = G*M/r3
+    K = G*M/(r*r*r)
     return np.array([K*dx, K*dy, K*dz, -K*dx, -K*dy, -K*dz]), np.array([p[0]/m[0], p[1]/m[0], p[2]/m[0], p[3]/m[1], p[4]/m[1], p[5]/m[1]])
 
 @jit
@@ -136,9 +136,11 @@ def plot_hamiltonian(t, H, V, T, dist):
 if __name__ == '__main__':
     
     parser = OptionParser()
-    parser.add_option('--nyears', default = 5, type = 'int', help = "Number of years")
+    parser.add_option('--years', default = 1, type = 'int', help = "Number of years")
     parser.add_option('--cm', default = False, action = 'store_true', help = "Set center of mass velocity to 0")
     parser.add_option('--cn_order', default = 7, type = 'int', help = "Crank-Nicolson integrator order")
+    parser.add_option('--dt', default = 1, type = 'int', help = "Number of secnds for each dt")
+    parser.add_option('-p', dest = "postprocessing", default = False, action = 'store_true', help = "Postprocessing")
 
     (opts,args) = parser.parse_args()
     
@@ -154,29 +156,41 @@ if __name__ == '__main__':
     
     if opts.cm:
         v_cm = (v0[:3]*m[0] + v0[3:]*m[1])/np.sum(m)
-        v0[0] -= v_cm[0]
-        v0[1] -= v_cm[1]
-        v0[2] -= v_cm[2]
-        v0[3] -= v_cm[0]
-        v0[4] -= v_cm[1]
-        v0[5] -= v_cm[2]
-    
+        v0[:3] -= v_cm
+        v0[3:] -= v_cm
+        
     p0 = np.concatenate((v0[:3]*m[0], v0[3:]*m[1]))
     
     # Integrator settings
-    n_years = opts.nyears
-    nsteps = 365*2*n_years
-    dt = day
+    n_years = int(opts.years)
+    nsteps = int(366*2*n_years*day/int(opts.dt))
+    dt = opts.dt
     
     order = int(opts.cn_order)
     
-    s, H, V, T = run(nsteps, dt, q0, p0, m, order)
-#    print(np.max(T) - np.min(T), np.max(V)-np.min(V))
+    if not opts.postprocessing:
+        s, H, V, T = run(nsteps, dt, q0, p0, m, order)
 
-    x1 = np.array([si[:3] for si in s])
-    x2 = np.array([si[3:] for si in s])
+        x1 = np.array([si[:3] for si in s])
+        x2 = np.array([si[3:] for si in s])
+
+        t = np.arange(len(x1))*dt
+        
+        np.savetxt('./orbit.txt', np.array([t, x1[:,0], x1[:,1], x1[:,2], x2[:,0], x2[:,1], x2[:,2], H, V, T]).T, header = 't x1x x1y x1z x2x x2y x2z H V T')
     
-    t = np.arange(len(s))*dt
+    else:
+        sol = np.genfromtxt('./orbit.txt', names = True)
+        
+        t  = sol['t']
+        
+        x1 = np.array([sol['x1x'], sol['x1y'], sol['x1z']]).T
+        x2 = np.array([sol['x2x'], sol['x2y'], sol['x2z']]).T
+        
+        H  = sol['H']
+        V  = sol['V']
+        T  = sol['T']
+        
+    
     d = distance(x1, x2)
     
     plot_solutions(x1, x2)
