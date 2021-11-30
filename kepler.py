@@ -38,7 +38,7 @@ def hamiltonian(q, p, m):
     dy = q[1] - q[4]
     dz = q[2] - q[5]
     r  = np.sqrt(dx**2 + dy**2 + dz**2)
-    T = np.sum([np.sum(p[i*3:(i+1)*3]**2/(2*mi)) for i, mi in enumerate(m)])
+    T = np.sum(p[:3]/m[0]) + np.sum(p[3:]/m[1])
     V = - G*np.prod(m)/r
     return T + V, V, T
 
