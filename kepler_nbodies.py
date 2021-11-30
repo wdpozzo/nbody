@@ -131,7 +131,7 @@ def distance(v1, v2):
     return d
 
 def plot_solutions(solutions):
-    colors = iter(cm.rainbow(np.linspace(0, 1, 2)))
+    colors = iter(cm.rainbow(np.linspace(0, 1, len(solutions))))
     f = plt.figure(figsize=(6,4))
     ax = f.add_subplot(111, projection = '3d')
 
@@ -147,9 +147,9 @@ def plot_hamiltonian(t, H, V, T):
     fig, (ax, e) = plt.subplots(2,1, sharex = True)
     fig.subplots_adjust(hspace=.0)
     
-    ax.plot(t, H, lw = 0.1, color = 'b', label = '$H$')
-    e.plot(t, T - np.mean(T), lw = 0.1, color = 'g', label = '$T$')
-    e.plot(t, V - np.mean(V), lw = 0.1, color = 'r', label = '$V$')
+    ax.plot(t, H, lw = 0.5, label = '$H$')
+    e.plot(t, T - np.mean(T), lw = 0.5, color = 'g', label = '$T$')
+    e.plot(t, V - np.mean(V), lw = 0.5, color = 'r', label = '$V$')
     ax.plot(t, np.ones(len(H))*H[0], lw = 0.5, ls = '--', color = 'k', label = '$H(0)$')
     
     e.set_ylabel('$E(t)$')
@@ -187,22 +187,22 @@ if __name__ == '__main__':
     
     t = Time(datetime.now())#'2021-06-21T00:00:00')
 
-    m = np.array([1*Msun, (M_earth/M_sun).value*Msun])
-    planet_names = ['earth', 'sun']
+    m = np.array([1*Msun, (M_earth/M_sun).value*Msun, (M_jup/M_sun).value*Msun])
+    planet_names = ['sun', 'earth', 'jupiter']
     
     planets = np.array([get_body_barycentric_posvel(planet, t) for planet in planet_names])
     
     # Initial conditions
-    q0 = np.concatenate((float(planet[0].x.value*AU), float(planet[0].y.value*AU), float(planet[0].z.value*AU) for planet in planets))
-    v0 = np.concatenate((float(planet[1].x.value*AU/day), float(planet[1].y.value*AU/day), float(planet[1].z.value*AU/day) for planet in planets))
+    q0 = np.concatenate([np.array([float(planet[0].x.value*AU), float(planet[0].y.value*AU), float(planet[0].z.value*AU)]) for planet in planets])
+    v0 = np.concatenate([np.array([float(planet[1].x.value*AU/day), float(planet[1].y.value*AU/day), float(planet[1].z.value*AU/day)]) for planet in planets])
     
     if opts.cm:
-        v_cm = (v0[:3]*m[0] + v0[3:]*m[1])/np.sum(m)
+        v_cm = np.sum([v0[3*i:3*(i+1)]*m[i] for i in range(len(m))])/np.sum(m)
         for i in range(len(m)):
             v0[3*i:3*(i+1)] -= v_cm
         
-    p0 = np.concatenate((v0[3*i:3(i+1)]*m[i] for i in range(len(m))))
-    
+    p0 = np.concatenate([v0[3*i:3*(i+1)]*m[i] for i in range(len(m))])
+
     # Integrator settings
     n_years = int(opts.years)
     nsteps = int(365*2*n_years*day/int(opts.dt))
