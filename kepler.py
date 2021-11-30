@@ -33,6 +33,21 @@ AU = 1.5e11
 day = 86400
 
 @jit
+def angular_momentum(q, p):
+    q1 = q[:3]
+    q2 = q[3:]
+    p1 = p[:3]
+    p2 = p[3:]
+    
+    L1 = np.array([(q1[1]*p1[2] - q1[2]*p1[1]), -(q1[0]*p1[2] - q1[2]*p1[0]), (q1[0]*p1[1] - q1[1]*p1[0])])
+    L2 = np.array([(q2[1]*p2[2] - q2[2]*p2[1]), -(q2[0]*p2[2] - q2[2]*p2[0]), (q2[0]*p1[1] - q2[1]*p2[0])])
+    
+    L = L1 + L2
+    
+    return np.sqrt(np.sum(L**2))
+    
+
+@jit
 def hamiltonian(q, p, m):
     dx = q[0] - q[3]
     dy = q[1] - q[4]
@@ -79,16 +94,19 @@ def run(nsteps, dt, q0, p0, m, order):
     H        = np.empty(nsteps, dtype = np.ndarray)
     V        = np.empty(nsteps, dtype = np.ndarray)
     T        = np.empty(nsteps, dtype = np.ndarray)
+    L        = np.empty(nsteps, dtype = np.ndarray)
     
     solution[0]      = q
     H[0], V[0], T[0] = hamiltonian(q, p, m)
+    L[0]             = angular_momentum(q, p)
     
     for i in tqdm(range(1,nsteps)):
         q, p             = one_step(q, p, dt, m, order)
         solution[i]      = q
+        L[i]             = angular_momentum(q, p)
         H[i], V[i], T[i] = hamiltonian(q, p, m)
     
-    return solution, H, V, T
+    return solution, H, V, T, L
 
 def distance(v1, v2):
     d = np.zeros(len(v1))
@@ -133,13 +151,24 @@ def plot_hamiltonian(t, H, V, T, dist):
     
     fig.savefig('./kepler_hamiltonian.pdf', bbox_inches = 'tight')
 
+def plot_angular_momentum(t, L):
+    
+    fig, ax = plt.subplots()
+    
+    ax.plot(t, L, lw = 0.5)
+    
+    ax.set_ylabel('$L(t)$')
+    ax.set_xlabel('$t\ [yr]$')
+    ax.grid(True,dashes=(1,3))
+    
+    fig.savefig('./angular_momentum.pdf', bbox_inches = 'tight')
 if __name__ == '__main__':
     
     parser = OptionParser()
     parser.add_option('--years', default = 1, type = 'int', help = "Number of years")
     parser.add_option('--cm', default = False, action = 'store_true', help = "Set center of mass velocity to 0")
     parser.add_option('--cn_order', default = 7, type = 'int', help = "Crank-Nicolson integrator order")
-    parser.add_option('--dt', default = 1, type = 'int', help = "Number of secnds for each dt")
+    parser.add_option('--dt', default = 1, type = 'int', help = "Number of seconds for each dt")
     parser.add_option('-p', dest = "postprocessing", default = False, action = 'store_true', help = "Postprocessing")
 
     (opts,args) = parser.parse_args()
@@ -163,20 +192,20 @@ if __name__ == '__main__':
     
     # Integrator settings
     n_years = int(opts.years)
-    nsteps = int(366*2*n_years*day/int(opts.dt))
+    nsteps = int(365*2*n_years*day/int(opts.dt))
     dt = opts.dt
     
     order = int(opts.cn_order)
     
     if not opts.postprocessing:
-        s, H, V, T = run(nsteps, dt, q0, p0, m, order)
+        s, H, V, T, L = run(nsteps, dt, q0, p0, m, order)
 
         x1 = np.array([si[:3] for si in s])
         x2 = np.array([si[3:] for si in s])
 
         t = np.arange(len(x1))*dt
         
-        np.savetxt('./orbit.txt', np.array([t, x1[:,0], x1[:,1], x1[:,2], x2[:,0], x2[:,1], x2[:,2], H, V, T]).T, header = 't x1x x1y x1z x2x x2y x2z H V T')
+        np.savetxt('./orbit.txt', np.array([t, x1[:,0], x1[:,1], x1[:,2], x2[:,0], x2[:,1], x2[:,2], H, V, T, L]).T, header = 't x1x x1y x1z x2x x2y x2z H V T, L')
     
     else:
         sol = np.genfromtxt('./orbit.txt', names = True)
@@ -189,11 +218,14 @@ if __name__ == '__main__':
         H  = sol['H']
         V  = sol['V']
         T  = sol['T']
+        L  = sol['L']
+        
         
     
     d = distance(x1, x2)
     
     plot_solutions(x1, x2)
     plot_hamiltonian(t/(2*365*day), H, V, T, d)
+    plot_angular_momentum(t/(2*365*day), L)
     
     
