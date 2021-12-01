@@ -6,10 +6,10 @@ from nbody.hamiltonian cimport _modulus
 
 import astropy.units as u
 
-cdef long double G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value
-cdef long double C = (3.0e8*(u.m/u.s)).to(u.AU/u.d).value
-cdef long double Msun = 2e30
-cdef long double GM = 1.32712440018e20
+cdef long double G = 6.67e-11 #(6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value
+cdef long double C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
+cdef long double Msun = 2e30 #(2e30*u.kg).to(u.solMass).value
+#cdef long double GM = 1.32712440018e20
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
