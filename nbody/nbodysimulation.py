@@ -7,26 +7,33 @@ from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
 
-G = 1  #6.67e-11
-C = 1 #3.0e8 
-Msun = 2e30
-GM = 1.32712440018e20
+#import astropy.units as u
+
+G = 6.67e-11 #(6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #* (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
+C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
+Ms = 2.0e30 #(2e30*u.kg).to(u.solMass).value
+#GM = 1.32712440018e20
+
+au = 149597870700. 
 
 if __name__=="__main__":
     parser = OptionParser()
     parser.add_option('-n', default=9, type='int', help='n bodies')
     parser.add_option('--steps', default=1000, type='int', help='n steps')
-    parser.add_option('--order', default=0, type='int', help='PN order')
+    parser.add_option('--PN_order', default=0, type='int', help='PN order')
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default=0, type='int', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
     parser.add_option('--plot', default=1, type='int', help='plot')
     parser.add_option('--cm', default=1, type='int', help='plot')
     parser.add_option('--seed', default=1, type='int', help='seed')
+    parser.add_option('--ICN_order', default=7, type='int', help='seed')
     (opts,args) = parser.parse_args()
 
     nbodies = opts.n
+    ICN_it = opts.ICN_order
     np.random.seed(opts.seed)
+    
     
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -42,46 +49,46 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    '''
-    m[0], m[1] = 1e-1, 1e-3 #Msun*(10e6), 10*Msun
+    m[0], m[1] = 10.*Ms, 10.*Ms
     
-    x[0], x[1] = 50., -50.
-    y[0], y[1] = 50., 50.
+    x[0], x[1] = 0.025*au, -0.025*au
+    y[0], y[1] = -0.025*au, 0.025*au
     z[0], z[1] = 0., 0.
 
-    vx[0], vx[1] = 1e-4, 1e-3
-    vy[0], vy[1] = -1e-4, 1e-3
+    vx[0], vx[1] = 1e4, -1e4
+    vy[0], vy[1] = 3e4, -3e4
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
     
-    print(x,y,z,vx,vy,vz,sx,sy,sz)
+    #print(x,y,z,vx,vy,vz,sx,sy,sz)
+    
     '''
+    m = np.random.uniform(1e0, 1e0,size = nbodies).astype(np.longdouble)
 
-    m = np.random.uniform(1e0, 1e1,size = nbodies).astype(np.longdouble)
+    x = np.random.uniform(- 2.0, 2.0,size = nbodies).astype(np.longdouble)
+    y = np.random.uniform(- 2.0, 2.0,size = nbodies).astype(np.longdouble)
+    z = np.random.uniform(- 2.0, 2.0,size = nbodies).astype(np.longdouble)
 
-    x = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-    y = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-    z = np.random.uniform(- 1000.0, 1000.0,size = nbodies).astype(np.longdouble)
-
-    vx = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
-    vy = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
-    vz = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+    vx = np.random.uniform(-5e-7, 5e-7,size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-5e-7, 5e-7,size = nbodies).astype(np.longdouble)
+    vz = np.random.uniform(-5e-7, 5e-7,size = nbodies).astype(np.longdouble)
     
     sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sz = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 
     #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
-
+    '''
+    
     dt = opts.dt
     N  = opts.steps
     Neff = N//10
     
     if opts.p == 1:
-        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
+        s, H,T, V = run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it)
         s   = np.array(s, dtype=object)
         pickle.dump(s, open('solution.p','wb'))
         pickle.dump(H, open('hamiltonian.p','wb'))
