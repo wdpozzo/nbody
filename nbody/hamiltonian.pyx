@@ -5,12 +5,15 @@ from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
 from nbody.body cimport body_t, merger, _merge_bodies
 
-import astropy.units as u
+#import astropy.units as u
 
-cdef long double G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #* (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
-cdef long double C = (3.0e8*(u.m/u.s)).to(u.AU/u.d).value
-cdef long double Msun = 2e30
-cdef long double GM = 1.32712440018e20 
+cdef long double G = 6.67e-11 #G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value 
+
+# AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
+
+cdef long double C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
+cdef long double Msun = 2e30 # (2e30*u.kg).to(u.solMass).value
+#cdef long double GM = 1.32712440018e20 
 
 cdef long double _modulus(long double x, long double y, long double z) nogil:
     return x*x+y*y+z*z
@@ -36,7 +39,10 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
     cdef long double H = 0.0
     
     cdef long double mi, mj
+    
+    
     cdef long double C2 = C*C
+    cdef long double C4 = C2*C2
     
     if order == 0:
         # compute the kinetic part
@@ -52,13 +58,14 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
         return (H, T, V)
 
     if order == 1: 
+    
         # compute the kinetic part
         for i in range(N):
             mi = bodies[i].mass
             
             T += _kinetic_energy(bodies[i])
 
-            T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C*C)
+            T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C2)
 #            print('2 T',i,T)
             
             # and the potential
@@ -72,6 +79,7 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
         return (H, T, V)
 
     if order == 2:
+
         # compute the kinetic part
         for i in range(N):
             mi = bodies[i].mass
