@@ -8,9 +8,9 @@ from nbody.body cimport body_t, merger, _merge_bodies
 import astropy.units as u
 
 cdef long double G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #* (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
-cdef long double C = 3.0e8
+cdef long double C = (3.0e8*(u.m/u.s)).to(u.AU/u.d).value
 cdef long double Msun = 2e30
-cdef long double GM = 1.32712440018e20
+cdef long double GM = 1.32712440018e20 
 
 cdef long double _modulus(long double x, long double y, long double z) nogil:
     return x*x+y*y+z*z
@@ -47,7 +47,6 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
             for j in range (i+1,N):
                 V += _potential_0pn(bodies[i], bodies[j])
         
-        
         H = T + V
 
         return (H, T, V)
@@ -64,11 +63,7 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
             
             # and the potential
             #for j in range(i+1,N):
-            for j in range (N):
-            
-               if (i==j):               
-                  V += 0
-               else :
+            for j in range (i+1,N):
                   V += _potential_0pn(bodies[i], bodies[j])
                   V += _potential_1pn(bodies[i], bodies[j])
                 
@@ -87,11 +82,7 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
 
             # and the potential
             #for j in range(i+1,N):
-            for j in range (N):
-            
-                if (i==j):               
-                    V += 0
-                else :
+            for j in range (i+1,N):
                     V += _potential_0pn(bodies[i], bodies[j])
                     V += _potential_1pn(bodies[i], bodies[j])                
                     V += _potential_2pn(bodies[i], bodies[j])
@@ -147,7 +138,7 @@ cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
 cdef long double _potential_1pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
-    cdef long double V0 = -2.*_potential_0pn(b1, b2)
+    cdef long double V0 = -_potential_0pn(b1, b2)
     cdef long double V = 0.0
     cdef long double m1 = b1.mass
     cdef long double m2 = b2.mass
@@ -188,7 +179,7 @@ cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
     cdef long double p22 = _modulus(b2.p[0],b2.p[1],b2.p[2]) 
     cdef long double p14 = p12*p12
              
-    cdef long double V0 = -2.*_potential_0pn(b1, b2)    
+    cdef long double V0 = -_potential_0pn(b1, b2)    
     cdef long double V = 0.0
     #cdef long double V = _potential_1pn(b1, b2)   
     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
