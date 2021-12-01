@@ -69,16 +69,14 @@ def gradient(q, p, m):
         pi = p[3*i:3*(i+1)]
         
         g_p[3*i:3*(i+1)] = pi/mi
-        gradient = np.zeros(3)
         for j in range(i+1, len(m)):
             mj = m[j]
             qj = q[3*j:3*(j+1)]
             dr = qi - qj
             r  = np.sqrt(np.sum(dr**2))
             K  = G*mi*mj/(r*r*r)
-            gradient += K*dr
-        g_q[3*i:3*(i+1)] += gradient
-        g_q[3*j:3*(j+1)] -= gradient
+            g_q[3*i:3*(i+1)] += K*dr
+            g_q[3*j:3*(j+1)] -= K*dr
         
     return g_q, g_p
 
