@@ -9,8 +9,8 @@ NB. --> the behaviour also depends on dt: the right dynamic will be achieved onl
 '''
 
 #hand compile (for now) with the charateristichs of the simulation
-N = 5000000
-dt = 0.2
+N = 4000000
+dt = 2
 
 Neff = N//10
 nbodies = 2
@@ -32,18 +32,18 @@ sz = np.array((2,1)).astype(np.longdouble)
 
 #set a seed if needed
 if 1:
-    np.random.seed(129)
+    np.random.seed(29)
 
 #initial conditions (randomized)
-m = np.random.uniform(1e0, 5e1,size = nbodies).astype(np.longdouble)
+m = np.random.uniform(5e0, 1e2,size = nbodies).astype(np.longdouble)
 
-x = np.random.uniform(- 600.0, 600.0,size = nbodies).astype(np.longdouble)
-y = np.random.uniform(- 600.0, 600.0,size = nbodies).astype(np.longdouble)
-z = np.random.uniform(- 600.0, 600.0,size = nbodies).astype(np.longdouble)
+x = np.random.uniform(- 300.0, 300.0,size = nbodies).astype(np.longdouble)
+y = np.random.uniform(- 300.0, 300.0,size = nbodies).astype(np.longdouble)
+z = np.random.uniform(- 300.0, 300.0,size = nbodies).astype(np.longdouble)
 
-vx = np.random.uniform(-0.1, 0.1,size = nbodies).astype(np.longdouble)
-vy = np.random.uniform(-0.1, 0.1,size = nbodies).astype(np.longdouble)
-vz = np.random.uniform(-0.1, 0.1,size = nbodies).astype(np.longdouble)
+vx = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+vy = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
+vz = np.random.uniform(-0.01, 0.01,size = nbodies).astype(np.longdouble)
 
 sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
 sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
@@ -72,17 +72,17 @@ print(x,y,z,vx,vy,vz,sx,sy,sz)
 
 #integration for various Newtonian orders
 
-s_N,H_N = run(N, np.longdouble(dt), 0, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
+s_N, H_N, T_N, V_N = run(N, np.longdouble(dt), 0, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_N = np.array(s_N, dtype=object)
 pickle.dump(s_N, open('solution.p','wb'))
 pickle.dump(H_N, open('hamiltonian.p','wb'))
         
-s_1PN,H_1PN = run(N, np.longdouble(dt), 1, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
+s_1PN, H_1PN, T_1PN, V_1PN = run(N, np.longdouble(dt), 1, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_1PN   = np.array(s_1PN, dtype=object)
 pickle.dump(s_1PN, open('solution.p','wb'))
 pickle.dump(H_1PN, open('hamiltonian.p','wb'))
         
-s_2PN,H_2PN = run(N, np.longdouble(dt), 2, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
+s_2PN, H_2PN, T_2PN, V_2PN = run(N, np.longdouble(dt), 2, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_2PN   = np.array(s_2PN, dtype=object)
 pickle.dump(s_2PN, open('solution.p','wb'))
 pickle.dump(H_2PN, open('hamiltonian.p','wb'))
@@ -105,10 +105,57 @@ ax.legend()
 #colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
 f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonian.pdf', bbox_inches='tight')
 
+h_n = []
+h_1pn = []
+h_2pn = []      
+    
+for i in range(0, Neff):
+    h_n.append(T_N[i] + V_N[i])
+
+    h_1pn.append(T_1PN[i] + V_1PN[i])
+
+    h_2pn.append(T_2PN[i] + V_2PN[i])
+
+f = plt.figure(figsize=(6,4))
+
+ax = f.add_subplot(1,3,1)
+ax.plot(range(Neff), V_N, label= "Newtonian")
+ax.plot(range(Neff), V_1PN, label= "1PN")
+ax.plot(range(Neff), V_2PN, label= "2PN")
+ax.set_xlabel('iteration')
+ax.set_ylabel('Potential')
+ax.grid()
+ax.legend()
+#colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
+
+ax2 = f.add_subplot(1,3,2)
+ax2.plot(range(Neff), T_N, label= "Newtonian")
+ax2.plot(range(Neff), T_1PN, label= "1PN")
+ax2.plot(range(Neff), T_2PN, label= "2PN")
+ax2.set_xlabel('iteration')
+ax2.set_ylabel('Kinetic energy')
+ax2.grid()
+ax2.legend()
+#colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
+
+ax3 = f.add_subplot(1,3,3)
+ax3.plot(range(Neff), h_n, label= "Newtonian")
+ax3.plot(range(Neff), h_1pn, label= "1PN")
+ax3.plot(range(Neff), h_2pn, label= "2PN")
+ax3.set_xlabel('iteration')
+ax3.set_ylabel('Hamiltonian')
+ax3.grid()
+ax3.legend()
+#colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
+
+f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonianNorm.pdf', bbox_inches='tight')
+
+print(len(T_N), len(V_N), len(T_N + V_N))
+
 H_1PN_N = []
 H_2PN_N = []
 
-arr=[]
+arr = []
 arr = [1 for i in range(Neff)] 
 
 for i in range(0, Neff):
