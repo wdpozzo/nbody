@@ -7,7 +7,7 @@ from nbody.hamiltonian cimport _modulus
 import astropy.units as u
 
 cdef long double G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value
-cdef long double C = 3.0e8 * (86400) / 1.5e11
+cdef long double C = (3.0e8*(u.m/u.s)).to(u.AU/u.d).value
 cdef long double Msun = 2e30
 cdef long double GM = 1.32712440018e20
 
@@ -82,7 +82,7 @@ cdef (int, int) _find_mergers(body_t *b, unsigned int nbodies) nogil:
 cdef int merger(body_t b1, body_t b2, double r) nogil:
 #    with gil:
 #        print("r = {} r1 = {} r2 = {} rm = {}\n".format(r, 6*G*b1.mass/(C*C),6*G*b2.mass/(C*C), 6*G*b1.mass/(C*C)+6*G*b2.mass/(C*C)))
-    if r < (6*G*b1.mass/(C*C)+6*G*b2.mass/(C*C)):
+    if r < (12*G*b1.mass/(C*C)+ 12*G*b2.mass/(C*C)):
         return 1
     else:
         return 0
