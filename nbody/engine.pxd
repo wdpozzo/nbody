@@ -2,7 +2,7 @@ import numpy as np
 cimport numpy as np
 from nbody.body cimport body_t
     
-cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order)
+cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order, int ICN_it)
 
 cdef void _initialise(body_t *bodies,
                       unsigned int n,
