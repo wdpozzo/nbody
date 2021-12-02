@@ -18,11 +18,11 @@ au = 149597870700.
 
 if __name__=="__main__":
     parser = OptionParser()
-    parser.add_option('-n', default=9, type='int', help='n bodies')
-    parser.add_option('--steps', default=1000, type='int', help='n steps')
+    parser.add_option('-n', default=2, type='int', help='n bodies')
+    parser.add_option('--steps', default=10000, type='int', help='n steps')
     parser.add_option('--PN_order', default=0, type='int', help='PN order')
     parser.add_option('--dt', default=1, type='float', help='dt')
-    parser.add_option('-p', default=0, type='int', help='post process')
+    parser.add_option('-p', default = False, action = 'store_true', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
     parser.add_option('--plot', default=1, type='int', help='plot')
     parser.add_option('--cm', default=1, type='int', help='plot')
@@ -49,14 +49,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 10.*Ms, 10.*Ms
+    m[0], m[1] = 1.*Ms, 6e-6*Ms
     
-    x[0], x[1] = 0.025*au, -0.025*au
-    y[0], y[1] = -0.025*au, 0.025*au
-    z[0], z[1] = 0., 0.
+    x[0], x[1] = 0.*au, 1.*au
+    y[0], y[1] = 0.*au, 0.*au
+    z[0], z[1] = 0.*au, 0.*au
 
-    vx[0], vx[1] = 1e4, -1e4
-    vy[0], vy[1] = 3e4, -3e4
+    vx[0], vx[1] = 0., 0.
+    vy[0], vy[1] = 0., 3e4
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -87,15 +87,15 @@ if __name__=="__main__":
     N  = opts.steps
     Neff = N//10
     
-    if opts.p == 1:
-        s, H,T, V = run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it)
+    if not opts.p:
+        s, H, T, V = run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it)
         s   = np.array(s, dtype=object)
-        pickle.dump(s, open('solution.p','wb'))
-        pickle.dump(H, open('hamiltonian.p','wb'))
+        pickle.dump(s, open('solution.pkl','wb'))
+        pickle.dump(H, open('hamiltonian.pkl','wb'))
         
     else:
-        s = pickle.load(open('solution.p','rb'))
-        H = pickle.load(open('hamiltonian.p','rb'))
+        s = pickle.load(open('solution.pkl','rb'))
+        H = pickle.load(open('hamiltonian.pkl','rb'))
     
     #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[1][0]['p'], s[1][1]['p'], s[1][0]['q'], s[1][1]['q']))
         
@@ -187,7 +187,7 @@ if __name__=="__main__":
                 qs[j].append(s[i][j]['q'])
 
         for q in qs:
-            q = np.array(q)
+            q = np.array(q)/au
             c = next(colors)
             ax.plot(q[:,0],q[:,1],q[:,2],color=c,lw=0.5)
             ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=2,zorder=0)
