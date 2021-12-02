@@ -124,7 +124,8 @@ def run(unsigned int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] pz,
           np.ndarray[long double, mode="c", ndim=1] sx,
           np.ndarray[long double, mode="c", ndim=1] sy,
-          np.ndarray[long double, mode="c", ndim=1] sz, int ICN_it):
+          np.ndarray[long double, mode="c", ndim=1] sz,
+          unsigned int ICN_it):
     
     from tqdm import tqdm
     cdef unsigned int i,j
