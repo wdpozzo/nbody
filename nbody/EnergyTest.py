@@ -74,18 +74,18 @@ print(x,y,z,vx,vy,vz,sx,sy,sz)
 
 s_N, H_N, T_N, V_N = run(N, np.longdouble(dt), 0, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_N = np.array(s_N, dtype=object)
-pickle.dump(s_N, open('solution.p','wb'))
-pickle.dump(H_N, open('hamiltonian.p','wb'))
+pickle.dump(s_N, open('solution.pkl','wb'))
+pickle.dump(H_N, open('hamiltonian.pkl','wb'))
         
 s_1PN, H_1PN, T_1PN, V_1PN = run(N, np.longdouble(dt), 1, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_1PN   = np.array(s_1PN, dtype=object)
-pickle.dump(s_1PN, open('solution.p','wb'))
-pickle.dump(H_1PN, open('hamiltonian.p','wb'))
+pickle.dump(s_1PN, open('solution.pkl','wb'))
+pickle.dump(H_1PN, open('hamiltonian.pkl','wb'))
         
 s_2PN, H_2PN, T_2PN, V_2PN = run(N, np.longdouble(dt), 2, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
 s_2PN   = np.array(s_2PN, dtype=object)
-pickle.dump(s_2PN, open('solution.p','wb'))
-pickle.dump(H_2PN, open('hamiltonian.p','wb'))
+pickle.dump(s_2PN, open('solution.pkl','wb'))
+pickle.dump(H_2PN, open('hamiltonian.pkl','wb'))
 
 #Energies, normalized energies, radii and orbits in the different cases
 
