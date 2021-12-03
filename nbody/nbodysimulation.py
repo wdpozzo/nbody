@@ -24,10 +24,10 @@ if __name__=="__main__":
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
-    parser.add_option('--plot', default=1, type='int', help='plot')
-    parser.add_option('--cm', default=1, type='int', help='plot')
+    parser.add_option('--plot', default=1, type='int', help='simulations plots')
+    parser.add_option('--cm', default=1, type='int', help='orbit plot in CM system and angular momentum')
     parser.add_option('--seed', default=1, type='int', help='seed')
-    parser.add_option('--ICN_order', default=7, type='int', help='seed')
+    parser.add_option('--ICN_order', default=7, type='int', help='ICN iteration number')
     (opts,args) = parser.parse_args()
 
     nbodies = opts.n
@@ -49,14 +49,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 1.*Ms, 6e-6*Ms
+    m[0], m[1] = 1.*Ms, 10*Ms
     
-    x[0], x[1] = 0.*au, 1.*au
+    x[0], x[1] = 0.*au, 0.2*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
     vx[0], vx[1] = 0., 0.
-    vy[0], vy[1] = 0., 3e4
+    vy[0], vy[1] = -2e4, 2e4
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -98,7 +98,6 @@ if __name__=="__main__":
         H = pickle.load(open('hamiltonian.pkl','rb'))
     
     #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[1][0]['p'], s[1][1]['p'], s[1][0]['q'], s[1][1]['q']))
-        
     
     if opts.animate == 1:
     
@@ -114,6 +113,7 @@ if __name__=="__main__":
         trails = {}
         lines  = []
         symbols = []
+        
         for b in range(nbodies):
             q = s[0][b]['q']
             trails[b] = deque(maxlen=200)
@@ -152,8 +152,9 @@ if __name__=="__main__":
         Writer = writers['ffmpeg']
         writer = Writer(fps=120, metadata=dict(artist='Me'), bitrate=900, extra_args=['-vcodec', 'libx264'])
         anim.save('nbody.mp4', writer=writer)
-        
+           
     if opts.plot==1:
+    
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
@@ -167,9 +168,9 @@ if __name__=="__main__":
         ax.set_ylabel('Hamiltonian')
         ax.grid()
         colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
-        
+                
         qs = [[] for x in range(nbodies)]
-    
+            
         # this is the number of bodies active in each step of the solution
         nbodies = [len(si) for si in s]
         
@@ -185,12 +186,13 @@ if __name__=="__main__":
         for i in range(0,Neff,plotting_step):
             for j in range(nbodies[i]):
                 qs[j].append(s[i][j]['q'])
-
+         
         for q in qs:
             q = np.array(q)/au
             c = next(colors)
             ax.plot(q[:,0],q[:,1],q[:,2],color=c,lw=0.5)
             ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=2,zorder=0)
+                
 
         f.set_facecolor('black')
         ax.set_facecolor('black')
@@ -276,20 +278,37 @@ if __name__=="__main__":
         
         #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q']))
         
+        L1 = np.zeros(k)          
+        L2 = np.zeros(k)
+        L = np.zeros(k)
+         
+        #print(type(L), L)
+                  
         for i in range(0,k):
             q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
+            L1[i] = s[i][0]['q'][1]*s[i][0]['p'][2] - s[i][0]['q'][2]*s[i][0]['p'][1] - s[i][0]['q'][0]*s[i][0]['p'][2] + s[i][0]['q'][2]*s[i][0]['p'][0] + s[i][0]['q'][0]*s[i][0]['p'][1] - s[i][0]['q'][1]*s[i][0]['p'][0]
+            
+            L2[i] = s[i][1]['q'][1]*s[i][1]['p'][2] - s[i][1]['q'][2]*s[i][1]['p'][1] - s[i][1]['q'][0]*s[i][1]['p'][2] + s[i][1]['q'][2]*s[i][1]['p'][0] + s[i][1]['q'][0]*s[i][1]['p'][1] - s[i][1]['q'][1]*s[i][1]['p'][0]
+            
+            L[i] = L1[i] + L2[i]
+        
 
-        #print(np.shape(q_rel), opts.steps, np.shape(s)) 
         
         f = plt.figure(figsize=(6,4))
-        
         ax = f.add_subplot(111, projection = '3d')
         colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))    
         ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], alpha=0.9)
         ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o-', alpha=0.9)       
         ax.set_xlabel('x')
         ax.set_ylabel('y')
-        ax.set_ylabel('z')
+        ax.set_zlabel('z')
+        plt.show()
 
+        f = plt.figure(figsize=(6,4))
+        ax = f.add_subplot(111)
+        ax.plot(range(k), L)
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('Angolar Momentum')
+        ax.grid()
         plt.show()
         
