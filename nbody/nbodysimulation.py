@@ -19,7 +19,7 @@ au = 149597870700.
 if __name__=="__main__":
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
-    parser.add_option('--steps', default=10000, type='int', help='n steps')
+    parser.add_option('--steps', default=5000000, type='int', help='n steps (must be equal or greater than 5e6')
     parser.add_option('--PN_order', default=0, type='int', help='PN order')
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
@@ -32,8 +32,7 @@ if __name__=="__main__":
 
     nbodies = opts.n
     ICN_it = opts.ICN_order
-    np.random.seed(opts.seed)
-    
+    np.random.seed(opts.seed)    
     
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -49,14 +48,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 1.*Ms, 10*Ms
+    m[0], m[1] = 1.*Ms, 6.e-6*Ms
     
-    x[0], x[1] = 0.*au, 0.2*au
+    x[0], x[1] = 0.*au, 1.*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
     vx[0], vx[1] = 0., 0.
-    vy[0], vy[1] = -2e4, 2e4
+    vy[0], vy[1] = 0., 3e4
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -83,20 +82,56 @@ if __name__=="__main__":
     #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
     '''
     
+    plot_step = 50000
     dt = opts.dt
     N  = opts.steps
-    Neff = N//10
+    Neff = (N//10)//plot_step
+    nout = int(N/5000000)
+    
     
     if not opts.p:
-        s, H, T, V = run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it)
-        s   = np.array(s, dtype=object)
-        pickle.dump(s, open('solution.pkl','wb'))
-        pickle.dump(H, open('hamiltonian.pkl','wb'))
-        
-    else:
-        s = pickle.load(open('solution.pkl','rb'))
-        H = pickle.load(open('hamiltonian.pkl','rb'))
+        run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it)
     
+    s, H, T, V = [], [], [], []
+    
+    for i in range(nout):
+        s.append(pickle.load(open('solution_{}.pkl'.format(i),'rb')))
+        H.append(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')))
+        T.append(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')))
+        V.append(pickle.load(open('potential_{}.pkl'.format(i),'rb')))
+       
+    #print([np.shape(h) for h in H])
+  
+    print(len(s), len(H), len(T), len(V))
+    H = np.array(H).flatten()[::plot_step]
+    T = np.array(T).flatten()[::plot_step]
+    V = np.array(V).flatten()[::plot_step]
+    
+    #print(len(s), np.shape(s))
+    
+    #print(s[j][0::plot_step][0]) 
+    for j in range(0, len(m)):
+        s[j] = s[j][0::plot_step]
+        #print(len(s), np.shape(s))    
+    
+    #print(len(s), np.shape(s))  
+    s = np.array(s)
+    #print(len(s), np.shape(s))
+    s = s.reshape(len(H), len(m))
+    #print(len(s), np.shape(s))
+    #print(s[j][0::plot_step][0])   
+
+    print(len(s), len(H), len(T), len(V))
+
+    '''
+    s = np.concatenate((s[:]))
+    H = np.concatenate((H[:]))
+    T = np.concatenate((T[:]))
+    V = np.concatenate((V[:]))
+    '''
+    
+    #print(np.shape(H))
+
     #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[1][0]['p'], s[1][1]['p'], s[1][0]['q'], s[1][1]['q']))
     
     if opts.animate == 1:
@@ -172,8 +207,9 @@ if __name__=="__main__":
         qs = [[] for x in range(nbodies)]
             
         # this is the number of bodies active in each step of the solution
-        nbodies = [len(si) for si in s]
         
+        nbodies = [len(si) for si in s]
+
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
         ax.plot(range(Neff), nbodies)
@@ -230,7 +266,7 @@ if __name__=="__main__":
             for b in range(nbodies[0]):
                 trails[b] = deque(maxlen=500)
 
-            for i in range(0,Neff,plotting_step):
+            for i in range(0, Neff,plotting_step):
                 plt.cla()
                 ax.set_title('H = {}'.format(H[i]), fontdict={'color':'w'}, loc='center')
                 ax.xaxis.pane.fill = False
@@ -271,7 +307,7 @@ if __name__=="__main__":
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
         
-        k = int(opts.steps/10)
+        k = int(opts.steps/10)//plot_step
         
         q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
         p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
@@ -291,7 +327,6 @@ if __name__=="__main__":
             L2[i] = s[i][1]['q'][1]*s[i][1]['p'][2] - s[i][1]['q'][2]*s[i][1]['p'][1] - s[i][1]['q'][0]*s[i][1]['p'][2] + s[i][1]['q'][2]*s[i][1]['p'][0] + s[i][1]['q'][0]*s[i][1]['p'][1] - s[i][1]['q'][1]*s[i][1]['p'][0]
             
             L[i] = L1[i] + L2[i]
-        
 
         
         f = plt.figure(figsize=(6,4))

@@ -128,6 +128,7 @@ def run(unsigned int nsteps, long double dt, int order,
           unsigned int ICN_it):
     
     from tqdm import tqdm
+    import pickle
     cdef unsigned int i,j
     cdef unsigned int n = len(mass)
     cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
@@ -140,11 +141,12 @@ def run(unsigned int nsteps, long double dt, int order,
     
     _initialise(bodies, n, mass, x, y, z,
                 px, py, pz, sx, sy, sz)
-    solution.append([bodies[i] for i in range(n)])
-    h, t, v = _hamiltonian(bodies, n, order)
-    H.append(h)
-    T.append(t)
-    V.append(v)
+    #solution.append([bodies[i] for i in range(n)])
+    #h, t, v = _hamiltonian(bodies, n, order)
+    #H.append(h)
+    #T.append(t)
+    #V.append(v)
+    n_sol = 0
 
     for i in tqdm(range(1,nsteps)):
         # check for mergers
@@ -153,12 +155,22 @@ def run(unsigned int nsteps, long double dt, int order,
         _one_step(bodies, n, dt, order, ICN_it)
         # store 1 every 10 steps
         
-        if i%10 == 0:
+        if (i+1)%10 == 0:
             solution.append([bodies[i] for i in range(n)])
             h, t, v = _hamiltonian(bodies, n, order)
         
             H.append(h)
             T.append(t)
             V.append(v)
-                     
-    return solution, H, T, V
+            
+        if (i+1)%5000000 == 0:
+            pickle.dump(solution,open('solution_{}.pkl'.format(n_sol),'wb'))
+            pickle.dump(T,open('kinetic_{}.pkl'.format(n_sol),'wb'))
+            pickle.dump(V,open('potential_{}.pkl'.format(n_sol),'wb'))
+            pickle.dump(H,open('hamiltonian_{}.pkl'.format(n_sol),'wb'))
+            n_sol += 1
+            H  		= []
+            T 		   = []
+            V        = []
+            solution = []
+    return 1

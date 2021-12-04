@@ -57,8 +57,7 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
 
         return (H, T, V)
 
-    if order == 1: 
-    
+    if order == 1:    
         # compute the kinetic part
         for i in range(N):
             mi = bodies[i].mass
@@ -127,6 +126,7 @@ cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
 #
 #    if order >= 4:
 #        raise(NotImplementedError)
+
     return V
 
 @cython.boundscheck(False)
@@ -274,8 +274,7 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r2 = r*r
     cdef long double r3 = r*r2
     
-    cdef long double prefactor = G*b1.mass*b2.mass/r3
-    
+    cdef long double prefactor = G*b1.mass*b2.mass/r3    
     
     # first 3 elements are the derivative wrt to q
     out[0] += prefactor*dx
@@ -345,8 +344,6 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         #out[3+k] +=  (0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*(n_p2)/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*(p12)/m1cu )/C2 #1PN order
         
         out[k+3] += ( 0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*p12/m1cu )/C2
-
-
          
     return
     
@@ -395,7 +392,6 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double n_p1 = _dot(normal,b1.p)
     cdef long double n_p2 = _dot(normal,b2.p)
     cdef long double p1_p2 = _dot(b1.p,b2.p)
-
 
     for k in range(3):
         
