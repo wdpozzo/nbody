@@ -48,14 +48,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 1.*Ms, 6.e-6*Ms
+    m[0], m[1] = 1.*Ms, 1.*Ms
     
-    x[0], x[1] = 0.*au, 0.2*au
+    x[0], x[1] = -0.1*au, 0.1*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
-    vx[0], vx[1] = 0., 0.
-    vy[0], vy[1] = 0., 3e4
+    vx[0], vx[1] = 2.e3, -2.e3
+    vy[0], vy[1] = -1.e4, 1.e4
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -196,8 +196,6 @@ if __name__=="__main__":
         N_arr = np.linspace(0, N, Neff)
         #plotting_step = np.maximum(64, Neff//int(0.1*Neff))
         
-        print(type(N_arr), len(N_arr), type(H), len(H))
-        
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
         ax.plot(N_arr, H)
@@ -309,20 +307,20 @@ if __name__=="__main__":
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
         
-        k = int(opts.steps/10)//plot_step
+        N_arr = np.linspace(0, N, Neff)
         
-        q_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
-        p_rel = np.array([[0 for i in range(0, 3)] for k in range(0, k)])
+        q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)])
+        p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)])
         
         #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q']))
         
-        L1 = np.zeros(k)          
-        L2 = np.zeros(k)
-        L = np.zeros(k)
+        L1 = np.zeros(Neff)          
+        L2 = np.zeros(Neff)
+        L = np.zeros(Neff)
          
         #print(type(L), L)
                   
-        for i in range(0,k):
+        for i in range(0, Neff):
             q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
             L1[i] = s[i][0]['q'][1]*s[i][0]['p'][2] - s[i][0]['q'][2]*s[i][0]['p'][1] - s[i][0]['q'][0]*s[i][0]['p'][2] + s[i][0]['q'][2]*s[i][0]['p'][0] + s[i][0]['q'][0]*s[i][0]['p'][1] - s[i][0]['q'][1]*s[i][0]['p'][0]
             
@@ -343,7 +341,7 @@ if __name__=="__main__":
 
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(range(k), L)
+        ax.plot(N_arr, L)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Angolar Momentum')
         ax.grid()
