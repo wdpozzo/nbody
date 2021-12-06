@@ -50,7 +50,7 @@ if __name__=="__main__":
     
     m[0], m[1] = 1.*Ms, 6.e-6*Ms
     
-    x[0], x[1] = 0.*au, 1.*au
+    x[0], x[1] = 0.*au, 0.2*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
@@ -83,10 +83,13 @@ if __name__=="__main__":
     '''
     
     plot_step = 50000
+    
     dt = opts.dt
     N  = opts.steps
-    Neff = (N//10)//plot_step
-    nout = int(N/5000000)
+    Neff = int((N//10)//plot_step)
+    s_f_step = 5000000 #solution_file_step
+    
+    nout = int(N/s_f_step)
     
     
     if not opts.p:
@@ -94,45 +97,41 @@ if __name__=="__main__":
     
     s, H, T, V = [], [], [], []
     
-    for i in range(nout):
-        s.append(pickle.load(open('solution_{}.pkl'.format(i),'rb')))
-        H.append(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')))
-        T.append(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')))
-        V.append(pickle.load(open('potential_{}.pkl'.format(i),'rb')))
+    for i in range(nout):  
+        s_tot, H_tot, T_tot, V_tot = [], [], [], []
+        
+        s_tot.append(pickle.load(open('solution_{}.pkl'.format(i),'rb')))
+        H_tot.append(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')))
+        T_tot.append(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')))
+        V_tot.append(pickle.load(open('potential_{}.pkl'.format(i),'rb')))       
+        
+        #print(np.shape(s_tot), np.shape(H_tot), np.shape(T_tot), np.shape(V_tot))
+        
+        s.append(s_tot[0][::plot_step][:])
+        H.append(H_tot[0][::plot_step])
+        T.append(T_tot[0][::plot_step])
+        V.append(V_tot[0][::plot_step])
        
-    #print([np.shape(h) for h in H])
-  
-    print(len(s), len(H), len(T), len(V))
-    H = np.array(H).flatten()[::plot_step]
-    T = np.array(T).flatten()[::plot_step]
-    V = np.array(V).flatten()[::plot_step]
+        #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
+        
+        del s_tot
+        del H_tot
+        del T_tot
+        del V_tot
+        
+        if i%10 == 0 :
+            print("Data deframmentation: {}%".format((100*i)/nout))
     
-    #print(len(s), np.shape(s))
-    
-    #print(s[j][0::plot_step][0]) 
-    for j in range(0, len(m)):
-        s[j] = s[j][0::plot_step]
-        #print(len(s), np.shape(s))    
-    
-    #print(len(s), np.shape(s))  
-    s = np.array(s)
-    #print(len(s), np.shape(s))
-    s = s.reshape(len(H), len(m))
-    #print(len(s), np.shape(s))
-    #print(s[j][0::plot_step][0])   
+    s = np.array(s, dtype=object)#.flatten()
+    H = np.array(H, dtype=object)#.flatten()
+    T = np.array(T, dtype=object)#.flatten()
+    V = np.array(V, dtype=object)#.flatten()
 
-    print(len(s), len(H), len(T), len(V))
-
-    '''
     s = np.concatenate((s[:]))
     H = np.concatenate((H[:]))
     T = np.concatenate((T[:]))
-    V = np.concatenate((V[:]))
-    '''
-    
-    #print(np.shape(H))
-
-    #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[1][0]['p'], s[1][1]['p'], s[1][0]['q'], s[1][1]['q']))
+    V = np.concatenate((V[:])) 
+       
     
     if opts.animate == 1:
     
@@ -194,11 +193,14 @@ if __name__=="__main__":
         import matplotlib.cm as cm
         from mpl_toolkits import mplot3d
         
-        plotting_step = np.maximum(64,Neff//int(0.1*Neff))
+        N_arr = np.linspace(0, N, Neff)
+        #plotting_step = np.maximum(64, Neff//int(0.1*Neff))
+        
+        print(type(N_arr), len(N_arr), type(H), len(H))
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(range(Neff), H)
+        ax.plot(N_arr, H)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Hamiltonian')
         ax.grid()
@@ -219,7 +221,7 @@ if __name__=="__main__":
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111, projection = '3d')
         
-        for i in range(0,Neff,plotting_step):
+        for i in range(0,Neff): #,plotting_step):
             for j in range(nbodies[i]):
                 qs[j].append(s[i][j]['q'])
          
@@ -266,7 +268,7 @@ if __name__=="__main__":
             for b in range(nbodies[0]):
                 trails[b] = deque(maxlen=500)
 
-            for i in range(0, Neff,plotting_step):
+            for i in range(0, Neff): #,plotting_step):
                 plt.cla()
                 ax.set_title('H = {}'.format(H[i]), fontdict={'color':'w'}, loc='center')
                 ax.xaxis.pane.fill = False
@@ -346,4 +348,3 @@ if __name__=="__main__":
         ax.set_ylabel('Angolar Momentum')
         ax.grid()
         plt.show()
-        
