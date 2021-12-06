@@ -20,10 +20,11 @@ import astropy.units as u
 
 G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value
 c = 3.0e8
-Msun = 1#2e30
-AU = 1#1.5e11 #astronomical unit
-GM = 1#1.32712440018e20 # G*Msun
-day = 1#86400 # s
+Msun = 2e30
+Mearth = 6e24
+AU = 1.5e11 #astronomical unit
+GM = 1.32712440018e20 # G*Msun
+day = 86400 # s
 
 def make_plots(H, Neff, nbodies, s):
     plotting_step =1# 64#np.maximum(64,Neff//int(0.1*Neff))
@@ -83,13 +84,13 @@ if __name__ == '__main__':
     
     planet_names = ['sun',
     'mercury',
-    #'venus',
+    'venus',
     'earth',
-    #'mars',
+    'mars',
     'jupiter',
-    #'saturn',
-    #'uranus',
-    #'neptune',
+    'saturn',
+    'uranus',
+    'neptune',
     ]
     
     planets = []
@@ -98,8 +99,8 @@ if __name__ == '__main__':
         planets.append(get_body_barycentric_posvel(planet,t))
     
     print(planets)
-    #m = np.concatenate((np.array([Msun]),np.array([0.330, 4.87, 5.97, 0.642, 1898, 568, 86.8, 102])*1e-6)).astype(np.longdouble)
-    m = np.array([Msun, (0.33/5.97 * M_earth/M_sun).value*Msun, (M_earth/M_sun).value*Msun, (M_jup/M_sun).value*Msun]).astype(np.longdouble)
+    m = np.concatenate((np.array([Msun]),np.array([0.330, 4.87, 5.97, 0.642, 1898, 568, 86.8, 102])*1e24)).astype(np.longdouble)
+#    m = np.array([Msun, (0.33/5.97 * M_earth/M_sun).value*Msun, (M_earth/M_sun).value*Msun, (M_jup/M_sun).value*Msun]).astype(np.longdouble)
     print(m)
     Mtot = np.sum(m)
    
@@ -130,13 +131,13 @@ if __name__ == '__main__':
     Neff = N
 
     if not opts.p:
-        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz)
+        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, 2)
         s   = np.array(s, dtype=object)
         pickle.dump(s, open('solution.pkl','wb'))
         pickle.dump(H, open('hamiltonian.pkl','wb'))
         
     else:
-        s = pickle.load(open('solution.pkl','rb'))
-        H = pickle.load(open('hamiltonian.pkl','rb'))
+        s = pickle.load(open('solution_0.pkl','rb'))
+        H = pickle.load(open('hamiltonian_0.pkl','rb'))
 
     make_plots(H, Neff, len(m), s)
