@@ -156,6 +156,7 @@ def run(unsigned int nsteps, long double dt, int order,
         # store 1 every 10 steps
         
         if (i+1)%10 == 0:
+        
             solution.append([bodies[i] for i in range(n)])
             h, t, v = _hamiltonian(bodies, n, order)
         
@@ -163,7 +164,8 @@ def run(unsigned int nsteps, long double dt, int order,
             T.append(t)
             V.append(v)
             
-        if (i+1)%5000000 == 0:
+        if (i+1)%(5000000) == 0:
+        
             pickle.dump(solution,open('solution_{}.pkl'.format(n_sol),'wb'))
             pickle.dump(T,open('kinetic_{}.pkl'.format(n_sol),'wb'))
             pickle.dump(V,open('potential_{}.pkl'.format(n_sol),'wb'))
@@ -173,4 +175,5 @@ def run(unsigned int nsteps, long double dt, int order,
             T 		   = []
             V        = []
             solution = []
+            
     return 1

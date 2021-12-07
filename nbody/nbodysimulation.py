@@ -48,14 +48,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 1.*Ms, 1.*Ms
+    m[0], m[1] = 0.05*Ms, 0.5*Ms
     
-    x[0], x[1] = -0.1*au, 0.1*au
+    x[0], x[1] = -0.02*au, 0.02*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
-    vx[0], vx[1] = 2.e3, -2.e3
-    vy[0], vy[1] = -1.e4, 1.e4
+    vx[0], vx[1] = 5.e2, -2.e1
+    vy[0], vy[1] = -2.e3, 1.e2
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -82,11 +82,11 @@ if __name__=="__main__":
     #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
     '''
     
-    plot_step = 50000
+    plot_step = 10000
     
     dt = opts.dt
     N  = opts.steps
-    Neff = int((N//10)//plot_step)
+    Neff = int(N/(10*plot_step))
     s_f_step = 5000000 #solution_file_step
     
     nout = int(N/s_f_step)
@@ -107,7 +107,7 @@ if __name__=="__main__":
         
         #print(np.shape(s_tot), np.shape(H_tot), np.shape(T_tot), np.shape(V_tot))
         
-        s.append(s_tot[0][::plot_step][:])
+        s.append(s_tot[0][::plot_step])
         H.append(H_tot[0][::plot_step])
         T.append(T_tot[0][::plot_step])
         V.append(V_tot[0][::plot_step])
@@ -119,19 +119,25 @@ if __name__=="__main__":
         del T_tot
         del V_tot
         
-        if i%10 == 0 :
+        if i % (10*nout)//100 == 0 :
             print("Data deframmentation: {}%".format((100*i)/nout))
+    
+    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
     
     s = np.array(s, dtype=object)#.flatten()
     H = np.array(H, dtype=object)#.flatten()
     T = np.array(T, dtype=object)#.flatten()
     V = np.array(V, dtype=object)#.flatten()
-
+    
+    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
+    
     s = np.concatenate((s[:]))
     H = np.concatenate((H[:]))
     T = np.concatenate((T[:]))
     V = np.concatenate((V[:])) 
-       
+    
+    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))      
+    #print(N, Neff, nout)
     
     if opts.animate == 1:
     
