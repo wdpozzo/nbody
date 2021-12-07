@@ -344,7 +344,9 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         #out[3+k] +=  (0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*(n_p2)/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*(p12)/m1cu )/C2 #1PN order
         
         out[k+3] += ( 0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*p12/m1cu )/C2
-         
+    
+    free(dq)
+    free(normal)
     return
     
 @cython.boundscheck(False)
@@ -406,5 +408,7 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
         #out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(20.0*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.*b1.p[k]*p12/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq -6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r2) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
         
         out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*n_p2/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(10*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.0*b1.p[k]*p22/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq - 6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
-    
+
+    free(dq)
+    free(normal)
     return 

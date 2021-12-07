@@ -20,7 +20,7 @@ import astropy.units as u
 
 G = 6.67e-11  # m^3 kg^-1 s^-2
 Msun = 2e30   # kg
-AU = 1.5e11   # m
+AU = 149597870700.   # m
 day = 86400   # s
 Mearth = 6e24 # kg
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     print(planets)
     m = np.array([masses[planet] for planet in planet_names]).astype(np.longdouble)
 
-    print(m)
+    print('m=',m)
     Mtot = np.sum(m)
    
    
@@ -121,11 +121,12 @@ if __name__ == '__main__':
     y = np.array([planet[0].y.value*AU for planet in planets]).astype(np.longdouble)
     z = np.array([planet[0].z.value*AU for planet in planets]).astype(np.longdouble)
     
-    vx = np.array([planet[1].x.value*AU/day for planet in planets]).astype(np.longdouble)
-    vy = np.array([planet[1].y.value*AU/day for planet in planets]).astype(np.longdouble)
-    vz = np.array([planet[1].z.value*AU/day for planet in planets]).astype(np.longdouble)
-    print(vx,vy,vz)
-    exit(0)
+    vx = np.array([planet[1].x.value*(AU/day) for planet in planets]).astype(np.longdouble)
+    vy = np.array([planet[1].y.value*(AU/day) for planet in planets]).astype(np.longdouble)
+    vz = np.array([planet[1].z.value*(AU/day) for planet in planets]).astype(np.longdouble)
+    print('r=',x,y,z)
+    print('v=',vx,vy,vz)
+#    exit(0)
     vcm = np.array([np.sum(vx*m/Mtot), np.sum(vy*m/Mtot), np.sum(vz*m/Mtot)])
     print(vcm, np.linalg.norm(vcm))
     sx = np.zeros(len(m)).astype(np.longdouble)
