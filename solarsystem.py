@@ -39,16 +39,22 @@ masses = {
     'pluto'   : 0.00218*Mearth,
 }
 
-def make_plots(H, Neff, nbodies, s):
+def make_plots(H, T, V, Neff, nbodies, s):
     plotting_step =1# 64#np.maximum(64,Neff//int(0.1*Neff))
     
     f = plt.figure(figsize=(6,4))
-    ax = f.add_subplot(111)
-    ax.plot(range(Neff), H)
-    ax.set_xlabel('iteration')
-    ax.set_ylabel('Hamiltonian')
+    ax = f.add_subplot(211)
+    ax.plot(range(Neff), H, label='H')
+    ax.set_ylabel('H(J)')
     ax.grid()
-    plt.savefig('./hamiltonian.pdf')
+    ax = f.add_subplot(212)
+    ax.plot(range(Neff), T, label='T')
+    ax.plot(range(Neff), V, label='V')
+    ax.set_xlabel('iteration')
+    ax.set_ylabel('Energy(J)')
+    ax.grid()
+    ax.legend(loc='upper left')
+    plt.savefig('./hamiltonian.pdf',bbox_inches='tight')
     colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
     
     qs = [[] for x in range(nbodies)]
@@ -124,27 +130,26 @@ if __name__ == '__main__':
     vx = np.array([planet[1].x.value*(AU/day) for planet in planets]).astype(np.longdouble)
     vy = np.array([planet[1].y.value*(AU/day) for planet in planets]).astype(np.longdouble)
     vz = np.array([planet[1].z.value*(AU/day) for planet in planets]).astype(np.longdouble)
-    print('r=',x,y,z)
-    print('v=',vx,vy,vz)
-#    exit(0)
+
     vcm = np.array([np.sum(vx*m/Mtot), np.sum(vy*m/Mtot), np.sum(vz*m/Mtot)])
     print(vcm, np.linalg.norm(vcm))
     sx = np.zeros(len(m)).astype(np.longdouble)
     sy = np.zeros(len(m)).astype(np.longdouble)
     sz = np.zeros(len(m)).astype(np.longdouble)
 
-    v0 = np.sqrt(vx[0]**2+vy[0]**2+vz[0]**2)
-    v1 = np.sqrt(vx[1]**2+vy[1]**2+vz[1]**2)
-    d  = np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2+(z[1]-z[0])**2)
-    print(d/AU)
-    E = 0.5*(v0**2*m[0] + v1**2*m[1]) - G*m[1]*m[0]/d
-    print(E)
+#    v0 = np.sqrt(vx[0]**2+vy[0]**2+vz[0]**2)
+#    v1 = np.sqrt(vx[1]**2+vy[1]**2+vz[1]**2)
+#    print(v1)
+#    d  = np.sqrt((x[1]-x[0])**2+(y[1]-y[0])**2+(z[1]-z[0])**2)
+#    print(d/AU)
+#    E = 0.5*(v0**2*m[0] + v1**2*m[1]) - G*m[1]*m[0]/d
+#    print('E=',E)
 
     dt = opts.dt
     N  = opts.steps
-    thin = 10
+    thin = 100
     Neff = N//thin
-    n_buf = 100000
+    n_buf = 1000000
     if not opts.p:
         run(N,
             np.longdouble(dt),
@@ -167,9 +172,12 @@ if __name__ == '__main__':
         if i == 0:
             s = np.array(pickle.load(open('solution_{}.pkl'.format(i),'rb')), dtype=object)
             H = np.array(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')))
+            T = np.array(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')))
+            V = np.array(pickle.load(open('potential_{}.pkl'.format(i),'rb')))
         else:
             s = np.row_stack((s,np.array(pickle.load(open('solution_{}.pkl'.format(i),'rb')), dtype=object)))
             H = np.concatenate((H,np.array(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')), dtype=object)))
+            T = np.concatenate((T,np.array(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')), dtype=object)))
+            V = np.concatenate((V,np.array(pickle.load(open('potential_{}.pkl'.format(i),'rb')), dtype=object)))
     
-    print(s.shape,H.shape)
-    make_plots(H, Neff, len(m), s)
+    make_plots(H, T, V, Neff, len(m), s)

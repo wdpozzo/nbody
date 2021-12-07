@@ -61,7 +61,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
                 mid_point[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
 
                 tmp_b.s[j] = bodies[i].s[j]
-                bodies[i].s[j] = 0.5*(tmp_b.s[j] + bodies[i].s[j])
+                mid_point[i].s[j] = 0.5*(tmp_b.s[j] + bodies[i].s[j])
 
         # update the gradient
         for i in range(nbodies):

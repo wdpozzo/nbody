@@ -214,14 +214,19 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
     
     for i in range(N):
+
         _gradient_free_particle(tmp, bodies[i])
+        
         for k in range(6):
             out[i][k] += tmp[k]
+        
         for j in range(N):
-            if i != j:
-                _gradient(tmp, bodies[i], bodies[j], order)
-                for k in range(6):
-                    out[i][k] += tmp[k]
+            if i == j:
+                continue
+      
+            _gradient(tmp, bodies[i], bodies[j], order)
+            for k in range(6):
+                out[i][k] += tmp[k]
      
     free(tmp)
       
@@ -255,9 +260,9 @@ cdef void _gradient_free_particle(long double *out, body_t b1) nogil:
     out[1] = 0.
     out[2] = 0.
     # second 3 elements are the derivative wrt p
-    out[3] = 0.
-    out[4] = 0.
-    out[5] = 0.
+    out[3] = b1.p[0]/b1.mass
+    out[4] = b1.p[1]/b1.mass
+    out[5] = b1.p[2]/b1.mass
     
     return
 
@@ -274,16 +279,16 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r2 = r*r
     cdef long double r3 = r*r2
     
-    cdef long double prefactor = G*b1.mass*b2.mass/r3    
+    cdef long double prefactor = G*b1.mass*b2.mass/r3
     
     # first 3 elements are the derivative wrt to q
     out[0] += prefactor*dx
     out[1] += prefactor*dy
     out[2] += prefactor*dz
     # second 3 elements are the derivative wrt p
-    out[3] += b1.p[0]/b1.mass
-    out[4] += b1.p[1]/b1.mass
-    out[5] += b1.p[2]/b1.mass
+#    out[3] += b1.p[0]/b1.mass
+#    out[4] += b1.p[1]/b1.mass
+#    out[5] += b1.p[2]/b1.mass
     
     return
 
