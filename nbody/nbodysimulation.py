@@ -82,19 +82,20 @@ if __name__=="__main__":
     #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
     '''
     
-    plot_step = 10000
+    #parameters for solution files management 
+    plot_step = 1000
     buffer_lenght = 5000000
     data_thin = 10
+    #---------------------------------------#
     
     dt = opts.dt
     N  = opts.steps
     Neff = int(N/(data_thin*plot_step))
-    
     nout = int(N/buffer_lenght)
     
     
     if not opts.p:
-        run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it)
+        run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
     
     s, H, T, V = [], [], [], []
     
