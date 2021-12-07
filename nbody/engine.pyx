@@ -21,7 +21,7 @@ cdef unsigned int _merge(body_t *bodies, unsigned int nbodies):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order, int ICN_it):
+cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it):
 
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
