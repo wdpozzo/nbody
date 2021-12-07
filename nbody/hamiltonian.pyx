@@ -3,6 +3,7 @@ cimport numpy as np
 cimport cython
 from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
+from libc.string cimport memset
 from nbody.body cimport body_t, merger, _merge_bodies
 
 #import astropy.units as u
@@ -12,7 +13,7 @@ cdef long double G = 6.67e-11 #G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u
 # AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
 
 cdef long double C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
-cdef long double Msun = 2e30 # (2e30*u.kg).to(u.solMass).value
+cdef long double Msun = 1.988e30 # (2e30*u.kg).to(u.solMass).value
 #cdef long double GM = 1.32712440018e20 
 
 cdef long double _modulus(long double x, long double y, long double z) nogil:
@@ -136,8 +137,8 @@ cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
 cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
-    
-    return - G*b1.mass*b2.mass/r
+
+    return -G*b1.mass*b2.mass/r
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -212,14 +213,13 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
 
     cdef unsigned int i,j,k
     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
-    
     for i in range(N):
 
         _gradient_free_particle(tmp, bodies[i])
         
         for k in range(6):
             out[i][k] += tmp[k]
-        
+            
         for j in range(N):
             if i == j:
                 continue
@@ -285,11 +285,12 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     out[0] += prefactor*dx
     out[1] += prefactor*dy
     out[2] += prefactor*dz
+
     # second 3 elements are the derivative wrt p
-#    out[3] += b1.p[0]/b1.mass
-#    out[4] += b1.p[1]/b1.mass
-#    out[5] += b1.p[2]/b1.mass
-    
+    out[3] = 0.
+    out[4] = 0.
+    out[5] = 0.
+
     return
 
 
