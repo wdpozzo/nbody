@@ -285,9 +285,9 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double prefactor = G*b1.mass*b2.mass/r3
     
     # first 3 elements are the derivative wrt to q
-    out[0] += prefactor*dx
-    out[1] += prefactor*dy
-    out[2] += prefactor*dz
+    out[0] = prefactor*dx
+    out[1] = prefactor*dy
+    out[2] = prefactor*dz
 
     # second 3 elements are the derivative wrt p
     out[3] = 0.

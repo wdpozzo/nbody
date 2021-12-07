@@ -103,13 +103,13 @@ if __name__ == '__main__':
     
     planet_names = ['sun',
     'mercury',
-#    'venus',
-#    'earth',
-#    'mars',
-#    'jupiter',
-#    'saturn',
-#    'uranus',
-#    'neptune',
+    'venus',
+    'earth',
+    'mars',
+    'jupiter',
+    'saturn',
+    'uranus',
+    'neptune',
     ]
     
     planets = []
