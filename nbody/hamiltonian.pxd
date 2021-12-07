@@ -2,8 +2,6 @@ import numpy as np
 cimport numpy as np
 from nbody.body cimport body_t
 
-cdef long double G = 1
-
 cdef long double _modulus(long double x, long double y, long double z) nogil
 
 cdef long double _dot(long double *v1, long double *v2) nogil

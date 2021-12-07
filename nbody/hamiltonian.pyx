@@ -3,6 +3,7 @@ cimport numpy as np
 cimport cython
 from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
+from libc.string cimport memset
 from nbody.body cimport body_t, merger, _merge_bodies
 
 #import astropy.units as u
@@ -12,7 +13,7 @@ cdef long double G = 6.67e-11 #G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u
 # AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
 
 cdef long double C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
-cdef long double Msun = 2e30 # (2e30*u.kg).to(u.solMass).value
+cdef long double Msun = 1.988e30 # (2e30*u.kg).to(u.solMass).value
 #cdef long double GM = 1.32712440018e20 
 
 cdef long double _modulus(long double x, long double y, long double z) nogil:
@@ -136,8 +137,8 @@ cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
 cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
-    
-    return - G*b1.mass*b2.mass/r
+
+    return -G*b1.mass*b2.mass/r
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -162,6 +163,8 @@ cdef long double _potential_1pn(body_t b1, body_t b2) nogil:
     V += ((1./8.)*V0*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
 
     V += (0.25*V0*G*(m1+ m2)/r)/C2
+    
+    free(normal)
     
     return V
 
@@ -202,6 +205,8 @@ cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
     
     V += - ((1./8.)*V0*G*G*(m1sq+5.*m1m2+m2sq)/r2)/C4
     
+    free(normal)
+    
     return V
 
 @cython.boundscheck(False)
@@ -212,16 +217,20 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
 
     cdef unsigned int i,j,k
     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
-    
     for i in range(N):
+
         _gradient_free_particle(tmp, bodies[i])
+        
         for k in range(6):
             out[i][k] += tmp[k]
+            
         for j in range(N):
-            if i != j:
-                _gradient(tmp, bodies[i], bodies[j], order)
-                for k in range(6):
-                    out[i][k] += tmp[k]
+            if i == j:
+                continue
+      
+            _gradient(tmp, bodies[i], bodies[j], order)
+            for k in range(6):
+                out[i][k] += tmp[k]
      
     free(tmp)
       
@@ -255,9 +264,9 @@ cdef void _gradient_free_particle(long double *out, body_t b1) nogil:
     out[1] = 0.
     out[2] = 0.
     # second 3 elements are the derivative wrt p
-    out[3] = 0.
-    out[4] = 0.
-    out[5] = 0.
+    out[3] = b1.p[0]/b1.mass
+    out[4] = b1.p[1]/b1.mass
+    out[5] = b1.p[2]/b1.mass
     
     return
 
@@ -271,20 +280,20 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double dy = b1.q[1]-b2.q[1]
     cdef long double dz = b1.q[2]-b2.q[2]
     cdef long double r  = sqrt(_modulus(dx,dy,dz))
-    cdef long double r2 = r*r
-    cdef long double r3 = r*r2
+    cdef long double r3 = r*r*r
     
-    cdef long double prefactor = G*b1.mass*b2.mass/r3    
+    cdef long double prefactor = G*b1.mass*b2.mass/r3
     
     # first 3 elements are the derivative wrt to q
-    out[0] += prefactor*dx
-    out[1] += prefactor*dy
-    out[2] += prefactor*dz
+    out[0] = prefactor*dx
+    out[1] = prefactor*dy
+    out[2] = prefactor*dz
+
     # second 3 elements are the derivative wrt p
-    out[3] += b1.p[0]/b1.mass
-    out[4] += b1.p[1]/b1.mass
-    out[5] += b1.p[2]/b1.mass
-    
+    out[3] = 0.
+    out[4] = 0.
+    out[5] = 0.
+
     return
 
 
@@ -344,7 +353,9 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         #out[3+k] +=  (0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*(n_p2)/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*(p12)/m1cu )/C2 #1PN order
         
         out[k+3] += ( 0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*p12/m1cu )/C2
-         
+    
+    free(dq)
+    free(normal)
     return
     
 @cython.boundscheck(False)
@@ -406,5 +417,7 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
         #out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(20.0*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.*b1.p[k]*p12/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq -6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r2) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
         
         out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*n_p2/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(10*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.0*b1.p[k]*p22/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq - 6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
-    
+
+    free(dq)
+    free(normal)
     return 
