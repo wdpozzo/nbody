@@ -125,8 +125,8 @@ def run(unsigned int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] sy,
           np.ndarray[long double, mode="c", ndim=1] sz,
           unsigned int ICN_it,
-          unsigned int nthin = 10,
-          unsigned int buffer_length = 1000000):
+          unsigned int nthin,
+          unsigned int buffer_length):
     
     from tqdm import tqdm
     import pickle

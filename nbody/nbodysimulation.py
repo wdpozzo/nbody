@@ -83,13 +83,14 @@ if __name__=="__main__":
     '''
     
     plot_step = 10000
+    buffer_lenght = 5000000
+    data_thin = 10
     
     dt = opts.dt
     N  = opts.steps
-    Neff = int(N/(10*plot_step))
-    s_f_step = 5000000 #solution_file_step
+    Neff = int(N/(data_thin*plot_step))
     
-    nout = int(N/s_f_step)
+    nout = int(N/buffer_lenght)
     
     
     if not opts.p:
