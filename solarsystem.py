@@ -18,13 +18,26 @@ from astropy.constants import M_earth, M_sun, au, M_jup
 
 import astropy.units as u
 
-G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value
-c = 3.0e8
-Msun = 2e30
-Mearth = 6e24
-AU = 1.5e11 #astronomical unit
-GM = 1.32712440018e20 # G*Msun
-day = 86400 # s
+G = 6.67e-11  # m^3 kg^-1 s^-2
+Msun = 2e30   # kg
+AU = 1.5e11   # m
+day = 86400   # s
+Mearth = 6e24 # kg
+
+# Solar system masses
+masses = {
+    'sun'     : Msun,
+    'earth'   : Mearth,
+    'moon'    : 0.0123*Mearth,
+    'mercury' : 0.0553*Mearth,
+    'mars'    : 0.1075*Mearth,
+    'venus'   : 0.815*Mearth,
+    'jupiter' : 317.8*Mearth,
+    'saturn'  : 95.2*Mearth,
+    'uranus'  : 14.6*Mearth,
+    'neptune' : 17.2*Mearth,
+    'pluto'   : 0.00218*Mearth,
+}
 
 def make_plots(H, Neff, nbodies, s):
     plotting_step =1# 64#np.maximum(64,Neff//int(0.1*Neff))
@@ -71,6 +84,7 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--steps', default = 1000, type='int', help = "Number of steps to compute")
     parser.add_option('--order', default = 0, type='int', help = "Post Newtonian order")
+    parser.add_option('--cn_order', default = 7, type='int', help = "CN integrator order")
     parser.add_option('--dt', default = 1, type='float', help = "Time interval (dt)")
     parser.add_option('-p', default = False, action = 'store_true', help = "Run postprocessing only")
     parser.add_option('--plot', default = True, action = 'store_true', help = "Make plots")
@@ -79,8 +93,6 @@ if __name__ == '__main__':
     
     
     t = Time(datetime.now())#'2021-06-21T00:00:00')
-
-    m = np.array([1*Msun, (M_earth/M_sun).value*Msun]).astype(np.longdouble)
     
     planet_names = ['sun',
     'mercury',
@@ -97,10 +109,10 @@ if __name__ == '__main__':
     
     for planet in planet_names:
         planets.append(get_body_barycentric_posvel(planet,t))
-    
+        
     print(planets)
-    m = np.concatenate((np.array([Msun]),np.array([0.330, 4.87, 5.97, 0.642, 1898, 568, 86.8, 102])*1e24)).astype(np.longdouble)
-#    m = np.array([Msun, (0.33/5.97 * M_earth/M_sun).value*Msun, (M_earth/M_sun).value*Msun, (M_jup/M_sun).value*Msun]).astype(np.longdouble)
+    m = np.array([masses[planet] for planet in planet_names]).astype(np.longdouble)
+
     print(m)
     Mtot = np.sum(m)
    
@@ -112,7 +124,8 @@ if __name__ == '__main__':
     vx = np.array([planet[1].x.value*AU/day for planet in planets]).astype(np.longdouble)
     vy = np.array([planet[1].y.value*AU/day for planet in planets]).astype(np.longdouble)
     vz = np.array([planet[1].z.value*AU/day for planet in planets]).astype(np.longdouble)
-
+    print(vx,vy,vz)
+    exit(0)
     vcm = np.array([np.sum(vx*m/Mtot), np.sum(vy*m/Mtot), np.sum(vz*m/Mtot)])
     print(vcm, np.linalg.norm(vcm))
     sx = np.zeros(len(m)).astype(np.longdouble)
@@ -128,16 +141,34 @@ if __name__ == '__main__':
 
     dt = opts.dt
     N  = opts.steps
-    Neff = N
-
+    thin = 10
+    Neff = N//thin
+    n_buf = 100000
     if not opts.p:
-        s,H = run(N, np.longdouble(dt), opts.order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, 2)
-        s   = np.array(s, dtype=object)
-        pickle.dump(s, open('solution.pkl','wb'))
-        pickle.dump(H, open('hamiltonian.pkl','wb'))
-        
-    else:
-        s = pickle.load(open('solution_0.pkl','rb'))
-        H = pickle.load(open('hamiltonian_0.pkl','rb'))
-
+        run(N,
+            np.longdouble(dt),
+            opts.order,
+            m,
+            x,
+            y,
+            z,
+            m*vx,
+            m*vy,
+            m*vz,
+            sx,
+            sy,
+            sz,
+            opts.cn_order,
+            nthin = thin,
+            buffer_length = n_buf)
+    n_buf = N//n_buf
+    for i in range(n_buf):
+        if i == 0:
+            s = np.array(pickle.load(open('solution_{}.pkl'.format(i),'rb')), dtype=object)
+            H = np.array(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')))
+        else:
+            s = np.row_stack((s,np.array(pickle.load(open('solution_{}.pkl'.format(i),'rb')), dtype=object)))
+            H = np.concatenate((H,np.array(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')), dtype=object)))
+    
+    print(s.shape,H.shape)
     make_plots(H, Neff, len(m), s)

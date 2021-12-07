@@ -48,7 +48,6 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
 
     for i in range(ICN_it):   
     # FIXME: spins are not evolving!
-    
         for i in range(nbodies):
             mass = bodies[i].mass
             mid_point[i].mass = mass
@@ -64,7 +63,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
                 tmp_b.s[j] = bodies[i].s[j]
                 bodies[i].s[j] = 0.5*(tmp_b.s[j] + bodies[i].s[j])
 
-    # update the gradient
+        # update the gradient
         for i in range(nbodies):
             memset(g[i], 0, 6*sizeof(long double))
         _gradients(g, mid_point, nbodies, order)
@@ -125,7 +124,9 @@ def run(unsigned int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] sx,
           np.ndarray[long double, mode="c", ndim=1] sy,
           np.ndarray[long double, mode="c", ndim=1] sz,
-          unsigned int ICN_it):
+          unsigned int ICN_it,
+          unsigned int nthin = 10,
+          unsigned int buffer_length = 1000000):
     
     from tqdm import tqdm
     import pickle
@@ -146,7 +147,7 @@ def run(unsigned int nsteps, long double dt, int order,
     #H.append(h)
     #T.append(t)
     #V.append(v)
-    n_sol = 0
+    cdef unsigned int n_sol = 0
 
     for i in tqdm(range(1,nsteps)):
         # check for mergers
@@ -155,7 +156,7 @@ def run(unsigned int nsteps, long double dt, int order,
         _one_step(bodies, n, dt, order, ICN_it)
         # store 1 every 10 steps
         
-        if (i+1)%10 == 0:
+        if (i+1)%nthin == 0:
             solution.append([bodies[i] for i in range(n)])
             h, t, v = _hamiltonian(bodies, n, order)
         
@@ -163,14 +164,14 @@ def run(unsigned int nsteps, long double dt, int order,
             T.append(t)
             V.append(v)
             
-        if (i+1)%5000000 == 0:
+        if (i+1)%buffer_length == 0:
             pickle.dump(solution,open('solution_{}.pkl'.format(n_sol),'wb'))
             pickle.dump(T,open('kinetic_{}.pkl'.format(n_sol),'wb'))
             pickle.dump(V,open('potential_{}.pkl'.format(n_sol),'wb'))
             pickle.dump(H,open('hamiltonian_{}.pkl'.format(n_sol),'wb'))
             n_sol += 1
-            H  		= []
-            T 		   = []
+            H        = []
+            T        = []
             V        = []
             solution = []
     return 1
