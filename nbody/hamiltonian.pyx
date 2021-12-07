@@ -164,6 +164,8 @@ cdef long double _potential_1pn(body_t b1, body_t b2) nogil:
 
     V += (0.25*V0*G*(m1+ m2)/r)/C2
     
+    free(normal)
+    
     return V
 
 @cython.boundscheck(False)
@@ -202,6 +204,8 @@ cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
     V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
     
     V += - ((1./8.)*V0*G*G*(m1sq+5.*m1m2+m2sq)/r2)/C4
+    
+    free(normal)
     
     return V
 
@@ -276,8 +280,7 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double dy = b1.q[1]-b2.q[1]
     cdef long double dz = b1.q[2]-b2.q[2]
     cdef long double r  = sqrt(_modulus(dx,dy,dz))
-    cdef long double r2 = r*r
-    cdef long double r3 = r*r2
+    cdef long double r3 = r*r*r
     
     cdef long double prefactor = G*b1.mass*b2.mass/r3
     

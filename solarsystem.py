@@ -19,7 +19,7 @@ from astropy.constants import M_earth, M_sun, au, M_jup
 import astropy.units as u
 
 G = 6.67e-11  # m^3 kg^-1 s^-2
-Msun = 2e30   # kg
+Msun = 1.988e30   # kg
 AU = 149597870700.   # m
 day = 86400   # s
 Mearth = 6e24 # kg
@@ -48,8 +48,8 @@ def make_plots(H, T, V, Neff, nbodies, s):
     ax.set_ylabel('H(J)')
     ax.grid()
     ax = f.add_subplot(212)
-    ax.plot(range(Neff), T, label='T')
-    ax.plot(range(Neff), V, label='V')
+    ax.plot(range(Neff), T-T.mean(), label='T')
+    ax.plot(range(Neff), V-V.mean(), label='V')
     ax.set_xlabel('iteration')
     ax.set_ylabel('Energy(J)')
     ax.grid()
@@ -90,10 +90,11 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option('--steps', default = 1000, type='int', help = "Number of steps to compute")
     parser.add_option('--order', default = 0, type='int', help = "Post Newtonian order")
-    parser.add_option('--cn_order', default = 7, type='int', help = "CN integrator order")
+    parser.add_option('--cn_order', default = 1, type='int', help = "CN integrator order")
     parser.add_option('--dt', default = 1, type='float', help = "Time interval (dt)")
     parser.add_option('-p', default = False, action = 'store_true', help = "Run postprocessing only")
     parser.add_option('--plot', default = True, action = 'store_true', help = "Make plots")
+    parser.add_option('--animate', default = False, action = 'store_true', help = "Make animation")
     parser.add_option('--cm', default = False, action = 'store_true', help = "Plot separation (requires nbodies = 2)")
     (opts,args) = parser.parse_args()
     
@@ -102,20 +103,21 @@ if __name__ == '__main__':
     
     planet_names = ['sun',
     'mercury',
-    'venus',
-    'earth',
-    'mars',
-    'jupiter',
-    'saturn',
-    'uranus',
-    'neptune',
+#    'venus',
+#    'earth',
+#    'mars',
+#    'jupiter',
+#    'saturn',
+#    'uranus',
+#    'neptune',
     ]
     
     planets = []
     
     for planet in planet_names:
         planets.append(get_body_barycentric_posvel(planet,t))
-        
+    
+    nbodies = len(planets)
     print(planets)
     m = np.array([masses[planet] for planet in planet_names]).astype(np.longdouble)
 
@@ -149,7 +151,7 @@ if __name__ == '__main__':
     N  = opts.steps
     thin = 100
     Neff = N//thin
-    n_buf = 1000000
+    n_buf = 100000
     if not opts.p:
         run(N,
             np.longdouble(dt),
@@ -168,6 +170,7 @@ if __name__ == '__main__':
             nthin = thin,
             buffer_length = n_buf)
     n_buf = N//n_buf
+    
     for i in range(n_buf):
         if i == 0:
             s = np.array(pickle.load(open('solution_{}.pkl'.format(i),'rb')), dtype=object)
@@ -179,5 +182,85 @@ if __name__ == '__main__':
             H = np.concatenate((H,np.array(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')), dtype=object)))
             T = np.concatenate((T,np.array(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')), dtype=object)))
             V = np.concatenate((V,np.array(pickle.load(open('potential_{}.pkl'.format(i),'rb')), dtype=object)))
+
+    if opts.animate == 1:
     
+        import matplotlib.pyplot as plt
+        import matplotlib.cm as cm
+        from mpl_toolkits import mplot3d
+        from matplotlib.animation import FuncAnimation, writers
+        
+        f = plt.figure(figsize=(6,4))
+        ax = f.add_subplot(111, projection = '3d')
+        
+        f.set_facecolor('black')
+        ax.set_facecolor('black')
+        ax.xaxis.pane.fill = False
+        ax.yaxis.pane.fill = False
+        ax.zaxis.pane.fill = False
+
+        # Now set color to white (or whatever is "invisible")
+        ax.xaxis.pane.set_edgecolor('w')
+        ax.yaxis.pane.set_edgecolor('w')
+        ax.zaxis.pane.set_edgecolor('w')
+#        ax.w_xaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+#        ax.w_yaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+#        ax.w_zaxis.set_pane_color((0.0, 0.0, 0.0, 0.0))
+        ax.xaxis.label.set_color('white')
+        ax.yaxis.label.set_color('white')
+        ax.zaxis.label.set_color('white')
+
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+        ax.tick_params(axis='z', colors='white')
+        # Bonus: To get rid of the grid as well:
+        ax.grid(False)
+        
+        colors = cm.rainbow(np.linspace(0, 1, nbodies))
+  
+        trails = {}
+        lines  = []
+        symbols = []
+        
+        for b in range(nbodies):
+            q = s[0][b]['q']
+            trails[b] = deque(maxlen=200)
+            trails[b].append(q)
+            q_trail = np.array(trails[b])
+            l, = ax.plot(q_trail[:,0],q_trail[:,1],q_trail[:,2], color=colors[b], alpha=0.5)
+            lines.append(l)
+            sym = ax.scatter(q[0],q[1],q[2], color=colors[b], s=10*s[0][b]['mass']/Msun)
+            symbols.append(sym)
+        
+        ax.view_init(15, 0)
+
+        ax.set(xlim=(-20*AU, 20*AU),
+               ylim=(-20*AU, 20*AU),
+               zlim=(-20*AU, 20*AU))
+        
+        def animate_bodies(i,q,symbol):
+            symbol._offsets3d = (np.atleast_1d(q[0]),
+                                 np.atleast_1d(q[1]),
+                                 np.atleast_1d(q[2]))
+        
+        def animate_trails(i,line,q_trail):
+            line.set_data(q_trail[:,0],q_trail[:,1])
+            line.set_3d_properties(q_trail[:,2])
+        
+        import sys
+        def animate(i, s, lines, symbols):
+            sys.stderr.write('{0}'.format(i))
+            for b in range(nbodies):
+                q = s[i][b]['q']
+                trails[b].append(q)
+                q_trail = np.array(trails[b])
+                animate_trails(i,lines[b],q_trail)
+                animate_bodies(i,q,symbols[b])
+            return []
+        
+        anim = FuncAnimation(f, animate, Neff, fargs=(s, lines, symbols),
+                             interval = 0.1, blit = True)
+        Writer = writers['ffmpeg']
+        writer = Writer(fps=120, metadata=dict(artist='Me'), bitrate=900, extra_args=['-vcodec', 'libx264'])
+        anim.save('solarsystem.mp4', writer=writer)
     make_plots(H, T, V, Neff, len(m), s)
