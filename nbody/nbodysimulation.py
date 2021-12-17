@@ -3,7 +3,7 @@ import math
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run
-from nbody.Kepler_dynamic import kepler
+from Kep_dynamic import kepler
 from collections import deque
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
@@ -320,7 +320,6 @@ if __name__=="__main__":
         
         N_arr = np.linspace(0, N, Neff)
         
-        
         '''
         Questa parte (inclusa la parte di meccanica kepleriana) sara' implementata in un file .pyx indipendente 
         '''
@@ -332,21 +331,21 @@ if __name__=="__main__":
         p1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
         q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
         p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')        
+      
+        for i in range(0, Neff):
         
-        q1 = s[i][0]['q']
-        p1 = s[i][0]['p']
-        q2 = s[i][1]['q']
-        p2 = s[i][1]['p']
-         
-        q_rel, p_rel = CM_system(p1, p2, q1, q2)          
+            q1[i,:] = s[i][0]['q']
+            p1[i,:] = s[i][0]['p']
+            q2[i,:] = s[i][1]['q']
+            p2[i,:] = s[i][1]['p']
+        
+        q_rel, p_rel = CM_system(p1, p2, q1, q2, Neff)          
 
         q1_dif, q2_dif, r_dif, q1_analit, q2_analit, L = kepler(p1, p2, q1, q2, Neff, H)
- 
         
 	     #-----------Plots-----------------#
 	     
         f = plt.figure(figsize=(16,6))
-        
         ax = f.add_subplot(121, projection = '3d')  
         #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
         ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
@@ -365,13 +364,11 @@ if __name__=="__main__":
         ax1.set_ylabel('Oribital radius difference [m]')
         plt.grid()
         plt.legend()                    
-
         plt.show()
 
 
         
         f = plt.figure(figsize=(16,6))
-               
         ax2 = f.add_subplot(121) 
         ax2.plot(N_arr, q1_dif[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
         ax2.set_xlabel('iterations')
@@ -385,12 +382,10 @@ if __name__=="__main__":
         ax3.set_ylabel('Displacement [m]')
         plt.grid()
         plt.legend()                    
-
         plt.show()
-        
+       
         
         f = plt.figure(figsize=(16,6))
-               
         ax2 = f.add_subplot(121) 
         ax2.plot(N_arr, q2_dif[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
         ax2.set_xlabel('iterations')
@@ -404,16 +399,13 @@ if __name__=="__main__":
         ax3.set_ylabel('Displacement [m]')
         plt.grid()
         plt.legend()                    
-
         plt.show()
 
 
         f = plt.figure(figsize=(6,4))
-        
         ax = f.add_subplot(111)
         ax.plot(N_arr, L)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Angolar Momentum')
         ax.grid()
-        
         plt.show()
