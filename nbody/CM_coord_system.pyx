@@ -14,7 +14,9 @@ def CM_system(list p1, list p2, list q1, list q2):
     cdef np.ndarray[long double,mode="c",ndim=1] p_rel = np.zeros(3, dtype = np.longdouble)
     
     for i in range(3):
-        q_rel[i] = np.array([q1[i] - q2[i]])
+    
+        q_rel[i] = np.array([q1[i] - q2[i]])       
         p_rel[i] = np.array([p1[i] - p2[i]])
     
     return (q_rel, p_rel)
+    

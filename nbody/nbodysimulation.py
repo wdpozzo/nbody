@@ -1,7 +1,9 @@
 import numpy as np
+import math
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run
+from nbody.Kepler_dynamic import kepler
 from collections import deque
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
@@ -13,7 +15,8 @@ G = 6.67e-11 #(6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).val
 C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
 Ms = 2.0e30 #(2e30*u.kg).to(u.solMass).value
 #GM = 1.32712440018e20
-
+Mmerc = 0.4e-6*Ms
+Mmerc = 2.0e-6*Ms
 au = 149597870700. 
 
 if __name__=="__main__":
@@ -25,7 +28,7 @@ if __name__=="__main__":
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
     parser.add_option('--plot', default=1, type='int', help='simulations plots')
-    parser.add_option('--cm', default=1, type='int', help='orbit plot in CM system and angular momentum')
+    parser.add_option('--cm', default=1, type='int', help='orbit plot in CM system and angular momentum; requires n=2 !')
     parser.add_option('--seed', default=1, type='int', help='seed')
     parser.add_option('--ICN_order', default=7, type='int', help='ICN iteration number')
     (opts,args) = parser.parse_args()
@@ -48,14 +51,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 0.05*Ms, 0.5*Ms
+    m[0], m[1] = 1.*Ms, 1.*Ms
     
-    x[0], x[1] = -0.02*au, 0.02*au
+    x[0], x[1] = -0.5*au, 0.5*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
-    vx[0], vx[1] = 5.e2, -2.e1
-    vy[0], vy[1] = -2.e3, 1.e2
+    vx[0], vx[1] = 0., 0.
+    vy[0], vy[1] = -1.5e3, 1.5e3
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -121,7 +124,7 @@ if __name__=="__main__":
         del T_tot
         del V_tot
         
-        if i % (10*nout)//100 == 0 :
+        if (1+i) % (10*nout)//100 == 0 :
             print("Data deframmentation: {}%".format((100*i)/nout))
     
     #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
@@ -317,40 +320,100 @@ if __name__=="__main__":
         
         N_arr = np.linspace(0, N, Neff)
         
-        q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)])
-        p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)])
         
-        #print("p1 = {} \np2 = {} \nq1 = {} \nq2 = {}".format(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q']))
+        '''
+        Questa parte (inclusa la parte di meccanica kepleriana) sara' implementata in un file .pyx indipendente 
+        '''
         
-        L1 = np.zeros(Neff)          
-        L2 = np.zeros(Neff)
-        L = np.zeros(Neff)
+        q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+        p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+        
+        q1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+        p1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+        q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+        p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')        
+        
+        q1 = s[i][0]['q']
+        p1 = s[i][0]['p']
+        q2 = s[i][1]['q']
+        p2 = s[i][1]['p']
          
-        #print(type(L), L)
-                  
-        for i in range(0, Neff):
-            q_rel[i,:], p_rel[i,:] = CM_system(s[i][0]['p'], s[i][1]['p'], s[i][0]['q'], s[i][1]['q'])
-            L1[i] = s[i][0]['q'][1]*s[i][0]['p'][2] - s[i][0]['q'][2]*s[i][0]['p'][1] - s[i][0]['q'][0]*s[i][0]['p'][2] + s[i][0]['q'][2]*s[i][0]['p'][0] + s[i][0]['q'][0]*s[i][0]['p'][1] - s[i][0]['q'][1]*s[i][0]['p'][0]
-            
-            L2[i] = s[i][1]['q'][1]*s[i][1]['p'][2] - s[i][1]['q'][2]*s[i][1]['p'][1] - s[i][1]['q'][0]*s[i][1]['p'][2] + s[i][1]['q'][2]*s[i][1]['p'][0] + s[i][1]['q'][0]*s[i][1]['p'][1] - s[i][1]['q'][1]*s[i][1]['p'][0]
-            
-            L[i] = L1[i] + L2[i]
+        q_rel, p_rel = CM_system(p1, p2, q1, q2)          
 
+        q1_dif, q2_dif, r_dif, q1_analit, q2_analit, L = kepler(p1, p2, q1, q2, Neff, H)
+ 
         
-        f = plt.figure(figsize=(6,4))
-        ax = f.add_subplot(111, projection = '3d')
-        colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))    
-        ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], alpha=0.9)
-        ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o-', alpha=0.9)       
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
+	     #-----------Plots-----------------#
+	     
+        f = plt.figure(figsize=(16,6))
+        
+        ax = f.add_subplot(121, projection = '3d')  
+        #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
+        ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
+        ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num starting point', alpha=0.9)     
+        #ax.plot(x_analit, y_analit, np.zeros(Neff), label = 'Analitical solution')
+        #ax.plot(x_analit[0], y_analit[0], 0., 'o', label = 'Analit starting point')
+        #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
+        ax.set_xlabel('x [m]')
+        ax.set_ylabel('y [m]')
+        ax.set_zlabel('z [m]')
+        plt.legend()
+        
+        ax1 = f.add_subplot(122)
+        ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical', alpha=0.9)
+        ax1.set_xlabel('iterations')
+        ax1.set_ylabel('Oribital radius difference [m]')
+        plt.grid()
+        plt.legend()                    
+
         plt.show()
 
+
+        
+        f = plt.figure(figsize=(16,6))
+               
+        ax2 = f.add_subplot(121) 
+        ax2.plot(N_arr, q1_dif[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
+        ax2.set_xlabel('iterations')
+        ax2.set_ylabel('Displacement [m]')
+        plt.grid()
+        plt.legend()
+        
+        ax3 = f.add_subplot(122)
+        ax3.plot(N_arr, q1_dif[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
+        ax3.set_xlabel('iterations')
+        ax3.set_ylabel('Displacement [m]')
+        plt.grid()
+        plt.legend()                    
+
+        plt.show()
+        
+        
+        f = plt.figure(figsize=(16,6))
+               
+        ax2 = f.add_subplot(121) 
+        ax2.plot(N_arr, q2_dif[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
+        ax2.set_xlabel('iterations')
+        ax2.set_ylabel('Displacement [m]')
+        plt.grid()
+        plt.legend()
+        
+        ax3 = f.add_subplot(122)
+        ax3.plot(N_arr, q2_dif[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
+        ax3.set_xlabel('iterations')
+        ax3.set_ylabel('Displacement [m]')
+        plt.grid()
+        plt.legend()                    
+
+        plt.show()
+
+
         f = plt.figure(figsize=(6,4))
+        
         ax = f.add_subplot(111)
         ax.plot(N_arr, L)
         ax.set_xlabel('iteration')
         ax.set_ylabel('Angolar Momentum')
         ax.grid()
+        
         plt.show()

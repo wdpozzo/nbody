@@ -113,7 +113,7 @@ cdef void _free(body_t *s) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def run(unsigned int nsteps, long double dt, int order,
+def run(long int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] mass,
           np.ndarray[long double, mode="c", ndim=1] x,
           np.ndarray[long double, mode="c", ndim=1] y,
@@ -147,7 +147,7 @@ def run(unsigned int nsteps, long double dt, int order,
     #H.append(h)
     #T.append(t)
     #V.append(v)
-    cdef unsigned int n_sol = 0
+    cdef long int n_sol = 0
 
     for i in tqdm(range(1,nsteps)):
         # check for mergers
