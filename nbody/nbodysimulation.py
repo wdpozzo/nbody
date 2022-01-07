@@ -16,13 +16,13 @@ C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
 Ms = 2.0e30 #(2e30*u.kg).to(u.solMass).value
 #GM = 1.32712440018e20
 Mmerc = 0.4e-6*Ms
-Mmerc = 2.0e-6*Ms
+Mearth = 2.0e-6*Ms
 au = 149597870700. 
 
 if __name__=="__main__":
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
-    parser.add_option('--steps', default=5000000, type='int', help='n steps (must be equal or greater than 5e6')
+    parser.add_option('--steps', default=5000000, type='int', help='n steps (must be >= 1e7, which is the n. of datas in a file solution fragment)')
     parser.add_option('--PN_order', default=0, type='int', help='PN order')
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
@@ -51,14 +51,14 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    m[0], m[1] = 1.*Ms, 1.*Ms
+    m[0], m[1] = 1.*Ms, 1.*Mearth
     
-    x[0], x[1] = -0.5*au, 0.5*au
+    x[0], x[1] = -0.*au, 1.*au
     y[0], y[1] = 0.*au, 0.*au
     z[0], z[1] = 0.*au, 0.*au
 
-    vx[0], vx[1] = 0., 0.
-    vy[0], vy[1] = -1.5e3, 1.5e3
+    vx[0], vx[1] = 0., -0.
+    vy[0], vy[1] = 0., -3e4
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -86,8 +86,8 @@ if __name__=="__main__":
     '''
     
     #parameters for solution files management 
-    plot_step = 1000
-    buffer_lenght = 5000000
+    plot_step = 500
+    buffer_lenght = 10000000
     data_thin = 10
     #---------------------------------------#
     
@@ -141,7 +141,7 @@ if __name__=="__main__":
     T = np.concatenate((T[:]))
     V = np.concatenate((V[:])) 
     
-    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))      
+    print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))      
     #print(N, Neff, nout)
     
     if opts.animate == 1:
@@ -320,10 +320,6 @@ if __name__=="__main__":
         
         N_arr = np.linspace(0, N, Neff)
         
-        '''
-        Questa parte (inclusa la parte di meccanica kepleriana) sara' implementata in un file .pyx indipendente 
-        '''
-        
         q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
         p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
         
@@ -341,7 +337,7 @@ if __name__=="__main__":
         
         q_rel, p_rel = CM_system(p1, p2, q1, q2, Neff)          
 
-        q1_dif, q2_dif, r_dif, q1_analit, q2_analit, L = kepler(p1, p2, q1, q2, Neff, H)
+        r_dif, q_an_rel, q_rel_diff, L = kepler(p1, p2, q1, q2, Neff, H, m)
         
 	     #-----------Plots-----------------#
 	     
@@ -350,8 +346,8 @@ if __name__=="__main__":
         #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
         ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
         ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num starting point', alpha=0.9)     
-        #ax.plot(x_analit, y_analit, np.zeros(Neff), label = 'Analitical solution')
-        #ax.plot(x_analit[0], y_analit[0], 0., 'o', label = 'Analit starting point')
+        ax.plot(q_an_rel[:,0], q_an_rel[:,1], q_an_rel[:,2], label = 'Analitical solution')
+        ax.plot(q_an_rel[0,0], q_an_rel[0,1], q_an_rel[0,2], 'o', label = 'Analit starting point')
         #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
@@ -365,42 +361,23 @@ if __name__=="__main__":
         plt.grid()
         plt.legend()                    
         plt.show()
-
-
         
         f = plt.figure(figsize=(16,6))
         ax2 = f.add_subplot(121) 
-        ax2.plot(N_arr, q1_dif[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
+        ax2.plot(N_arr, q_rel_diff[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
         ax2.set_xlabel('iterations')
         ax2.set_ylabel('Displacement [m]')
         plt.grid()
         plt.legend()
         
         ax3 = f.add_subplot(122)
-        ax3.plot(N_arr, q1_dif[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
+        ax3.plot(N_arr, q_rel_diff[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
         ax3.set_xlabel('iterations')
         ax3.set_ylabel('Displacement [m]')
         plt.grid()
         plt.legend()                    
         plt.show()
        
-        
-        f = plt.figure(figsize=(16,6))
-        ax2 = f.add_subplot(121) 
-        ax2.plot(N_arr, q2_dif[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
-        ax2.set_xlabel('iterations')
-        ax2.set_ylabel('Displacement [m]')
-        plt.grid()
-        plt.legend()
-        
-        ax3 = f.add_subplot(122)
-        ax3.plot(N_arr, q2_dif[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
-        ax3.set_xlabel('iterations')
-        ax3.set_ylabel('Displacement [m]')
-        plt.grid()
-        plt.legend()                    
-        plt.show()
-
 
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)

@@ -48,24 +48,24 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
 
     for i in range(ICN_it):   
     # FIXME: spins are not evolving!
-        for i in range(nbodies):
-            mass = bodies[i].mass
-            mid_point[i].mass = mass
+    
+        for k in range(nbodies):
+            mass = bodies[k].mass
+            mid_point[k].mass = mass
         
             for j in range(3):
+                tmp_b.q[j] = bodies[k].q[j] + dt2*g[k][3+j]
+                mid_point[k].q[j] = 0.5*(tmp_b.q[j] + bodies[k].q[j])
 
-                tmp_b.q[j] = bodies[i].q[j] + dt2*g[i][3+j]
-                mid_point[i].q[j] = 0.5*(tmp_b.q[j] + bodies[i].q[j])
+                tmp_b.p[j] = bodies[k].p[j] - dt2*g[k][j]
+                mid_point[k].p[j] = 0.5*(tmp_b.p[j] + bodies[k].p[j])
 
-                tmp_b.p[j] = bodies[i].p[j] - dt2*g[i][j]
-                mid_point[i].p[j] = 0.5*(tmp_b.p[j] + bodies[i].p[j])
-
-                tmp_b.s[j] = bodies[i].s[j]
-                mid_point[i].s[j] = 0.5*(tmp_b.s[j] + bodies[i].s[j])
+                tmp_b.s[j] = bodies[k].s[j]
+                mid_point[k].s[j] = 0.5*(tmp_b.s[j] + bodies[k].s[j])
 
         # update the gradient
-        for i in range(nbodies):
-            memset(g[i], 0, 6*sizeof(long double))
+        for k in range(nbodies):
+            memset(g[k], 0, 6*sizeof(long double))
         _gradients(g, mid_point, nbodies, order)
         
         #print(g[0][0])
@@ -125,12 +125,13 @@ def run(long int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] sy,
           np.ndarray[long double, mode="c", ndim=1] sz,
           unsigned int ICN_it,
-          unsigned int nthin,
+          unsigned int nthin,                                   
+  #kernel-core-5.15.11-200.fc35.x86_64          
           unsigned int buffer_length):
     
     from tqdm import tqdm
     import pickle
-    cdef unsigned int i,j
+    cdef int i,j
     cdef unsigned int n = len(mass)
     cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
     cdef list solution = []
@@ -149,7 +150,7 @@ def run(long int nsteps, long double dt, int order,
     #V.append(v)
     cdef long int n_sol = 0
 
-    for i in tqdm(range(1,nsteps)):
+    for i in tqdm(range(1, nsteps)):
         # check for mergers
         n = _merge(bodies, n)
         # evolve forward in time
