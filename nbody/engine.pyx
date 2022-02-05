@@ -36,22 +36,22 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
     cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
     if g == NULL:
         raise MemoryError
-                   
+        
     for i in range(nbodies):
-        g[i] = <long double *>malloc(6*sizeof(long double))#FIXME: for the spins
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
         if g[i] == NULL:
             raise MemoryError
         memset(g[i], 0, 6*sizeof(long double))
         
 
     _gradients(g, bodies, nbodies, order)
-
+           
     for i in range(ICN_it):   
-    # FIXME: spins are not evolving!
-    
+        # FIXME: spins are not evolving!
+        
         for k in range(nbodies):
             mass = bodies[k].mass
-            mid_point[k].mass = mass
+            mid_point[k].mass = mass 
         
             for j in range(3):
                 tmp_b.q[j] = bodies[k].q[j] + dt2*g[k][3+j]
@@ -73,18 +73,21 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
     #calculate the final forward coordinates
     for i in range(nbodies):
         mass = bodies[i].mass
+        
         for j in range(3):
             bodies[i].q[j] += dt2*g[i][3+j]
             bodies[i].p[j] -= dt2*g[i][j]
 #            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
     
     _free(mid_point)
+    
     for i in range(nbodies):
         free(g[i])
  
     free(g);
     return
 
+    
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
@@ -125,39 +128,42 @@ def run(long int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] sy,
           np.ndarray[long double, mode="c", ndim=1] sz,
           unsigned int ICN_it,
-          unsigned int nthin,                                   
+          int nthin,                                   
   #kernel-core-5.15.11-200.fc35.x86_64          
           unsigned int buffer_length):
     
     from tqdm import tqdm
     import pickle
-    cdef int i,j
-    cdef unsigned int n = len(mass)
+    cdef long int i
+    cdef int n = len(mass)
     cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
     cdef list solution = []
     cdef list H = []
     cdef list V = []
     cdef list T = []
     cdef long double h, t, v
-    
+    #cdef long int nsteps = nsteps
     
     _initialise(bodies, n, mass, x, y, z,
                 px, py, pz, sx, sy, sz)
+                
     #solution.append([bodies[i] for i in range(n)])
     #h, t, v = _hamiltonian(bodies, n, order)
     #H.append(h)
     #T.append(t)
     #V.append(v)
+    
     cdef long int n_sol = 0
-
-    for i in tqdm(range(1, nsteps)):
+     
+    for i in tqdm(np.arange(1,nsteps)):
         # check for mergers
         n = _merge(bodies, n)
         # evolve forward in time
         _one_step(bodies, n, dt, order, ICN_it)
-        # store 1 every 10 steps
         
+        # store 1 every nthin steps        
         if (i+1)%nthin == 0:
+        
             solution.append([bodies[i] for i in range(n)])
             h, t, v = _hamiltonian(bodies, n, order)
         
@@ -165,11 +171,13 @@ def run(long int nsteps, long double dt, int order,
             T.append(t)
             V.append(v)
             
+        # divide in files with buffer_lenght steps each    
         if (i+1)%buffer_length == 0:
-            pickle.dump(solution,open('solution_{}.pkl'.format(n_sol),'wb'))
-            pickle.dump(T,open('kinetic_{}.pkl'.format(n_sol),'wb'))
-            pickle.dump(V,open('potential_{}.pkl'.format(n_sol),'wb'))
-            pickle.dump(H,open('hamiltonian_{}.pkl'.format(n_sol),'wb'))
+        
+            pickle.dump(solution, open('solution_{}.pkl'.format(n_sol),'wb'))
+            pickle.dump(T, open('kinetic_{}.pkl'.format(n_sol),'wb'))
+            pickle.dump(V, open('potential_{}.pkl'.format(n_sol),'wb'))
+            pickle.dump(H, open('hamiltonian_{}.pkl'.format(n_sol),'wb'))
             n_sol += 1
             H        = []
             T        = []

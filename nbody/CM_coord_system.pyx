@@ -1,7 +1,7 @@
 import numpy as np
 cimport numpy as np
 cimport cython
-from libc.stdlib cimport malloc
+#from libc.stdlib cimport malloc
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

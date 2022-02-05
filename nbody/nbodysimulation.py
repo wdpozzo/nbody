@@ -9,33 +9,116 @@ from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
 
-#import astropy.units as u
+import astropy.units as u
+from datetime import datetime
+from astropy.time import Time
+from astropy.coordinates import solar_system_ephemeris, get_body_barycentric_posvel
 
-G = 6.67e-11 #(6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #* (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
-C = 3.0e8 #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
-Ms = 2.0e30 #(2e30*u.kg).to(u.solMass).value
-#GM = 1.32712440018e20
-Mmerc = 0.4e-6*Ms
-Mearth = 2.0e-6*Ms
-au = 149597870700. 
+
+'''
+Precession of the perihelion of mercury = 43 seconds of arc per century (1 second of arch = 1/3600 degrees) 
+Number of seconds in a century = 3153600000
+More information at "https://math.ucr.edu/home/baez/physics/Relativity/GR/mercury_orbit.html"
+'''
+
+day = 86400. #*u.second
+
+G = 6.67e-11 #*(u.meter**3)/(u.kilogram*u.second**2) # 6.67e-11 #
+
+# AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
+
+C = 299792458. #*(u.meter/u.second) #299792458. #
+Ms = 1.988e30 #*(u.kilogram) # 1.988e30 #
+
+Mmerc = 0.3301e24
+Mearth = 5.9722e24 
+AU = 149597870700. #*u.meter
+
+#G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #G = 6.67e-11 
+
+# AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
+
+#C = (299792458.*(u.m/u.s)).to(u.AU/u.d).value #299792458. 
+#Msun = (1.988e30*u.kg).to(u.solMass).value 
 
 if __name__=="__main__":
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
-    parser.add_option('--steps', default=5000000, type='int', help='n steps (must be >= 1e7, which is the n. of datas in a file solution fragment)')
-    parser.add_option('--PN_order', default=0, type='int', help='PN order')
+    parser.add_option('--steps', default=5000000, type='long', help='n steps (must be >= 1e7, which is the n. of datas in a file solution fragment)') #, type='longint'
+    parser.add_option('--PN_order', default=0, type='int', help='Post Newtonian approximation order')
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
     parser.add_option('--animate', default=0, type='int', help='animate')
     parser.add_option('--plot', default=1, type='int', help='simulations plots')
     parser.add_option('--cm', default=1, type='int', help='orbit plot in CM system and angular momentum; requires n=2 !')
     parser.add_option('--seed', default=1, type='int', help='seed')
-    parser.add_option('--ICN_order', default=7, type='int', help='ICN iteration number')
+    parser.add_option('--ICN_order', default=2, type='int', help='ICN iteration number')
     (opts,args) = parser.parse_args()
 
-    nbodies = opts.n
+    nbodies = opts.n	
     ICN_it = opts.ICN_order
     np.random.seed(opts.seed)    
+    
+    '''
+    #actual natural initial coordinates    
+    t = Time(datetime.now())
+    
+    masses = {
+    'sun'     : Ms,
+    #'earth'   : Mearth,
+    'mercury' : Mmerc,
+    #'mars'    : 0.1075*Mearth,
+    #'venus'   : 0.815*Mearth,
+    #'jupiter' : 317.8*Mearth,
+    #'saturn'  : 95.2*Mearth,
+    #'uranus'  : 14.6*Mearth,
+    #'neptune' : 17.2*Mearth,
+    #'pluto'   : 0.00218*Mearth,
+}
+
+    planet_names = [
+    'sun',
+    #'earth',
+    'mercury',
+    #'mars',
+    #'venus',
+    #'jupiter',
+    #'saturn',
+    #'uranus',
+    #'neptune',
+    ]
+    
+    planets = []
+    
+    for planet in planet_names:
+        planets.append(get_body_barycentric_posvel(planet,t))
+    
+    nbodies = len(planets)
+    #print(planets)
+    m = np.array([masses[planet] for planet in planet_names]).astype(np.longdouble)
+
+    print('m=',m)
+    Mtot = np.sum(m)
+
+    x = np.array([planet[0].x.to(u.meter).value for planet in planets]).astype(np.longdouble)
+    y = np.array([planet[0].y.to(u.meter).value for planet in planets]).astype(np.longdouble)
+    z = np.array([planet[0].z.to(u.meter).value for planet in planets]).astype(np.longdouble)
+    
+    vx = np.array([planet[1].x.to(u.meter/u.second).value for planet in planets]).astype(np.longdouble)
+    vy = np.array([planet[1].y.to(u.meter/u.second).value for planet in planets]).astype(np.longdouble)
+    vz = np.array([planet[1].z.to(u.meter/u.second).value for planet in planets]).astype(np.longdouble)
+
+    vcm = np.array([np.sum(vx*m/Mtot), np.sum(vy*m/Mtot), np.sum(vz*m/Mtot)])
+    #print(vcm, np.linalg.norm(vcm))
+    
+    sx = np.zeros(len(m)).astype(np.longdouble)
+    sy = np.zeros(len(m)).astype(np.longdouble)
+    sz = np.zeros(len(m)).astype(np.longdouble)
+
+    print(x,y,z,vx,vy,vz,sx,sy,sz)
+    '''
+    
+    #custom initial coordinates
     
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -50,24 +133,28 @@ if __name__=="__main__":
     sx = np.array((2,1)).astype(np.longdouble)
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
-    
-    m[0], m[1] = 1.*Ms, 1.*Mearth
-    
-    x[0], x[1] = -0.*au, 1.*au
-    y[0], y[1] = 0.*au, 0.*au
-    z[0], z[1] = 0.*au, 0.*au
 
-    vx[0], vx[1] = 0., -0.
-    vy[0], vy[1] = 0., -3e4
+    
+    m[0], m[1] = Ms, Mmerc
+    
+    x[0], x[1] = -0.*AU, 69.818e9
+    y[0], y[1] = 0.*AU, 0.*AU
+    z[0], z[1] = 0.*AU, 0.*AU
+
+    vx[0], vx[1] = -0., -0.
+    vy[0], vy[1] = 0., -38.86e3
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    
+
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
+
     
     '''
+    #random initial coordinates
+    
     m = np.random.uniform(1e0, 1e0,size = nbodies).astype(np.longdouble)
 
     x = np.random.uniform(- 2.0, 2.0,size = nbodies).astype(np.longdouble)
@@ -94,8 +181,7 @@ if __name__=="__main__":
     dt = opts.dt
     N  = opts.steps
     Neff = int(N/(data_thin*plot_step))
-    nout = int(N/buffer_lenght)
-    
+    nout = int(N/buffer_lenght)    
     
     if not opts.p:
         run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
@@ -141,7 +227,7 @@ if __name__=="__main__":
     T = np.concatenate((T[:]))
     V = np.concatenate((V[:])) 
     
-    print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))      
+    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))      
     #print(N, Neff, nout)
     
     if opts.animate == 1:
@@ -208,12 +294,21 @@ if __name__=="__main__":
         #plotting_step = np.maximum(64, Neff//int(0.1*Neff))
         
         f = plt.figure(figsize=(6,4))
-        ax = f.add_subplot(111)
-        ax.plot(N_arr, H)
-        ax.set_xlabel('iteration')
-        ax.set_ylabel('Hamiltonian')
-        ax.grid()
-        colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
+
+        ax1 = f.add_subplot(121)
+        ax1.plot(N_arr, T, label = 'Kinetic energy')
+        ax1.plot(N_arr, V, label = 'Potential energy')
+        ax1.set_xlabel('iteration')
+        ax1.set_ylabel('Energy')
+        ax1.legend()
+        ax1.grid()
+                
+        ax2 = f.add_subplot(122)
+        ax2.plot(N_arr, H, label = 'Hamiltonian')
+        ax2.set_xlabel('iteration')
+        ax2.grid()
+           
+        colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))      
                 
         qs = [[] for x in range(nbodies)]
             
@@ -233,12 +328,14 @@ if __name__=="__main__":
         for i in range(0,Neff): #,plotting_step):
             for j in range(nbodies[i]):
                 qs[j].append(s[i][j]['q'])
+        
+        #print(np.shape(qs))
          
         for q in qs:
-            q = np.array(q)/au
+            q = np.array(q) #/AU
             c = next(colors)
             ax.plot(q[:,0],q[:,1],q[:,2],color=c,lw=0.5)
-            ax.plot(q[:,0],q[:,1],q[:,2],color='w',alpha=0.5,lw=2,zorder=0)
+            ax.plot(q[:,0],q[:,1],q[:,2], color='w', alpha=0.5, lw=2, zorder=0)
                 
 
         f.set_facecolor('black')
@@ -310,9 +407,9 @@ if __name__=="__main__":
                     ax.plot(q_trail[:,0],q_trail[:,1],q_trail[:,2],color='w',alpha=0.5,lw=2,zorder=0)
     #            ax.set(xlim=(-50, 50), ylim=(-50, 50), zlim=(-50,50))
                 plt.pause(0.00001)
+                
             plt.show()
-            
-
+  
     if opts.cm == 1:
         import matplotlib.pyplot as plt
         import matplotlib.cm as cm
@@ -337,7 +434,10 @@ if __name__=="__main__":
         
         q_rel, p_rel = CM_system(p1, p2, q1, q2, Neff)          
 
-        r_dif, q_an_rel, q_rel_diff, L = kepler(p1, p2, q1, q2, Neff, H, m)
+        r_dif, q_an_rel, q_rel_diff, L, a_p = kepler(p1, p2, q1, q2, Neff, H, m)
+        
+        #perihelion total shift
+        p_s = np.sum(a_p)
         
 	     #-----------Plots-----------------#
 	     
@@ -353,16 +453,23 @@ if __name__=="__main__":
         ax.set_ylabel('y [m]')
         ax.set_zlabel('z [m]')
         plt.legend()
+
+        #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
+        #ax.set_ylim(min(q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
+        #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
+        #plt.axis('auto')
         
         ax1 = f.add_subplot(122)
         ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical', alpha=0.9)
         ax1.set_xlabel('iterations')
-        ax1.set_ylabel('Oribital radius difference [m]')
+        ax1.set_ylabel('Orbital radius difference [m]')
         plt.grid()
-        plt.legend()                    
+        plt.legend()                         
+        
         plt.show()
         
         f = plt.figure(figsize=(16,6))
+        
         ax2 = f.add_subplot(121) 
         ax2.plot(N_arr, q_rel_diff[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
         ax2.set_xlabel('iterations')
@@ -378,7 +485,14 @@ if __name__=="__main__":
         plt.legend()                    
         plt.show()
        
-
+        f = plt.figure(figsize=(6,4))
+        ax = f.add_subplot(111)
+        ax.plot(N_arr, a_p)
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('Apsidial precession [rad x revolution]')
+        ax.grid()
+        plt.show()
+        
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
         ax.plot(N_arr, L)
@@ -386,3 +500,6 @@ if __name__=="__main__":
         ax.set_ylabel('Angolar Momentum')
         ax.grid()
         plt.show()
+        
+        print('Perihelion shift = {}'.format(p_s))
+        #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
