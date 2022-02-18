@@ -1,4 +1,4 @@
-cimport cython
+cimport cython                        
 import numpy as np
 cimport numpy as np
 from libc.stdlib cimport malloc, free
@@ -54,6 +54,7 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
             mid_point[k].mass = mass 
         
             for j in range(3):
+                
                 tmp_b.q[j] = bodies[k].q[j] + dt2*g[k][3+j]
                 mid_point[k].q[j] = 0.5*(tmp_b.q[j] + bodies[k].q[j])
 

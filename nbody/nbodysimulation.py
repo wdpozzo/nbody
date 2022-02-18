@@ -44,7 +44,7 @@ AU = 149597870700. #*u.meter
 if __name__=="__main__":
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
-    parser.add_option('--steps', default=5000000, type='long', help='n steps (must be >= 1e7, which is the n. of datas in a file solution fragment)') #, type='longint'
+    parser.add_option('--steps', default=5000000, type='long', help='n steps (must be a multiple of  1e7, which is the n. of datas in a file solution fragment)') #, type='longint'
     parser.add_option('--PN_order', default=0, type='int', help='Post Newtonian approximation order')
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
@@ -133,16 +133,30 @@ if __name__=="__main__":
     sx = np.array((2,1)).astype(np.longdouble)
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
-
     
-    m[0], m[1] = Ms, Mmerc
+    m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
-    x[0], x[1] = -0.*AU, 69.818e9
+    x[0], x[1] = -69.818e9, 0.*AU
     y[0], y[1] = 0.*AU, 0.*AU
     z[0], z[1] = 0.*AU, 0.*AU
 
-    vx[0], vx[1] = -0., -0.
-    vy[0], vy[1] = 0., -38.86e3
+    vx[0], vx[1] = 0., 0.
+    vy[0], vy[1] = 38.86e3, 0.
+    vz[0], vz[1] = 0., 0.
+    
+    sx[0], sx[1] = 0., 0.
+    sy[0], sy[1] = 0., 0.
+    sz[0], sz[1] = 0., 0.
+      
+    '''
+    m[0], m[1] = 4.e0*Ms, 1.e0*Ms
+    
+    x[0], x[1] = -0.9*AU, 0.9*AU
+    y[0], y[1] = 0.*AU, 0.*AU
+    z[0], z[1] = 0.*AU, 0.*AU
+
+    vx[0], vx[1] = +0.7e1, -1.2e1
+    vy[0], vy[1] = +1.86e2, -2.56e2
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
@@ -150,8 +164,7 @@ if __name__=="__main__":
     sz[0], sz[1] = 0., 0.
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-
-    
+    '''
     '''
     #random initial coordinates
     
@@ -332,7 +345,7 @@ if __name__=="__main__":
         #print(np.shape(qs))
          
         for q in qs:
-            q = np.array(q) #/AU
+            q = np.array(q) #/AU)
             c = next(colors)
             ax.plot(q[:,0],q[:,1],q[:,2],color=c,lw=0.5)
             ax.plot(q[:,0],q[:,1],q[:,2], color='w', alpha=0.5, lw=2, zorder=0)
@@ -371,6 +384,7 @@ if __name__=="__main__":
             ax.set_facecolor('black')
             colors = cm.rainbow(np.linspace(0, 1, nbodies[0]))
             trails = {}
+            
             for b in range(nbodies[0]):
                 trails[b] = deque(maxlen=500)
 
@@ -411,95 +425,106 @@ if __name__=="__main__":
             plt.show()
   
     if opts.cm == 1:
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
-        from mpl_toolkits import mplot3d
+        print(opts.n)
         
-        N_arr = np.linspace(0, N, Neff)
+        if opts.n == 2:
+            import matplotlib.pyplot as plt
+            import matplotlib.cm as cm
+            from mpl_toolkits import mplot3d
+            N_arr = np.linspace(0, N, Neff)
+            
+            q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+            p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+            q1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+            p1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+            q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+            p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')        
+            
+            for i in range(0, Neff):
+                q1[i,:] = s[i][0]['q']
+                p1[i,:] = s[i][0]['p']
+                q2[i,:] = s[i][1]['q']
+                p2[i,:] = s[i][1]['p']
+                
+            q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])
+            
+            r_dif, q_an_rel, q_rel_diff, L, a_p, r_kepler, t = kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it)
+            r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
+            
+            #perihelion total shift
+            #p_s = np.sum(a_p)
+            #-----------Plots-----------------#
+            
+            print(q_rel, q_an_rel)
+            
+            f = plt.figure(figsize=(16,6))
+            ax = f.add_subplot(121, projection = '3d')  
+            #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
+            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
+            ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num. starting point', alpha=0.9)     
+            ax.plot(q_an_rel[:,0], q_an_rel[:,1], q_an_rel[:,2], label = 'Analitical solution')
+            ax.plot(q_an_rel[0,0], q_an_rel[0,1], q_an_rel[0,2], 'o', label = 'Analit. starting point')
+            ax.plot(q_cm[:,0], q_cm[:,1], q_cm[:,2], 'o', label = 'CM')
+            #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
+            ax.set_xlabel('x [m]')
+            ax.set_zlabel('z [m]')
+            plt.legend()
+            #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
+            #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
+            #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
+            #plt.axis('auto')
+            
+            ax1 = f.add_subplot(122)
+            ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical (1)', alpha=0.9)
+            ax1.plot(N_arr, abs(r - r_kepler), label = 'Analitycal vs. Numerical (2)', alpha=0.9)
+            ax1.set_xlabel('iterations')
+            ax1.set_ylabel('Orbital radius difference [m]')
+            plt.grid()
+            plt.legend()
+            plt.show()
+            
+            f = plt.figure(figsize=(16,6))
+            ax2 = f.add_subplot(121) 
+            ax2.plot(N_arr, q_rel_diff[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
+            ax2.set_xlabel('iterations')
+            ax2.set_ylabel('Displacement [m]')
+            plt.grid()
+            plt.legend()
+            
+            ax3 = f.add_subplot(122)
+            ax3.plot(N_arr, q_rel_diff[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
+            ax3.set_xlabel('iterations')
+            ax3.set_ylabel('Displacement [m]')
+            plt.grid()
+            plt.legend()
+            plt.show()
+            
+            f = plt.figure(figsize=(6,4))
+            ax = f.add_subplot(111)
+            ax.plot(N_arr, a_p)
+            ax.set_xlabel('iteration')
+            ax.set_ylabel('Apsidial precession [rad x revolution]')
+            ax.grid()
+            plt.show()
+            
+            f = plt.figure(figsize=(6,4))
+            ax = f.add_subplot(111)
+            ax.plot(N_arr, L)
+            ax.set_xlabel('iteration')
+            ax.set_ylabel('Angolar Momentum')
+            ax.grid()
+            plt.show()
+            
+            f = plt.figure(figsize=(6,4))
+            ax = f.add_subplot(111)
+            ax.plot(N_arr, t)
+            ax.set_xlabel('iteration')
+            ax.set_ylabel('Orbital period')
+            ax.grid()
+            plt.show()
+            
+            print('Perihelion shift = {}'.format(p_s))
+            #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
         
-        q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-        p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-        
-        q1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-        p1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-        q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-        p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')        
-      
-        for i in range(0, Neff):
-        
-            q1[i,:] = s[i][0]['q']
-            p1[i,:] = s[i][0]['p']
-            q2[i,:] = s[i][1]['q']
-            p2[i,:] = s[i][1]['p']
-        
-        q_rel, p_rel = CM_system(p1, p2, q1, q2, Neff)          
-
-        r_dif, q_an_rel, q_rel_diff, L, a_p = kepler(p1, p2, q1, q2, Neff, H, m)
-        
-        #perihelion total shift
-        p_s = np.sum(a_p)
-        
-	     #-----------Plots-----------------#
-	     
-        f = plt.figure(figsize=(16,6))
-        ax = f.add_subplot(121, projection = '3d')  
-        #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
-        ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
-        ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num starting point', alpha=0.9)     
-        ax.plot(q_an_rel[:,0], q_an_rel[:,1], q_an_rel[:,2], label = 'Analitical solution')
-        ax.plot(q_an_rel[0,0], q_an_rel[0,1], q_an_rel[0,2], 'o', label = 'Analit starting point')
-        #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
-        ax.set_xlabel('x [m]')
-        ax.set_ylabel('y [m]')
-        ax.set_zlabel('z [m]')
-        plt.legend()
-
-        #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
-        #ax.set_ylim(min(q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
-        #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
-        #plt.axis('auto')
-        
-        ax1 = f.add_subplot(122)
-        ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical', alpha=0.9)
-        ax1.set_xlabel('iterations')
-        ax1.set_ylabel('Orbital radius difference [m]')
-        plt.grid()
-        plt.legend()                         
-        
-        plt.show()
-        
-        f = plt.figure(figsize=(16,6))
-        
-        ax2 = f.add_subplot(121) 
-        ax2.plot(N_arr, q_rel_diff[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
-        ax2.set_xlabel('iterations')
-        ax2.set_ylabel('Displacement [m]')
-        plt.grid()
-        plt.legend()
-        
-        ax3 = f.add_subplot(122)
-        ax3.plot(N_arr, q_rel_diff[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
-        ax3.set_xlabel('iterations')
-        ax3.set_ylabel('Displacement [m]')
-        plt.grid()
-        plt.legend()                    
-        plt.show()
-       
-        f = plt.figure(figsize=(6,4))
-        ax = f.add_subplot(111)
-        ax.plot(N_arr, a_p)
-        ax.set_xlabel('iteration')
-        ax.set_ylabel('Apsidial precession [rad x revolution]')
-        ax.grid()
-        plt.show()
-        
-        f = plt.figure(figsize=(6,4))
-        ax = f.add_subplot(111)
-        ax.plot(N_arr, L)
-        ax.set_xlabel('iteration')
-        ax.set_ylabel('Angolar Momentum')
-        ax.grid()
-        plt.show()
-        
-        print('Perihelion shift = {}'.format(p_s))
-        #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
+        if (opts.n!= 2):
+            print("n do not equal 2: no CM plot")

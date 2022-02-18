@@ -308,7 +308,7 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double r  = sqrt(_modulus(dx,dy,dz))
     cdef long double r3 = r*r*r
     
-    cdef long double prefactor = 0.5*G*b1.mass*b2.mass/r3
+    cdef long double prefactor = G*b1.mass*b2.mass/r3
     
     # first 3 elements are the derivative wrt to q
     out[0] = prefactor*dx
