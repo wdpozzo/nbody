@@ -17,6 +17,12 @@ C = 299792458. #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
 Ms = 1.988e30 #(2e30*u.kg).to(u.solMass).value
 #GM = 1.32712440018e20
 
+	
+'''
+WORK IN PROGRESS
+'''
+
+
 '''
 def kep_integrator(p1, p2, q1, q2, m, dt, ICN_it, H, Neff):
 
@@ -121,10 +127,6 @@ def kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it):
 		
 	#L = q_rel[:,1]*p_rel[:,2] - q_rel[:,2]*p_rel[:,1] - q_rel[:,0]*p_rel[:,2] + q_rel[:,2]*p_rel[:,0] + q_rel[:,0]*p_rel[:,1] - q_rel[:,1]*p_rel[:,0]
 	
-	
-	'''
-	WORK IN PROGRESS
-	'''
 
 	#q1_analit = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
 	#q2_analit = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
@@ -158,6 +160,7 @@ def kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it):
 	#e = np.zeros(Neff)
 	#a = np.zeros(Neff, dtype='float64')	
 	a_p = np.zeros(Neff, dtype='float64')	
+	#T = np.zeros(Neff, dtype='float64')	
 	t = np.zeros(Neff, dtype='float64')	
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	
@@ -226,37 +229,37 @@ def kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it):
 			x_kepler = a*math.cos(E) - c
 			y_kepler = b*math.sin(E)
 			
-			t[i] = a*math.sqrt(a/alpha[i])*(E - e*math.sin(E))
+			#t[i] = a*math.sqrt(a/alpha[i])*(E - e*math.sin(E))
 			r_kepler[i] = np.float(a*(1 - e*math.cos(E))) 
 
 		if (e>1):
 			x_kepler = -a*math.cosh(E) + c
 			y_kepler = a*(math.sqrt(e*e -1))*(math.sinh(E))
 
-			t[i] = a*math.sqrt(a/alpha[i])*(e*math.sinh(E) - E)
+			#t[i] = a*math.sqrt(a/alpha[i])*(e*math.sinh(E) - E)
 			r_kepler[i] = np.float(a*(e*math.cosh(E) - 1))
 			
 		if (e==1):
 			x_kepler = +a*math.cosh(E) + c
 			y_kepler = a*(math.sqrt(e*e -1))*(math.sinh(E))
 
-			t[i] = a*math.sqrt(a/alpha[i])*(e*math.sinh(E) + E)
+			#t[i] = a*math.sqrt(a/alpha[i])*(e*math.sinh(E) + E)
 			r_kepler[i] = np.float(a*(e*math.cosh(E) + 1))  
 
 		
 		'''
 		# angular displacement of the ellipse (https://mathworld.wolfram.com/Ellipse.html)
 		if ((b==0) & (a < c)):
-		theta_ellipse = 0  
+			theta_ellipse = 0  
 			
 		if ((b==0) & (a > c)):
-		theta_ellipse = 0.5*math.pi
+			theta_ellipse = 0.5*math.pi
 
 		if ((b!=0) & (a < c)):
-		theta_ellipse = 0.5*(1/(math.atan((a - c)/(2*b))))
+			theta_ellipse = 0.5*(1/(math.atan((a - c)/(2*b))))
 
 		if ((b!=0) & (a > c)):
-		theta_ellipse = 0.5*(math.pi + 1/(math.atan((a - c)/(2*b))))
+			theta_ellipse = 0.5*(math.pi + 1/(math.atan((a - c)/(2*b))))
 
 		#Equations to center a generical ellipse (https://math.stackexchange.com/questions/2645689/what-is-the-parametric-equation-of-a-rotated-ellipse-given-the-angle-of-rotatio/2647450#2647450)
 		
@@ -311,6 +314,8 @@ def kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it):
 		
 		#apsidial precession [#rad per revolution]
 		a_p[i] = 6*math.pi*G*M/(C*C*a*(1 - e*e))
+		
+		t[i] = math.sqrt((4*math.pi*math.pi*a*a*a)/(G*M))
         
 	q_rel_diff = q_rel - q_analit_rel
 	

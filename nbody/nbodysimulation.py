@@ -22,6 +22,7 @@ More information at "https://math.ucr.edu/home/baez/physics/Relativity/GR/mercur
 '''
 
 day = 86400. #*u.second
+year = day*365
 
 G = 6.67e-11 #*(u.meter**3)/(u.kilogram*u.second**2) # 6.67e-11 #
 
@@ -58,17 +59,17 @@ if __name__=="__main__":
     nbodies = opts.n	
     ICN_it = opts.ICN_order
     np.random.seed(opts.seed)    
-    
+     
     '''
     #actual natural initial coordinates    
     t = Time(datetime.now())
     
     masses = {
     'sun'     : Ms,
-    #'earth'   : Mearth,
+    'earth'   : Mearth,
     'mercury' : Mmerc,
-    #'mars'    : 0.1075*Mearth,
-    #'venus'   : 0.815*Mearth,
+    'mars'    : 0.1075*Mearth,
+    'venus'   : 0.815*Mearth,
     #'jupiter' : 317.8*Mearth,
     #'saturn'  : 95.2*Mearth,
     #'uranus'  : 14.6*Mearth,
@@ -78,10 +79,10 @@ if __name__=="__main__":
 
     planet_names = [
     'sun',
-    #'earth',
+    'earth',
     'mercury',
-    #'mars',
-    #'venus',
+    'mars',
+    'venus',
     #'jupiter',
     #'saturn',
     #'uranus',
@@ -115,11 +116,10 @@ if __name__=="__main__":
     sy = np.zeros(len(m)).astype(np.longdouble)
     sz = np.zeros(len(m)).astype(np.longdouble)
 
-    print(x,y,z,vx,vy,vz,sx,sy,sz)
+    #print(x,y,z,vx,vy,vz,sx,sy,sz)
     '''
     
     #custom initial coordinates
-    
     m = np.array((2,1)).astype(np.longdouble)
 
     x = np.array((2,1)).astype(np.longdouble)
@@ -133,7 +133,8 @@ if __name__=="__main__":
     sx = np.array((2,1)).astype(np.longdouble)
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
-    
+
+
     m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
     x[0], x[1] = -69.818e9, 0.*AU
@@ -147,8 +148,9 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-      
-    '''
+
+
+    '''    
     m[0], m[1] = 4.e0*Ms, 1.e0*Ms
     
     x[0], x[1] = -0.9*AU, 0.9*AU
@@ -165,6 +167,7 @@ if __name__=="__main__":
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
     '''
+    
     '''
     #random initial coordinates
     
@@ -186,9 +189,9 @@ if __name__=="__main__":
     '''
     
     #parameters for solution files management 
-    plot_step = 500
-    buffer_lenght = 10000000
-    data_thin = 10
+    plot_step = 20
+    buffer_lenght = 1000000
+    data_thin = 20
     #---------------------------------------#
     
     dt = opts.dt
@@ -452,7 +455,7 @@ if __name__=="__main__":
             r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
             
             #perihelion total shift
-            #p_s = np.sum(a_p)
+            p_s = abs(a_p[0] - a_p[-1])
             #-----------Plots-----------------#
             
             print(q_rel, q_an_rel)

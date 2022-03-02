@@ -21,11 +21,10 @@ cdef unsigned int _merge(body_t *bodies, unsigned int nbodies):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it):
+cdef void _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it):
 
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
-    cdef body_t b
     cdef body_t tmp_b
     
  
@@ -88,6 +87,102 @@ cdef void _one_step(body_t *bodies, unsigned int nbodies, long double dt, int or
     free(g);
     return
 
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef void _one_step_lp(body_t *bodies, unsigned int nbodies, long double dt, int order):
+    
+    cdef unsigned int i,j,k
+    cdef long double dt2 = 0.5*dt
+
+    cdef body_t *tmp_b = <body_t *>malloc(nbodies*sizeof(body_t))
+    if tmp_b == NULL:
+        raise MemoryError
+        
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))    
+
+    _gradients(g, bodies, nbodies, order)
+
+    for k in range(nbodies):
+        mass = bodies[k].mass
+        tmp_b[k].mass = mass         
+        
+        for j in range(3):
+                
+            tmp_b[k].q[j] = bodies[k].q[j] + dt2*g[k][3+j]
+
+            tmp_b[k].p[j] = bodies[k].p[j] - dt2*g[k][j]
+
+            tmp_b[k].s[j] = bodies[k].s[j]
+
+    for k in range(nbodies):
+        memset(g[k], 0, 6*sizeof(long double))
+    _gradients(g, tmp_b, nbodies, order)       
+    
+    for k in range(nbodies):
+        mass = tmp_b[k].mass
+                
+        for j in range(3):
+            bodies[k].q[j] = tmp_b[k].q[j] + dt2*g[k][3+j]
+            bodies[k].p[j] = tmp_b[k].p[j] - dt2*g[k][j]
+#            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
+    
+    
+    _free(tmp_b)
+    
+    for i in range(nbodies):
+        free(g[i])
+ 
+    free(g);
+    
+    return
+    
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef void _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int order):
+    
+    cdef unsigned int i,j,k
+    cdef long double dt2 = 0.5*dt
+        
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))    
+
+    _gradients(g, bodies, nbodies, order)
+   
+    for k in range(nbodies):
+        mass = bodies[k].mass
+                
+        for j in range(3):
+            bodies[k].q[j] += dt2*g[k][3+j]
+            bodies[k].p[j] -= dt2*g[k][j]
+#            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
+    
+    
+    for i in range(nbodies):
+        free(g[i])
+ 
+    free(g);
+    
+    return
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -117,7 +212,7 @@ cdef void _free(body_t *s) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def run(long int nsteps, long double dt, int order,
+def run(long long int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] mass,
           np.ndarray[long double, mode="c", ndim=1] x,
           np.ndarray[long double, mode="c", ndim=1] y,
@@ -135,7 +230,7 @@ def run(long int nsteps, long double dt, int order,
     
     from tqdm import tqdm
     import pickle
-    cdef long int i
+    cdef long long int i
     cdef int n = len(mass)
     cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
     cdef list solution = []
@@ -155,12 +250,14 @@ def run(long int nsteps, long double dt, int order,
     #V.append(v)
     
     cdef long int n_sol = 0
-     
-    for i in tqdm(np.arange(1,nsteps)):
+    
+    #for i in range(nsteps):
+    for i in tqdm(np.arange(nsteps)):
         # check for mergers
         n = _merge(bodies, n)
         # evolve forward in time
-        _one_step(bodies, n, dt, order, ICN_it)
+        #_one_step_eu(bodies, n, dt, order)
+        _one_step_icn(bodies, n, dt, order, ICN_it)
         
         # store 1 every nthin steps        
         if (i+1)%nthin == 0:
