@@ -451,17 +451,18 @@ if __name__=="__main__":
                 
             q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])
             
-            r_dif, q_an_rel, q_rel_diff, L, a_p, r_kepler, t = kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it)
-            r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
+            r_dif, q_an_rel, q_rel_diff, L, a_p, t, P_quad = kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it)
+            #r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
             
             #perihelion total shift
             p_s = abs(a_p[0] - a_p[-1])
             #-----------Plots-----------------#
             
-            print(q_rel, q_an_rel)
+            #print(q_rel, q_an_rel)
             
             f = plt.figure(figsize=(16,6))
-            ax = f.add_subplot(121, projection = '3d')  
+            
+            ax = f.add_subplot(131, projection = '3d')  
             #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
             ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
             ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num. starting point', alpha=0.9)     
@@ -470,20 +471,28 @@ if __name__=="__main__":
             ax.plot(q_cm[:,0], q_cm[:,1], q_cm[:,2], 'o', label = 'CM')
             #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
             ax.set_xlabel('x [m]')
-            ax.set_zlabel('z [m]')
+            ax.set_zlabel('z [m]')        
+            
             plt.legend()
             #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
             #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
             #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
             #plt.axis('auto')
             
-            ax1 = f.add_subplot(122)
-            ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical (1)', alpha=0.9)
-            ax1.plot(N_arr, abs(r - r_kepler), label = 'Analitycal vs. Numerical (2)', alpha=0.9)
+            ax1 = f.add_subplot(132)
+            ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical', alpha=0.9)
             ax1.set_xlabel('iterations')
             ax1.set_ylabel('Orbital radius difference [m]')
             plt.grid()
             plt.legend()
+            
+            ax2 = f.add_subplot(133)
+            ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
+            ax2.set_xlabel('iterations')
+            ax2.set_ylabel('Energy [J]')
+            plt.grid()
+            plt.legend()
+            
             plt.show()
             
             f = plt.figure(figsize=(16,6))

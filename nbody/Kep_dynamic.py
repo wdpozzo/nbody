@@ -160,6 +160,7 @@ def kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it):
 	#e = np.zeros(Neff)
 	#a = np.zeros(Neff, dtype='float64')	
 	a_p = np.zeros(Neff, dtype='float64')	
+	P_quad = np.zeros(Neff, dtype='float64')	
 	#T = np.zeros(Neff, dtype='float64')	
 	t = np.zeros(Neff, dtype='float64')	
 	r_kepler = np.zeros(Neff, dtype='float64')	
@@ -316,10 +317,16 @@ def kepler(p1, p2, q1, q2, Neff, H, m, dt, ICN_it):
 		a_p[i] = 6*math.pi*G*M/(C*C*a*(1 - e*e))
 		
 		t[i] = math.sqrt((4*math.pi*math.pi*a*a*a)/(G*M))
-        
+		
+		#dal maggiore
+		f_e = (1/((1 - e**2)**(7/2)))*(1 + (73/24)*(e**2) + (37/96)*(e**4))
+		
+		P_quad[i] = -(((32./5.)*(G**4)*(mu**2)*(M**3))/((a**5)*(c**5)))*f_e
+    
+          
 	q_rel_diff = q_rel - q_analit_rel
 	
 	#print (q_analit_rel, q_rel[0,:], q_analit_rel[0,:])
 
-	return (d_dif, q_analit_rel, q_rel_diff, L, a_p, r_kepler, t)
+	return (d_dif, q_analit_rel, q_rel_diff, L, a_p, t, P_quad)
 
