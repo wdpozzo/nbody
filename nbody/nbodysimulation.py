@@ -62,7 +62,7 @@ if __name__=="__main__":
     order = opts.PN_order
     np.random.seed(opts.seed)    
 
-       
+    '''   
     #actual natural initial coordinates    
     t = Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
     
@@ -149,7 +149,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    '''
+
 
     '''    
     m[0], m[1] = 4.e0*Ms, 1.e0*Ms
@@ -635,19 +635,7 @@ if __name__=="__main__":
                 H_2body.append(h)
                 T_2body.append(t)
                 V_2body.append(v)
-                
-            #print(H_2body/H)
-            f = plt.figure(figsize=(16,6))
-            ax = f.add_subplot(111)
-            ax.plot(N_arr, H_2body, label = 'Total', alpha=0.9)
-            ax.plot(N_arr, T_2body, label = 'Kinetic', alpha=0.9)
-            ax.plot(N_arr, V_2body, label = 'Potential', alpha=0.9)
-            ax.set_xlabel('iterations')
-            ax.set_ylabel('Energy [joule]')
-            plt.grid()
-            plt.legend()
-            plt.show()
-                         
+                               
             L, P_quad, a_p1, a_p2, a_p3, a_p4 = kepler_sol_sys(p, q, Neff, H_2body, m, dt)
             
             #r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
@@ -662,7 +650,7 @@ if __name__=="__main__":
             
             f = plt.figure(figsize=(16,6))
             
-            ax = f.add_subplot(221, projection = '3d')  
+            ax = f.add_subplot(121, projection = '3d')  
             #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
             ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
             ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num. starting point', alpha=0.9)     
@@ -679,37 +667,40 @@ if __name__=="__main__":
             #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
             #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
             #plt.axis('auto')
-            
-            ax1 = f.add_subplot(222)
-            ax1.plot(N_arr, L)
+
+            ax1 = f.add_subplot(122)
+            ax1.plot(N_arr, p_s, label = 'Total', alpha=0.9)
+            ax1.plot(N_arr, a_p1, label = 'GR standard precession', alpha=0.9)
+            ax1.plot(N_arr, a_p2*a_p3, label = 'Coupling of Sun-Mercury  system with other planets', alpha=0.9)
+            #ax3.plot(N_arr, a_p3, label = 'Coupling of Sun and other planets', alpha=0.9)
+            ax1.plot(N_arr, a_p4, label = 'Gravitomagnetic effect', alpha=0.9)
             ax1.set_xlabel('iterations')
-            ax1.set_ylabel('Total angolar momentum')
-            plt.grid()
-            
-            ax2 = f.add_subplot(223)
-            ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
-            ax2.set_xlabel('iterations')
-            ax2.set_ylabel('Energy [J]')
-            plt.grid()
-            plt.legend()
-            
-            ax3 = f.add_subplot(224)
-            ax3.plot(N_arr, p_s, label = 'Total', alpha=0.9)
-            ax3.plot(N_arr, a_p1, label = 'GR standard precession', alpha=0.9)
-            ax3.plot(N_arr, a_p2, label = 'Coupling of Mercury and other planets', alpha=0.9)
-            ax3.plot(N_arr, a_p3, label = 'Coupling of Sun and other planets', alpha=0.9)
-            ax3.plot(N_arr, a_p4, label = 'Gravitomagnetic effect', alpha=0.9)
-            ax3.set_xlabel('iterations')
-            ax3.set_xscale('log')
-            ax3.set_ylabel('Perihelion shift [rad/revolution]')
-            ax3.set_yscale('log')
+            ax1.set_xscale('log')
+            ax1.set_ylabel('Perihelion shift [rad/revolution]')
+            ax1.set_yscale('log')
             plt.grid()
             plt.legend()
 
             plot_solar_system(epoch=EPOCH)   
                    
             plt.show()
+
+            f = plt.figure(figsize=(16,6))
+            ax1 = f.add_subplot(121)
+            ax1.plot(N_arr, L)
+            ax1.set_xlabel('iterations')
+            ax1.set_ylabel('Total angolar momentum')
+            plt.grid()
             
+            ax2 = f.add_subplot(122)
+            ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
+            ax2.set_xlabel('iterations')
+            ax2.set_ylabel('Energy [J]')
+            plt.grid()
+            plt.legend()
+            
+            plt.show()
+                        
             print('Perihelion shift = {}'.format(abs(p_s[-1] - p_s[0])))
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
         

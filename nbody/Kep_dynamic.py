@@ -167,8 +167,8 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		routine per il calcolo dell'orbita kepleriana anche in caso di orbita iperbolica (https://kyleniemeyer.github.io/space-systems-notes/orbital-mechanics/two-body-problems.html)
 		'''		
 
-		psi_orb = np.float(math.atan2(np.sqrt(q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2]), q_rel[i,0]))
-		theta_orb = np.float(math.atan2(np.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1]), q_rel[i,2])) # orbital angle
+		#psi_orb = np.float(math.atan2(np.sqrt(q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2]), q_rel[i,0]))
+		#theta_orb = np.float(math.atan2(np.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1]), q_rel[i,2])) # orbital angle
 		phi_orb = np.float(math.atan2(q_rel[i,1], q_rel[i,0]))
 	
 		if (1 > e):
@@ -190,6 +190,22 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		#print(math.tan(phi_orb/2))
 		E = 2*math.atan2(math.sqrt(1 - e)*math.tan(phi_orb/2), math.sqrt(1 + e)) # eccentric anomaly
 		
+		'''
+		# "ON THE COMPUTATION OF THE ECCENTRIC ANOMALY FROM THE MEAN ANOMALY OF A PLANET": averaged form of E
+
+		m = E - e*math.sin(E)
+			
+		theta = math.atan2(e*math.sqrt(2)*math.sin(m), (1 - e*math.cos(m)))
+		
+		#root = - (1. - e*math.cos(m))/(e*math.sin(m)) - math.sqrt((1. - e*math.cos(m))/(e*math.sin(m))*(1. - e*math.cos(m))/(e*math.sin(m)) + 2.)
+		root = math.sqrt(2)*math.tan(0.5*theta)
+		
+		E_temp = m + root
+		m_temp = E_temp - e*math.sin(E_temp)
+		
+		E = E_temp + (m - m_temp)/(1. - e*math.cos(E_temp))
+		'''
+			
 		#par2, par1 = e*math.sin(E), f(E, e)
 		#E = np.real(g(par1, par2))
 
@@ -394,7 +410,7 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 			
 			a_p2_arr[j] = (3.*math.pi/2.)*(m[j]/M)*(a/r_m)*(a/r_m)*(a/r_m)*(math.sqrt(1.- e*e))
 		
-		a_p2[i] = np.sum(a_p2_arr,)
+		a_p2[i] = np.sum(a_p2_arr)
 		
 		#apsidial precession given by coupling the attractor and the other bodies [#rad per revolution]
 		a_p3[i] = (1. + 0.5*(G*M*28. + 47.*e*e)/(C*C*a*(1. - e*e)*(1. - e*e)))
@@ -414,5 +430,5 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 		
 		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   
  
-	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4)
+	return (L, P_quad, a_p1, a_p2, a_p3, a_p4)
 	
