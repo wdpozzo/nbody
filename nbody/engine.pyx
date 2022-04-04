@@ -193,26 +193,20 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
 
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
-    
-    #cdef double[:] k_arr_q = np.zeros((RK_order))
-    #cdef double[:] k_arr_p = np.zeros((RK_order))
 
-    cdef body_t *k1 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if k1 == NULL:
-        raise MemoryError
-        
-    cdef body_t *k2 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if k2 == NULL:
-        raise MemoryError
-
-    cdef body_t *k3 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if k3 == NULL:
-        raise MemoryError
-        
-    cdef body_t *k4 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if k4 == NULL:
-        raise MemoryError
-        
+    cdef np.ndarray[long double,mode="c",ndim=1] k1_q = np.zeros(3, dtype = np.longdouble)
+    cdef np.ndarray[long double,mode="c",ndim=1] k1_p = np.zeros(3, dtype = np.longdouble) 
+    cdef np.ndarray[long double,mode="c",ndim=1] k2_q = np.zeros(3, dtype = np.longdouble)    
+    cdef np.ndarray[long double,mode="c",ndim=1] k2_p = np.zeros(3, dtype = np.longdouble)    
+    cdef np.ndarray[long double,mode="c",ndim=1] k3_q = np.zeros(3, dtype = np.longdouble)    
+    cdef np.ndarray[long double,mode="c",ndim=1] k3_p = np.zeros(3, dtype = np.longdouble)   
+    cdef np.ndarray[long double,mode="c",ndim=1] k4_q = np.zeros(3, dtype = np.longdouble)
+    cdef np.ndarray[long double,mode="c",ndim=1] k4_p = np.zeros(3, dtype = np.longdouble) 
+    cdef np.ndarray[long double,mode="c",ndim=1] k5_q = np.zeros(3, dtype = np.longdouble)    
+    cdef np.ndarray[long double,mode="c",ndim=1] k5_p = np.zeros(3, dtype = np.longdouble)    
+    cdef np.ndarray[long double,mode="c",ndim=1] k6_q = np.zeros(3, dtype = np.longdouble)    
+    cdef np.ndarray[long double,mode="c",ndim=1] k6_p = np.zeros(3, dtype = np.longdouble)
+               
     cdef body_t *tmp_q = <body_t *>malloc(nbodies*sizeof(body_t))
     if tmp_q == NULL:
         raise MemoryError
@@ -250,83 +244,118 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
         if g_p[i] == NULL:
             raise MemoryError
         memset(g_p[i], 0, 6*sizeof(long double))
-        
-
+                
     _gradients(g, bodies, nbodies, order)
-        
+    
     for k in range(nbodies):      
             
         mass = bodies[k].mass        
         tmp_q[k].mass = mass
-        tmp_p[k].mass = mass   
-            
+        tmp_p[k].mass = mass               
+        
         #k1   
         for j in range(3):
             
-            k1[k].q[j] = dt2*g[k][3+j]   
-            k1[k].p[j] = -dt2*g[k][j]         
-                        
-            tmp_q[k].q[j] = bodies[k].q[j] + 0.5*k1[k].q[j]    
-            tmp_q[k].p[j] = bodies[k].p[j] - 0.5*dt2     
+            k1_q[j] = dt2*g[k][3+j]
+            k1_p[j] = -dt2*g[k][j] 
+                                    
+            tmp_q[k].q[j] = bodies[k].q[j] + 0.25*k1_q[j]    
+            tmp_q[k].p[j] = bodies[k].p[j] + 0.25*dt2     
                  
-            tmp_p[k].q[j] = bodies[k].q[j] + 0.5*dt2  
-            tmp_p[k].p[j] = bodies[k].p[j] + 0.5*k1[k].p[j]
-                
-        #memset(g[k], 0, 6*sizeof(long double))
-        _gradients(g_q, tmp_q, nbodies, order)      
-        _gradients(g_p, tmp_p, nbodies, order)
-            
+            tmp_p[k].q[j] = bodies[k].q[j] + 0.25*dt2  
+            tmp_p[k].p[j] = bodies[k].p[j] + 0.25*k1_p[j]
+                         
+    _gradients(g_q, tmp_q, nbodies, order)      
+    _gradients(g_p, tmp_p, nbodies, order)
+
+    for k in range(nbodies): 
         #k2
         for j in range(3):
             
-            k2[k].q[j] = dt2*g_q[k][3+j]   
-            k2[k].p[j] = -dt2*g_p[k][j]         
+            k2_q[j] = dt2*g_q[k][3+j]   
+            k2_p[j] = -dt2*g_p[k][j]         
                         
-            tmp_q[k].q[j] = bodies[k].q[j] + 0.5*k2[k].q[j]    
-            tmp_q[k].p[j] = bodies[k].p[j] - 0.5*dt2     
+            tmp_q[k].q[j] = bodies[k].q[j] + 3./32.*k1_q[j] + 9./32.*k2_q[j]    
+            tmp_q[k].p[j] = bodies[k].p[j] + 3./8.*dt2     
                  
-            tmp_p[k].q[j] = bodies[k].q[j] + 0.5*dt2  
-            tmp_p[k].p[j] = bodies[k].p[j] + 0.5*k2[k].p[j]                
-                
+            tmp_p[k].q[j] = bodies[k].q[j] + 3./8.*dt2  
+            tmp_p[k].p[j] = bodies[k].p[j] + 3./32.*k1_p[j] + 9./32.*k2_p[j]                 
+
             memset(g_q[k], 0, 6*sizeof(long double))
             memset(g_p[k], 0, 6*sizeof(long double))
-            
-        _gradients(g_q, tmp_q, nbodies, order)      
-        _gradients(g_p, tmp_p, nbodies, order)
-             
+           
+    _gradients(g_q, tmp_q, nbodies, order)      
+    _gradients(g_p, tmp_p, nbodies, order)          
+
+    for k in range(nbodies):                       
         #k3
         for j in range(3):
             
-            k3[k].q[j] = dt2*g_q[k][3+j]   
-            k3[k].p[j] = -dt2*g_p[k][j]         
+            k3_q[j] = dt2*g_q[k][3+j]   
+            k3_p[j] = -dt2*g_p[k][j]         
                         
-            tmp_q[k].q[j] = bodies[k].q[j] + k3[k].q[j]    
-            tmp_q[k].p[j] = bodies[k].p[j] - dt2     
+            tmp_q[k].q[j] = bodies[k].q[j] + 1932./2197.*k1_q[j] - 7200./2197.*k2_q[j] +  7296./2197.*k3_q[j]    
+            tmp_q[k].p[j] = bodies[k].p[j] + 12./13.*dt2     
                  
-            tmp_p[k].q[j] = bodies[k].q[j] + dt2  
-            tmp_p[k].p[j] = bodies[k].p[j] + k3[k].p[j]               
-                
+            tmp_p[k].q[j] = bodies[k].q[j] + 12./13.*dt2  
+            tmp_p[k].p[j] = bodies[k].p[j] + 1932./2197.*k1_p[j] - 7200./2197.*k2_p[j] +  7296./2197.*k3_p[j]                 
+
             memset(g_q[k], 0, 6*sizeof(long double))
             memset(g_p[k], 0, 6*sizeof(long double))
-            
-        _gradients(g_q, tmp_q, nbodies, order)      
-        _gradients(g_p, tmp_p, nbodies, order)
-             
+           
+    _gradients(g_q, tmp_q, nbodies, order)      
+    _gradients(g_p, tmp_p, nbodies, order)          
+
+    for k in range(nbodies):           
         #k4
         for j in range(3):
             
-            k4[k].q[j] = dt2*g_q[k][3+j]   
-            k4[k].p[j] = -dt2*g_p[k][j]         
+            k4_q[j] = dt2*g_q[k][3+j]   
+            k4_p[j] = -dt2*g_p[k][j]         
+                        
+            tmp_q[k].q[j] = bodies[k].q[j] + 439./216.*k1_q[j] - 8*k2_q[j] +  3680./513.*k3_q[j] - 845./4104.*k4_q[j]    
+            tmp_q[k].p[j] = bodies[k].p[j] + dt2     
+                 
+            tmp_p[k].q[j] = bodies[k].q[j] + dt2  
+            tmp_p[k].p[j] = bodies[k].p[j] + 439./216.*k1_p[j] - 8*k2_p[j] +  3680./513.*k3_p[j] - 845./4104.*k4_p[j]                  
+
+            memset(g_q[k], 0, 6*sizeof(long double))
+            memset(g_p[k], 0, 6*sizeof(long double))
+           
+    _gradients(g_q, tmp_q, nbodies, order)      
+    _gradients(g_p, tmp_p, nbodies, order)          
+
+    for k in range(nbodies):           
+        #k5
+        for j in range(3):
             
-            bodies[k].q[j] += (1/6)*k1[k].q[j] + (1/3)*k2[k].q[j] + (1/3)*k3[k].q[j] + (1/6)*k4[k].q[j]            
-            bodies[k].p[j] += (1/6)*k1[k].p[j] + (1/3)*k2[k].p[j] + (1/3)*k3[k].p[j] + (1/6)*k4[k].p[j]       
+            k5_q[j] = dt2*g_q[k][3+j]   
+            k5_p[j] = -dt2*g_p[k][j]         
+                        
+            tmp_q[k].q[j] = bodies[k].q[j] - 8./27.*k1_q[j] + 2*k2_q[j] -  3544./2565.*k3_q[j] + 1859./4104.*k4_q[j] - 11./40.*k5_q[j]   
+            tmp_q[k].p[j] = bodies[k].p[j] + 0.5*dt2     
+                 
+            tmp_p[k].q[j] = bodies[k].q[j] + 0.5*dt2  
+            tmp_p[k].p[j] = bodies[k].p[j] - 8./27.*k1_p[j] + 2*k2_p[j] -  3544./2565.*k3_p[j] + 1859./4104.*k4_p[j] - 11./40.*k5_p[j]                     
+
+            memset(g_q[k], 0, 6*sizeof(long double))
+            memset(g_p[k], 0, 6*sizeof(long double))
+           
+    _gradients(g_q, tmp_q, nbodies, order)      
+    _gradients(g_p, tmp_p, nbodies, order)    
+
+    for k in range(nbodies):           
+        #k6
+        for j in range(3):
+            
+            k6_q[j] = dt2*g_q[k][3+j]   
+            k6_p[j] = -dt2*g_p[k][j]         
+            
+            bodies[k].q[j] += (16./135.)*k1_q[j] + (6656./12825.)*k3_q[j] + (28561./56430.)*k4_q[j] - (9./50.)*k5_q[j] + (2./55.)*k6_q[j]            
+            bodies[k].p[j] += (16./135.)*k1_p[j] + (6656./12825.)*k3_p[j] + (28561./56430.)*k4_p[j] - (9./50.)*k5_p[j] + (2./55.)*k6_p[j]       
    
     _free(tmp_q)
     _free(tmp_p)
-    _free(k1)
-    _free(k2)
-    _free(k3)
-    _free(k4)
     
     for i in range(nbodies):
         free(g[i])
@@ -338,7 +367,6 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
     free(g_q);
     
     return
-
    
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -363,6 +391,35 @@ cdef void _initialise(body_t *bodies,
 cdef void _free(body_t *s) nogil:
     free(<void *>s)
     return
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+def _H_2body(np.ndarray[long double, mode="c", ndim=1] mass,
+          np.ndarray[long double, mode="c", ndim=1] x,
+          np.ndarray[long double, mode="c", ndim=1] y,
+          np.ndarray[long double, mode="c", ndim=1] z,
+          np.ndarray[long double, mode="c", ndim=1] px,
+          np.ndarray[long double, mode="c", ndim=1] py,
+          np.ndarray[long double, mode="c", ndim=1] pz,
+          np.ndarray[long double, mode="c", ndim=1] sx,
+          np.ndarray[long double, mode="c", ndim=1] sy,
+          np.ndarray[long double, mode="c", ndim=1] sz, 
+          int order):
+          
+    cdef unsigned int n = 2
+    cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
+  
+    _initialise(bodies, n, mass, x, y, z,
+                px, py, pz, sx, sy, sz)
+                
+    #print(bodies[0], bodies[1])
+                        
+    h, t, v = _hamiltonian(bodies, n, order)
+            
+    
+    return (h, t, v)
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -412,8 +469,8 @@ def run(long long int nsteps, long double dt, int order,
         # check for mergers
         n = _merge(bodies, n)
         # evolve forward in time
-        _one_step_rk(bodies, n, dt, order)
-        #_one_step_icn(bodies, n, dt, order, ICN_it)
+        #_one_step_rk(bodies, n, dt, order)
+        _one_step_icn(bodies, n, dt, order, ICN_it)
         
         # store 1 every nthin steps        
         if (i+1)%nthin == 0:

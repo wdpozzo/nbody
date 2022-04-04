@@ -17,6 +17,7 @@ cdef long double C = 299792458. #*(u.meter/u.second)
 cdef long double Ms = 1.988e30 #*(u.kilogram) # 1.988e30 #
 
 cdef long double _modulus(long double x, long double y, long double z) nogil:
+
     return x*x+y*y+z*z
                               
 cdef long double _dot(long double *v1, long double *v2) nogil:
@@ -53,40 +54,38 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
         
             T += _kinetic_energy(bodies[i])
 
-        H = T + V
-
-        return (H, T, V)
-
-    if order == 1:    
+    if order >= 1:    
         # compute the kinetic part
         for i in range(N):
         
             mi = bodies[i].mass
             
-            T += _kinetic_energy(bodies[i])
-            T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C2)
-            
-        H = T + V
-        
-        return (H, T, V)
+            #T += _kinetic_energy(bodies[i])
+            T -= ((1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/C2
 
-    if order == 2:
+    if order >= 2:
 
         # compute the kinetic part
         for i in range(N):
             mi = bodies[i].mass
            
-            T += _kinetic_energy(bodies[i])   
-            T -= (1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi)/(C2) 
-            T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C4)
+            #T += _kinetic_energy(bodies[i])   
+            #T -= (1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi)/(C2) 
+            T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/C4
          
-        H = T + V
+    H = T + V
         
-        return (H, T, V)
+    return (H, T, V)
 
  
 cdef inline long double _kinetic_energy(body_t b) nogil:
-    return 0.5*_modulus(b.p[0],b.p[1],b.p[2])/b.mass
+
+    cdef long double m = b.mass
+    cdef long double num = 0.5*_modulus(b.p[0],b.p[1],b.p[2])
+    
+    #print(num, m)
+    
+    return (num*1.0)/(m*1.0)
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -207,7 +206,7 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
     #cdef long double *tmp = np.zeros(6, dtype = np.longdouble)    
     #memset(tmp, 0, 6*sizeof(long double))
-    
+     
     
     for i in range(N):
     
@@ -327,7 +326,6 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
     out[5] = 0.
 
     return
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
