@@ -184,28 +184,57 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 
 		#r_kepler = a*(1 - e*e)/(1 + e*math.cos(phi_orb))
 		#r_kepler[i] = np.float(R[i]/(1 + e*math.cos(phi_orb))) # r_phi keplerian equation
-				
-		#M = math.atan2(math.sqrt(1 - e*e)*math.sin(phi_orb)/(1+e*math.cos(phi_orb)), (e + math.cos(phi_orb)/(1 + e*math.cos(phi_orb)))) - e*math.sqrt(1 - e*e)*math.sin(phi_orb)/(1 + e*math.cos(phi_orb))
+		
 		#E = math.acos((e + math.cos(psi_orb))/(1 + e*math.cos(psi_orb)))		
 		#print(math.tan(phi_orb/2))
-		E = 2*math.atan2(math.sqrt(1 - e)*math.tan(phi_orb/2), math.sqrt(1 + e)) # eccentric anomaly
+		E = 2*math.atan2(math.sqrt(1. - e)*math.tan(phi_orb/2.), math.sqrt(1. + e)) # eccentric anomaly
+			
+		'''
+		m = math.atan2(math.sqrt(1 - e*e)*math.sin(phi_orb)/(1+e*math.cos(phi_orb)), (e + math.cos(phi_orb))/(1 + e*math.cos(phi_orb))) - e*math.sqrt(1 - e*e)*math.sin(phi_orb)/(1 + e*math.cos(phi_orb))
+		
+		E = m + (e - (1./8.)*e*e*e )*math.sin(m) + (1./2.)*e*e*math.sin(2.*m) + (3./8.)*math.sin(3.*m)
+		'''
 		
 		'''
-		# "ON THE COMPUTATION OF THE ECCENTRIC ANOMALY FROM THE MEAN ANOMALY OF A PLANET": averaged form of E
+		# "ON THE COMPUTATION OF THE ECCENTRIC ANOMALY FROM THE MEAN ANOMALY OF A PLANET"
 
 		m = E - e*math.sin(E)
 			
-		theta = math.atan2(e*math.sqrt(2)*math.sin(m), (1 - e*math.cos(m)))
+		theta = math.atan2(e*math.sqrt(2.)*math.sin(m), (1. - e*math.cos(m)))
 		
 		#root = - (1. - e*math.cos(m))/(e*math.sin(m)) - math.sqrt((1. - e*math.cos(m))/(e*math.sin(m))*(1. - e*math.cos(m))/(e*math.sin(m)) + 2.)
-		root = math.sqrt(2)*math.tan(0.5*theta)
+		root = math.sqrt(2.)*math.tan(0.5*theta)
 		
 		E_temp = m + root
 		m_temp = E_temp - e*math.sin(E_temp)
 		
 		E = E_temp + (m - m_temp)/(1. - e*math.cos(E_temp))
 		'''
+		
+		'''
+		#Development Of Closed-Form Approximation Of The Eccentric Anomaly For Circular And Elliptical Keplerian Orbit 
+
+		m = math.atan2(math.sqrt(1 - e*e)*math.sin(phi_orb)/(1+e*math.cos(phi_orb)), (e + math.cos(phi_orb))/(1 + e*math.cos(phi_orb))) - e*math.sqrt(1 - e*e)*math.sin(phi_orb)/(1 + e*math.cos(phi_orb))
+		
+		#m = E - e*math.sin(E)
+
+		if (0.5 <= e <= 1):
+			A = -0.584013113 
+			B = 1.173439404
+			F = 0.809460441
+			D = 0.077357763
 			
+		if (0.01 <= e <= 5):
+			A = -0.248393819  
+			B = 1.019165175 
+			F = 0.961260155
+			D = 0.004043021		
+			
+		theta = (B*math.sin(m) + D*math.cos(m))/(1./e - A*math.sin(m) - F*math.cos(m))
+
+		E = m + e*(math.sin(m + theta))
+		'''
+		
 		#par2, par1 = e*math.sin(E), f(E, e)
 		#E = np.real(g(par1, par2))
 

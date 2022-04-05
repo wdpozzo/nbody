@@ -62,7 +62,7 @@ if __name__=="__main__":
     order = opts.PN_order
     np.random.seed(opts.seed)    
 
-    '''   
+ 
     #actual natural initial coordinates    
     t = Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
     
@@ -119,8 +119,8 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-    '''
     
+    '''
     #custom initial coordinates
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -149,7 +149,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-
+    '''
 
     '''    
     m[0], m[1] = 4.e0*Ms, 1.e0*Ms
@@ -533,6 +533,7 @@ if __name__=="__main__":
             '''
             
             f = plt.figure(figsize=(16,6))
+            
             ax2 = f.add_subplot(121) 
             ax2.plot(N_arr, q_rel_diff[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
             ax2.set_xlabel('iterations')
@@ -546,6 +547,7 @@ if __name__=="__main__":
             ax3.set_ylabel('Displacement [m]')
             plt.grid()
             plt.legend()
+            
             plt.show()
             
             f = plt.figure(figsize=(6,4))
@@ -671,7 +673,7 @@ if __name__=="__main__":
             ax1 = f.add_subplot(122)
             ax1.plot(N_arr, p_s, label = 'Total', alpha=0.9)
             ax1.plot(N_arr, a_p1, label = 'GR standard precession', alpha=0.9)
-            ax1.plot(N_arr, a_p2*a_p3, label = 'Coupling of Sun-Mercury  system with other planets', alpha=0.9)
+            ax1.plot(N_arr, a_p2*a_p3, label = 'Coupling of Sun-Mercury system with other planets', alpha=0.9)
             #ax3.plot(N_arr, a_p3, label = 'Coupling of Sun and other planets', alpha=0.9)
             ax1.plot(N_arr, a_p4, label = 'Gravitomagnetic effect', alpha=0.9)
             ax1.set_xlabel('iterations')
