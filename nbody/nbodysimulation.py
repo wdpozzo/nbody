@@ -9,6 +9,8 @@ from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
 
+import random
+
 import astropy.units as u
 from datetime import datetime
 from astropy.time import Time
@@ -43,6 +45,34 @@ Ms = 1.988e30
 #C = (299792458.*(u.m/u.s)).to(u.AU/u.d).value #299792458. 
 #Msun = (1.988e30*u.kg).to(u.solMass).value 
 
+def gaussian_random_sphere(x, y, z, r, num, bulge):
+
+    x_a = np.zeros(num)
+    y_a = np.zeros(num)
+    z_a = np.zeros(num)
+        
+    for i in range(0, num):
+        
+        if (bulge == 0):
+            factor = random.random()
+        	    
+        if (bulge == 1): 
+            factor = min(1, max(0, abs(random.gauss(0.0, 0.5))))
+            #print(factor)
+               
+        ir = r * factor
+        itheta = np.arccos(np.random.uniform(-1, 1))
+        iphi = np.random.uniform(0, 2 * math.pi)
+        ix = x + ir * math.sin(itheta) * math.cos(iphi)
+        iy = y + ir * math.sin(itheta) * math.sin(iphi)
+        iz = z + ir * math.cos(itheta)
+        
+        x_a[i] = ix
+       	y_a[i] = iy
+        z_a[i] = iz
+                        
+    return ((x_a).astype(np.longdouble), (y_a).astype(np.longdouble), (z_a).astype(np.longdouble))
+        
 if __name__=="__main__":
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
@@ -60,20 +90,56 @@ if __name__=="__main__":
     nbodies = opts.n	
     ICN_it = opts.ICN_order
     order = opts.PN_order
-    np.random.seed(opts.seed)    
+    np.random.seed(opts.seed)        
 
- 
-    #actual natural initial coordinates    
+  
+    #points in generated randomly inside a sphere (bulge == 0) or with gaussian density distribution centered in the origin + a massive body there (bulge == 1)
+
+    bulge = 1 
+    
+    m = np.random.uniform(5e-1*Ms, 1.e0*Ms, size = nbodies).astype(np.longdouble)
+    
+    x, y, z = gaussian_random_sphere(0, 0, 0, 20.0*AU, nbodies, bulge)
+
+    vx = np.random.uniform(-5e-6, 5e-6, size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-5e-6, 5e-6, size = nbodies).astype(np.longdouble)
+    vz = np.random.uniform(-5e-6, 5e-6, size = nbodies).astype(np.longdouble)
+    
+    sx = np.random.uniform(-1.0, 1.0, size = nbodies).astype(np.longdouble)
+    sy = np.random.uniform(-1.0, 1.0, size = nbodies).astype(np.longdouble)
+    sz = np.random.uniform(-1.0, 1.0, size = nbodies).astype(np.longdouble)
+    
+    if (bulge == 1): #aggiungo una massa "grande" al centro del cluster
+        m = np.append(m, 2.e1*Ms)
+        
+        x = np.append(x, 0.)
+        y = np.append(y, 0.)
+        z = np.append(z, 0.)
+        
+        vx = np.append(vx, 0.)
+        vy = np.append(vy, 0.)
+        vz = np.append(vz, 0.) 
+        
+        sx = np.append(sx, 0.)
+        sy = np.append(sy, 0.)
+        sz = np.append(sz, 0.)    
+                  
+        nbodies = opts.n + 1 
+    #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
+    
     t = Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
     
+    '''
+    #actual natural initial coordinates        
+
     masses = {
     'sun'     : Ms, #1st planet has to be the central attractor
     'mercury' : Mmerc, #2nd planet has to be the one which we want to test the GR dynamics effects on 
     'earth'   : Mearth,
     'mars'    : 0.1075*Mearth,
     'venus'   : 0.815*Mearth,
-    #'jupiter' : 317.8*Mearth,
-    #'saturn'  : 95.2*Mearth,
+    'jupiter' : 317.8*Mearth,
+    'saturn'  : 95.2*Mearth,
     #'uranus'  : 14.6*Mearth,
     #'neptune' : 17.2*Mearth,
     #'pluto'   : 0.00218*Mearth,
@@ -85,8 +151,8 @@ if __name__=="__main__":
     'earth',
     'mars',
     'venus',
-    #'jupiter',
-    #'saturn',
+    'jupiter',
+    'saturn',
     #'uranus',
     #'neptune',
     ]
@@ -119,6 +185,7 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
+    '''
     
     '''
     #custom initial coordinates
@@ -150,7 +217,7 @@ if __name__=="__main__":
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
     '''
-
+    
     '''    
     m[0], m[1] = 4.e0*Ms, 1.e0*Ms
     
@@ -346,14 +413,14 @@ if __name__=="__main__":
             for j in range(nbodies[i]):
                 qs[j].append(s[i][j]['q'])
         
-        #print(np.shape(qs))
+        print(np.shape(qs))
          
         for q in qs:
-            q = np.array(q)
-            #q = q/AU
+            q = np.array(q) #, dtype = 'float128')
+            print(np.shape(q))
             c = next(colors)
-            ax.plot(q[:,0],q[:,1],q[:,2],color=c,lw=0.5)
-            ax.plot(q[:,0],q[:,1],q[:,2], color='w', alpha=0.5, lw=2, zorder=0)
+            ax.plot(q[:,0], q[:,1], q[:,2], color=c, lw=0.5)
+            ax.plot(q[:,0], q[:,1], q[:,2], color='w', alpha=0.5, lw=2, zorder=0)
                 
 
         f.set_facecolor('black')
@@ -464,18 +531,7 @@ if __name__=="__main__":
             
             #q1, q2, p1, p2 = gen_3d_frame(p1, p2, q1, q2, Neff, m)
             q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])
-
-            '''
-            for i in range(0,Neff):
-            
-                h, t, v = _H_2body(np.array(m), np.array(q1[i,0], q2[i,0]), np.array(q1[i,1], q2[i,1]), np.array(q1[i,2], q2[i,2]), np.array(p1[i,0], p2[i,0]), np.array(p1[i,1], p2[i,1]), np.array(p1[i,2], p2[i,2]), np.array(s1[i,0], s2[i,0]), np.array(s1[i,1], s2[i,1]), np.array(s1[i,2], s2[i,2]), order)
-                
-                H_2body.append(h)
-                T_2body.append(t)
-                V_2body.append(v)
-            
-            '''
-                            
+                  
             r_dif, q_an_rel, q_rel_diff, L, a_p, t, P_quad = kepler(q1, q2, p1, p2, Neff, H, m, dt)
             #r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
             
@@ -515,7 +571,7 @@ if __name__=="__main__":
             ax2 = f.add_subplot(133)
             ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
             ax2.set_xlabel('iterations')
-            ax2.set_ylabel('Energy [J]')
+            ax2.set_ylabel('Power [J/s]')
             plt.grid()
             plt.legend()
             
@@ -697,7 +753,7 @@ if __name__=="__main__":
             ax2 = f.add_subplot(122)
             ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
             ax2.set_xlabel('iterations')
-            ax2.set_ylabel('Energy [J]')
+            ax2.set_ylabel('Power [J/s]')
             plt.grid()
             plt.legend()
             

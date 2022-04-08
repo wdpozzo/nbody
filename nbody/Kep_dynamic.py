@@ -185,7 +185,7 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		#r_kepler = a*(1 - e*e)/(1 + e*math.cos(phi_orb))
 		#r_kepler[i] = np.float(R[i]/(1 + e*math.cos(phi_orb))) # r_phi keplerian equation
 		
-		#E = math.acos((e + math.cos(psi_orb))/(1 + e*math.cos(psi_orb)))		
+		#E = math.acos((e + math.cos(phi_orb))/(1 + e*math.cos(phi_orb)))		
 		#print(math.tan(phi_orb/2))
 		E = 2*math.atan2(math.sqrt(1. - e)*math.tan(phi_orb/2.), math.sqrt(1. + e)) # eccentric anomaly
 			
@@ -195,21 +195,23 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		E = m + (e - (1./8.)*e*e*e )*math.sin(m) + (1./2.)*e*e*math.sin(2.*m) + (3./8.)*math.sin(3.*m)
 		'''
 		
-		'''
-		# "ON THE COMPUTATION OF THE ECCENTRIC ANOMALY FROM THE MEAN ANOMALY OF A PLANET"
 
-		m = E - e*math.sin(E)
+		# "ON THE COMPUTATION OF THE ECCENTRIC ANOMALY FROM THE MEAN ANOMALY OF A PLANET"
+		
+		for j in range(3):
+		
+			m = E - e*math.sin(E)
+				
+			theta = math.atan2(e*math.sqrt(2.)*math.sin(m), (1. - e*math.cos(m)))
 			
-		theta = math.atan2(e*math.sqrt(2.)*math.sin(m), (1. - e*math.cos(m)))
-		
-		#root = - (1. - e*math.cos(m))/(e*math.sin(m)) - math.sqrt((1. - e*math.cos(m))/(e*math.sin(m))*(1. - e*math.cos(m))/(e*math.sin(m)) + 2.)
-		root = math.sqrt(2.)*math.tan(0.5*theta)
-		
-		E_temp = m + root
-		m_temp = E_temp - e*math.sin(E_temp)
-		
-		E = E_temp + (m - m_temp)/(1. - e*math.cos(E_temp))
-		'''
+			#root = - (1. - e*math.cos(m))/(e*math.sin(m)) - math.sqrt((1. - e*math.cos(m))/(e*math.sin(m))*(1. - e*math.cos(m))/(e*math.sin(m)) + 2.)
+			root = math.sqrt(2.)*math.tan(0.5*theta)
+			
+			E_temp = m + root
+			m_temp = E_temp - e*math.sin(E_temp)
+			
+			E = E_temp + (m - m_temp)/(1. - e*math.cos(E_temp))
+
 		
 		'''
 		#Development Of Closed-Form Approximation Of The Eccentric Anomaly For Circular And Elliptical Keplerian Orbit 
