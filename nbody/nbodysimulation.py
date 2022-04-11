@@ -3,7 +3,7 @@ import math
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run, _H_2body
-from Kep_dynamic import kepler, kepler_sol_sys, gen_3d_frame
+from Kep_dynamic import kepler, kepler_sol_sys, 
 from collections import deque
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
@@ -57,8 +57,9 @@ def gaussian_random_sphere(x, y, z, r, num, bulge):
             factor = random.random()
         	    
         if (bulge == 1): 
-            factor = min(1, max(0, abs(random.gauss(0.0, 0.5))))
-            #print(factor)
+            #factor = min(1, max(0, abs(random.gauss(0.0, 0.5))))
+            factor = random.random()
+            print(factor)
                
         ir = r * factor
         itheta = np.arccos(np.random.uniform(-1, 1))
@@ -99,18 +100,18 @@ if __name__=="__main__":
     
     m = np.random.uniform(5e-1*Ms, 1.e0*Ms, size = nbodies).astype(np.longdouble)
     
-    x, y, z = gaussian_random_sphere(0, 0, 0, 20.0*AU, nbodies, bulge)
+    x, y, z = gaussian_random_sphere(0, 0, 0, 25.0*AU, nbodies, bulge)
 
-    vx = np.random.uniform(-5e-6, 5e-6, size = nbodies).astype(np.longdouble)
-    vy = np.random.uniform(-5e-6, 5e-6, size = nbodies).astype(np.longdouble)
-    vz = np.random.uniform(-5e-6, 5e-6, size = nbodies).astype(np.longdouble)
+    vx = np.random.uniform(-5e-7, 5e-7, size = nbodies).astype(np.longdouble)
+    vy = np.random.uniform(-5e-7, 5e-7, size = nbodies).astype(np.longdouble)
+    vz = np.random.uniform(-5e-7, 5e-7, size = nbodies).astype(np.longdouble)
     
     sx = np.random.uniform(-1.0, 1.0, size = nbodies).astype(np.longdouble)
     sy = np.random.uniform(-1.0, 1.0, size = nbodies).astype(np.longdouble)
     sz = np.random.uniform(-1.0, 1.0, size = nbodies).astype(np.longdouble)
     
     if (bulge == 1): #aggiungo una massa "grande" al centro del cluster
-        m = np.append(m, 2.e1*Ms)
+        m = np.append(m, 5.e1*Ms)
         
         x = np.append(x, 0.)
         y = np.append(y, 0.)
@@ -126,6 +127,7 @@ if __name__=="__main__":
                   
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
+ 
     
     t = Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
     
