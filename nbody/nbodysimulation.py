@@ -3,7 +3,7 @@ import math
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run, _H_2body
-from Kep_dynamic import kepler, kepler_sol_sys, 
+from Kep_dynamic import kepler, kepler_sol_sys
 from collections import deque
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
@@ -57,8 +57,8 @@ def gaussian_random_sphere(x, y, z, r, num, bulge):
             factor = random.random()
         	    
         if (bulge == 1): 
-            #factor = min(1, max(0, abs(random.gauss(0.0, 0.5))))
-            factor = random.random()
+            factor = min(1, max(0, abs(random.gauss(0.0, 0.5)))) #gaussian distribution
+            #factor = random.random()
             print(factor)
                
         ir = r * factor
@@ -93,7 +93,7 @@ if __name__=="__main__":
     order = opts.PN_order
     np.random.seed(opts.seed)        
 
-  
+    '''
     #points in generated randomly inside a sphere (bulge == 0) or with gaussian density distribution centered in the origin + a massive body there (bulge == 1)
 
     bulge = 1 
@@ -127,11 +127,11 @@ if __name__=="__main__":
                   
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
- 
+    '''
     
     t = Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
-    
-    '''
+
+ 
     #actual natural initial coordinates        
 
     masses = {
@@ -187,7 +187,7 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-    '''
+
     
     '''
     #custom initial coordinates
@@ -203,8 +203,10 @@ if __name__=="__main__":
     
     sx = np.array((2,1)).astype(np.longdouble)
     sy = np.array((2,1)).astype(np.longdouble)
-    sz = np.array((2,1)).astype(np.longdouble)
-
+    sz = np.array((2,1)).astype(np.longdouble)#
+    
+    '''
+    '''
     m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
     x[0], x[1] = -69.818e9, 0.*AU
@@ -219,25 +221,22 @@ if __name__=="__main__":
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
     '''
+    '''
+    m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
     
-    '''    
-    m[0], m[1] = 4.e0*Ms, 1.e0*Ms
-    
-    x[0], x[1] = -0.9*AU, 0.9*AU
+    x[0], x[1] = -1.*AU, 1.0*AU
     y[0], y[1] = 0.*AU, 0.*AU
     z[0], z[1] = 0.*AU, 0.*AU
-
-    vx[0], vx[1] = +0.7e1, -1.2e1
-    vy[0], vy[1] = +1.86e2, -2.56e2
+    
+    vx[0], vx[1] = -4.2e0, +9.2e1
+    vy[0], vy[1] = +3.86e0, +7.56e1
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-
-    #print(x,y,z,vx,vy,vz,sx,sy,sz)
-    '''
     
+    '''
     '''
     #random initial coordinates
     
@@ -613,6 +612,8 @@ if __name__=="__main__":
             ax.plot(N_arr, a_p)
             ax.set_xlabel('iteration')
             ax.set_ylabel('Apsidial precession [rad x revolution]')
+            ax.set_xscale('log')
+            ax.set_yscale('log')
             ax.grid()
             plt.show()
             

@@ -383,18 +383,6 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 	#Dinamica Kepleriana#------------------#
 	M = m[0] + m[1]
 	mu = (m[0]*m[1])/M
-
-	'''
-	H2 = np.array(H)*np.array(H)
-	
-	L2 = L*L
-
-	k = -G*M*mu
-	#k = G*(mu*mu*mu)*(M*M)
-	R = L2/(-k*mu) # semi-latus rectum = a*(1 - e*e)
-  
-	alpha = H2/R
-	'''
 	 
 	P_quad = np.zeros(Neff, dtype='float64')
 	#e = np.zeros(Neff)
@@ -411,18 +399,6 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	
 	for i in range(0, Neff):
-		#t1 = np.float(k*k*mu)
-		#t2 = np.float(H[i]*L2[i])	
-		#a = 1. + (2.*t2)/(t1)
-		
-		#print(H[i]*L2[i], H[i], L2[i], (2.*H[i]*L2[i])/(k*k*mu))		
-		
-		#e = math.sqrt(1 + (2.*H[i]*L2[i])/(k*k*mu))# eccentricity
-	
-		#print(e)
-		
-		#a = R[i]/(1. - e*e) # semi-major axis
-		#b = R[i]/(math.sqrt(1. - e*e)) # semi-minor axis
 		
 		'''	   
 		if (1 <= e):
@@ -440,18 +416,15 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 			r_m = math.sqrt((q[1,i,0]-q[j,i,0])*(q[1,i,0]-q[j,i,0]) + (q[1,i,1]-q[j,i,1])*(q[1,i,1]-q[j,i,1]) + (q[1,i,2]-q[j,i,2])*(q[1,i,2]-q[j,i,2]))
 			
 			a_p2_arr[j] = (3.*math.pi/2.)*(m[j]/M)*(a/r_m)*(a/r_m)*(a/r_m)*(math.sqrt(1.- e*e))
-		
+
+			a_p4_arr[j] = 4.*math.pi*(G*m[j]/(C*C*a))*(a/r_m)*(a/r_m)*math.sqrt(a/r_m)		
+			
 		a_p2[i] = np.sum(a_p2_arr)
 		
 		#apsidial precession given by coupling the attractor and the other bodies [#rad per revolution]
 		a_p3[i] = (1. + 0.5*(G*M*28. + 47.*e*e)/(C*C*a*(1. - e*e)*(1. - e*e)))
 		
 		#apsidial precession given by gravitomagnetic effect [#rad per revolution]
-		for j in range(2, len(m)):	
-		
-			r_m = math.sqrt((q[1,i,0]-q[j,i,0])*(q[1,i,0]-q[j,i,0]) + (q[1,i,1]-q[j,i,1])*(q[1,i,1]-q[j,i,1]) + (q[1,i,2]-q[j,i,2])*(q[1,i,2]-q[j,i,2]))
-			
-			a_p4_arr[j] = 4.*math.pi*(G*m[j]/(C*C*a))*(a/r_m)*(a/r_m)*math.sqrt(a/r_m)
 		
 		a_p4[i] = np.sum(a_p4_arr)
 		

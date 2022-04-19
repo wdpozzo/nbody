@@ -14,15 +14,15 @@ Mearth = 5.9722e24
 AU = 149597870700. #*u.meter
 Ms = 1.988e30
 
-
-plot_step = 20
-buffer_lenght = 10000000
-data_thin = 40
+plot_step = 1
+buffer_lenght = 50000000
+data_thin = 500000
 
 ICN_it = 2
 
-dt = 0.5
-N  = 200000000
+dt = 0.2
+N  = 1000000000
+
 Neff = int(N/(data_thin*plot_step))
 nout = int(N/buffer_lenght)    
 
@@ -207,7 +207,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout):
 
 	f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonianNorm.pdf', bbox_inches='tight')
 
-	print(len(T_N), len(V_N), len(T_N + V_N))
+	#print(len(T_N), len(V_N), len(T_N + V_N))
 
 	H_1PN_N = []
 	#H_2PN_N = []
@@ -336,19 +336,19 @@ sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
 '''
 
-m[0], m[1] = 4.e0*Ms, 1.e0*Ms
+m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
 
-x[0], x[1] = -0.9*AU, 0.9*AU
+x[0], x[1] = -1.0*AU, 1.*AU
 y[0], y[1] = 0.*AU, 0.*AU
 z[0], z[1] = 0.*AU, 0.*AU
 
-vx[0], vx[1] = +0.7e0, -1.2e0
-vy[0], vy[1] = +1.86e1, -2.56e1
+vx[0], vx[1] = -4.2e0, +9.2e1
+vy[0], vy[1] = +3.86e0, +7.56e1
 vz[0], vz[1] = 0., 0.
 
 sx[0], sx[1] = 0., 0.
 sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
-
+    
 energy_test(N, dt, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, nout)
 
