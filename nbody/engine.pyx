@@ -469,7 +469,7 @@ def run(long long int nsteps, long double dt, int order,
         # check for mergers
         n = _merge(bodies, n)
         # evolve forward in time
-        #_one_step_rk(bodies, n, dt, order)
+        #_one_step_lp(bodies, n, dt, order)
         _one_step_icn(bodies, n, dt, order, ICN_it)
         
         # store 1 every nthin steps        

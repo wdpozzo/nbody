@@ -23,6 +23,10 @@ Number of seconds in a century = 3153600000
 More information at "https://math.ucr.edu/home/baez/physics/Relativity/GR/mercury_orbit.html"
 '''
 
+#python nbodysimulation.py -n 7 --steps 640000000 --dt 5 --ICN_order 2 --PN_order 1
+#python nbodysimulation.py -n 5 --steps 1280000000 --dt 2.5 --ICN_order 2 --PN_order 1
+
+
 day = 86400. #*u.second
 year = day*365
 
@@ -92,7 +96,7 @@ if __name__=="__main__":
     ICN_it = opts.ICN_order
     order = opts.PN_order
     np.random.seed(opts.seed)        
-
+    
     '''
     #points in generated randomly inside a sphere (bulge == 0) or with gaussian density distribution centered in the origin + a massive body there (bulge == 1)
 
@@ -128,20 +132,19 @@ if __name__=="__main__":
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
     '''
-    
-    t = Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
-
+    '''
+    t = Time(datetime.now()) #Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
  
     #actual natural initial coordinates        
 
     masses = {
     'sun'     : Ms, #1st planet has to be the central attractor
     'mercury' : Mmerc, #2nd planet has to be the one which we want to test the GR dynamics effects on 
-    'earth'   : Mearth,
-    'mars'    : 0.1075*Mearth,
-    'venus'   : 0.815*Mearth,
-    'jupiter' : 317.8*Mearth,
-    'saturn'  : 95.2*Mearth,
+    #'earth'   : Mearth,
+    #'mars'    : 0.1075*Mearth,
+    #'venus'   : 0.815*Mearth,
+    #'jupiter' : 317.8*Mearth,
+    #'saturn'  : 95.2*Mearth,
     #'uranus'  : 14.6*Mearth,
     #'neptune' : 17.2*Mearth,
     #'pluto'   : 0.00218*Mearth,
@@ -150,11 +153,11 @@ if __name__=="__main__":
     planet_names = [
     'sun',
     'mercury',
-    'earth',
-    'mars',
-    'venus',
-    'jupiter',
-    'saturn',
+    #'earth',
+    #'mars',
+    #'venus',
+    #'jupiter',
+    #'saturn',
     #'uranus',
     #'neptune',
     ]
@@ -187,9 +190,8 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-
-    
     '''
+    
     #custom initial coordinates
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -205,8 +207,7 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)#
     
-    '''
-    '''
+
     m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
     x[0], x[1] = -69.818e9, 0.*AU
@@ -220,7 +221,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    '''
+ 
     '''
     m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
     
@@ -253,14 +254,13 @@ if __name__=="__main__":
     sx = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sy = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
     sz = np.random.uniform(-1.0,1.0,size = nbodies).astype(np.longdouble)
-
     #print(m,x,y,z,vx,vy,vz,sx,sy,sz)
     '''
     
     #parameters for solution files management 
-    plot_step = 20
-    buffer_lenght = 10000000
-    data_thin = 40
+    plot_step = 10
+    buffer_lenght = 1000000
+    data_thin = 1000
     #---------------------------------------#
     
     dt = opts.dt
@@ -762,8 +762,7 @@ if __name__=="__main__":
             
             plt.show()
                         
-            print('Perihelion shift = {}'.format(abs(p_s[-1] - p_s[0])))
-            #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
+            print('GR standard shift = {};\nCoupling with other planets shift = {};\nGravitomagnetic shift = {}.'.format(a_p1[0], a_p2[0]*a_p3[0], a_p4[0])) #(a_p1[0]*415.203075824, a_p2[0]*a_p3[0]*415.203075824, a_p4[0]*415.203075824))
         
         #if (opts.n!= 2):
         #    print("n do not equal 2: no CM plot")
