@@ -22,16 +22,9 @@ def CM_system(np.ndarray[double, mode="c", ndim=2] p1, np.ndarray[double, mode="
     for i in range(Neff):
 
         q_rel[i,:] = np.array([q1[i,:] - q2[i,:]])       
-        p_rel[i,:] = np.array([p1[i,:] - p2[i,:]])
+        p_rel[i,:] = np.array([(m2*p1[i,:] - m1*p2[i,:])/(m1 + m2)])
         
         q_cm[i,:] = np.array([(m1*q1[i,:] + m2*q2[i,:])/(m1+m2)])
-        p_cm[i,:] = np.array([(m1*p1[i,:] + m2*p2[i,:])/(m1+m2)])
+        p_cm[i,:] = np.array([p1[i,:] + p2[i,:]])
            
-             
-    #q_rel -= q_cm
-    #q_cm -= q_cm
-    
-    #p_rel -=  p_cm
-    #p_cm -= p_cm
-    
     return (q_rel, p_rel, q_cm, p_cm)

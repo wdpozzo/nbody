@@ -138,7 +138,7 @@ cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
 
-    return -G*b1.mass*b2.mass/r
+    return -G*b1.mass*b2.mass/(r)
     
 @cython.boundscheck(False)
 @cython.wraparound(False)

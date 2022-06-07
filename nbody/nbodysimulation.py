@@ -4,7 +4,7 @@ import math
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run, _H_2body
 from Kep_dynamic import kepler, kepler_sol_sys
-from collections import deque
+from collections import deque 
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
@@ -23,7 +23,7 @@ Number of seconds in a century = 3153600000
 More information at "https://math.ucr.edu/home/baez/physics/Relativity/GR/mercury_orbit.html"
 '''
 
-#python nbodysimulation.py -n 7 --steps 640000000 --dt 5 --ICN_order 2 --PN_order 1
+#
 #python nbodysimulation.py -n 5 --steps 1280000000 --dt 2.5 --ICN_order 2 --PN_order 1
 
 
@@ -73,12 +73,13 @@ def gaussian_random_sphere(x, y, z, r, num, bulge):
         iz = z + ir * math.cos(itheta)
         
         x_a[i] = ix
-       	y_a[i] = iy
+        y_a[i] = iy
         z_a[i] = iz
                         
     return ((x_a).astype(np.longdouble), (y_a).astype(np.longdouble), (z_a).astype(np.longdouble))
         
 if __name__=="__main__":
+
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
     parser.add_option('--steps', default=5000000, type='long', help='n steps (must be a multiple of  1e7, which is the n. of datas in a file solution fragment)') #, type='longint'
@@ -131,12 +132,12 @@ if __name__=="__main__":
                   
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
+    ''' 
+    
     '''
-    '''
-    t = Time(datetime.now()) #Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())
- 
-    #actual natural initial coordinates        
-
+    #actual natural initial coordinates    
+    t = Time(datetime.now()) #Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())    
+    
     masses = {
     'sun'     : Ms, #1st planet has to be the central attractor
     'mercury' : Mmerc, #2nd planet has to be the one which we want to test the GR dynamics effects on 
@@ -205,8 +206,7 @@ if __name__=="__main__":
     
     sx = np.array((2,1)).astype(np.longdouble)
     sy = np.array((2,1)).astype(np.longdouble)
-    sz = np.array((2,1)).astype(np.longdouble)#
-    
+    sz = np.array((2,1)).astype(np.longdouble)
 
     m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
@@ -221,7 +221,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
- 
+	
     '''
     m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
     
@@ -235,9 +235,9 @@ if __name__=="__main__":
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
-    sz[0], sz[1] = 0., 0.
-    
+    sz[0], sz[1] = 0., 0.    
     '''
+    
     '''
     #random initial coordinates
     
@@ -414,11 +414,11 @@ if __name__=="__main__":
             for j in range(nbodies[i]):
                 qs[j].append(s[i][j]['q'])
         
-        print(np.shape(qs))
+        #print(np.shape(qs))
          
         for q in qs:
-            q = np.array(q) #, dtype = 'float128')
-            print(np.shape(q))
+            q = np.array(q)# , dtype = 'object')
+            #print(np.shape(q))
             c = next(colors)
             ax.plot(q[:,0], q[:,1], q[:,2], color=c, lw=0.5)
             ax.plot(q[:,0], q[:,1], q[:,2], color='w', alpha=0.5, lw=2, zorder=0)
@@ -482,7 +482,7 @@ if __name__=="__main__":
                 ax.tick_params(axis='x', colors='white')
                 ax.tick_params(axis='y', colors='white')
                 ax.tick_params(axis='z', colors='white')
-                # Bonus: To get rid of the grid as well:
+                # Bonus: To get  rid of the grid as well:
                 ax.grid(False)
                 
                 for b in range(nbodies[0]):
@@ -501,12 +501,12 @@ if __name__=="__main__":
     
         #solar_system_ephemeris.set("jpl")
 
-        EPOCH = Time("2021-05-21 12:05:50", scale="tdb")
+        #EPOCH = Time("2021-05-21 12:05:50", scale="tdb")
     
         if opts.n == 2:
             
-            from poliastro.bodies import Sun, Mercury 
-            from poliastro.twobody import Orbit                 
+            #from poliastro.bodies import Sun, Mercury 
+            #from poliastro.twobody import Orbit                 
             import matplotlib.pyplot as plt
             import matplotlib.cm as cm
             from mpl_toolkits import mplot3d
@@ -528,19 +528,19 @@ if __name__=="__main__":
                 s1[i,:] = s[i][0]['s']
                 q2[i,:] = s[i][1]['q']
                 p2[i,:] = s[i][1]['p']
-                s2[i,:] = s[i][1]['s']               
-            
-            #q1, q2, p1, p2 = gen_3d_frame(p1, p2, q1, q2, Neff, m)
-            q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])
-                  
-            r_dif, q_an_rel, q_rel_diff, L, a_p, t, P_quad = kepler(q1, q2, p1, p2, Neff, H, m, dt)
-            #r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
-            
+                s2[i,:] = s[i][1]['s']                      
+                        
+            q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])            
+            r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
+                                
+            r_dif, q_an_rel, r_kepler, L, a_p, t, P_quad = kepler(q1, q2, p1, p2, Neff, H, m, dt)
+
             #perihelion total shift
-            p_s = abs(a_p[0] - a_p[-1])
-            #-----------Plots-----------------#
             
-            #print(q_rel, q_an_rel)
+            p_s = abs(a_p[0] - a_p[-1])
+            
+            
+            #-----------Plots-----------------#   
             
             f = plt.figure(figsize=(16,6))
             
@@ -557,6 +557,7 @@ if __name__=="__main__":
             ax.set_zlabel('z [m]')        
             
             plt.legend()
+            
             #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
             #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
             #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
@@ -578,7 +579,7 @@ if __name__=="__main__":
             
             plt.show()
             
-            Mercury.plot(EPOCH)
+            #Mercury.plot(EPOCH)
             
             '''
             q_merc = [x[0], y[0], z[0]] * u.km
@@ -591,20 +592,13 @@ if __name__=="__main__":
             
             f = plt.figure(figsize=(16,6))
             
-            ax2 = f.add_subplot(121) 
-            ax2.plot(N_arr, q_rel_diff[:,0], label = 'Simul vs. Analit y coordinate', alpha=0.9)
-            ax2.set_xlabel('iterations')
-            ax2.set_ylabel('Displacement [m]')
+            ax = f.add_subplot(121) 
+            ax.plot(N_arr, r_kepler - r_sim, label = 'Simul r_rel vs. Analit r_kepler', alpha=0.9)
+            ax.set_xlabel('iterations')
+            ax.set_ylabel('Displacement [m]')
             plt.grid()
             plt.legend()
-            
-            ax3 = f.add_subplot(122)
-            ax3.plot(N_arr, q_rel_diff[:,1], label = 'Simul vs. Analit x coordinate', alpha=0.9)
-            ax3.set_xlabel('iterations')
-            ax3.set_ylabel('Displacement [m]')
-            plt.grid()
-            plt.legend()
-            
+       
             plt.show()
             
             f = plt.figure(figsize=(6,4))
@@ -639,8 +633,8 @@ if __name__=="__main__":
         
         else :
         
-            from poliastro.plotting.misc import plot_solar_system
-            from poliastro.bodies import Earth, Sun, Mercury, Venus, Mars
+            #from poliastro.plotting.misc import plot_solar_system
+            #from poliastro.bodies import Earth, Sun, Mercury, Venus, Mars
             
             import matplotlib.pyplot as plt
             import matplotlib.cm as cm
@@ -742,7 +736,7 @@ if __name__=="__main__":
             plt.grid()
             plt.legend()
 
-            plot_solar_system(epoch=EPOCH)   
+            #plot_solar_system(epoch=EPOCH)   
                    
             plt.show()
 
