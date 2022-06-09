@@ -1,7 +1,9 @@
 import numpy as np
 import math
 from nbody.CM_coord_system import CM_system
-from scipy.special import lambertw
+from scipy.signal import argrelextrema
+
+#from scipy.special import lambertw
 
 '''
 This will become a cython code one day...
@@ -85,23 +87,28 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 
 
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
-	L_rel =	np.cross(q_rel, p_rel)
 	
+	L_rel =	np.cross(q_rel, p_rel)
 	L = np.linalg.norm(L_rel, axis=-1)
 	
 	#print(L, L_cm, L_rel)	
 	
 	q_analit_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-
-
+	
 	r_dif = np.zeros(Neff, dtype='float64')
+	r_rel = np.zeros(Neff, dtype='float64')
+	
+	for i in range(0, Neff):
+
+		r_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
 			   
 	#Dinamica Kepleriana#------------------#
 	
 	M = m[0] + m[1]
 	mu = (m[0]*m[1])/M
 
-	H -= (p_cm[:, 0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])/(2*M) #ricavo H_rel
+	H -= (p_cm[:,0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])/(2*M) #ricavo H_rel
+	
 	H2 = H*H
 	L2 = L*L	
 		
@@ -109,29 +116,17 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 
 	R = L2/(k*mu) # semi-latus rectum = a*(1 - e*e)
 	alpha = H2/R 
-
-	#e = np.zeros(Neff)
-	#a = np.zeros(Neff, dtype='float64')	
+	
 	a_p = np.zeros(Neff, dtype='float64')	
-	P_quad = np.zeros(Neff, dtype='float64')	
-	#T = np.zeros(Neff, dtype='float64')	
+	P_quad = np.zeros(Neff, dtype='float64')		
 	t = np.zeros(Neff, dtype='float64')	
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	
 	for i in range(0, Neff):
 
-		r_rel = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
-        
-		#c = e*a
-		#c = np.float(math.sqrt(abs(a*a - b*b))) 
-				  	
 		#print("[{}, {}, {}, {}, {}]".format(L2[i], H[i], k, mu, i))
 		
-		e = np.float(math.sqrt(1 + (2*H[i]*L2[i])/(k*k*mu)))	
-		
-		#e = c/a
-		#a = np.float(R[i]/(1 - e*e)) # semi-major axis
-		#b = np.float(R[i]/(math.sqrt(1 - e*e))) # semi-minor axis  	
+		e = np.float(math.sqrt(1 + (2*H[i]*L2[i])/(k*k*mu)))		
 		 
 		'''
 		routine per il calcolo dell'orbita kepleriana anche in caso di orbita iperbolica (https://kyleniemeyer.github.io/space-systems-notes/orbital-mechanics/two-body-problems.html)
@@ -170,7 +165,6 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 				
 			theta = math.atan2(e*math.sqrt(2.)*math.sin(m), (1. - e*math.cos(m)))
 			
-			#root = - (1. - e*math.cos(m))/(e*math.sin(m)) - math.sqrt((1. - e*math.cos(m))/(e*math.sin(m))*(1. - e*math.cos(m))/(e*math.sin(m)) + 2.)
 			root = math.sqrt(2.)*math.tan(0.5*theta)
 			
 			E_temp = m + root
@@ -258,7 +252,7 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		q_analit_rel[i,1] = y_kepler
 		q_analit_rel[i,2] = q_rel[i,2]	
 		
-		r_dif[i] = abs(math.sqrt(q_analit_rel[i,0]*q_analit_rel[i,0] + q_analit_rel[i,1]*q_analit_rel[i,1] + q_analit_rel[i,2]*q_analit_rel[i,2]) - r_rel) 
+		r_dif[i] = abs(math.sqrt(q_analit_rel[i,0]*q_analit_rel[i,0] + q_analit_rel[i,1]*q_analit_rel[i,1] + q_analit_rel[i,2]*q_analit_rel[i,2]) - r_rel[i]) 
 		
 		#d_dif[i] = abs(r_kepler - d_rel) 
 
@@ -273,22 +267,39 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		
 		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   	
           	#---------------------------------------------------------
-
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, t, P_quad)
+        
+        #numerical shift
+        	
+	peri_indexes = argrelextrema(r_rel, np.less)
+	peri_indexes = np.transpose(peri_indexes)
+	phi_shift = 0 
+		
+	n_peri = len(peri_indexes)
+	
+	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')	
+	
+	for i in range(0, n_peri):
+	
+		q_peri[i,:] = q_rel[peri_indexes[i], :]
+	
+	for i in range(1, n_peri):
+		
+		q_shift = q_peri[i, :] - q_peri[i-1, :]
+		phi_shift += np.float(math.atan2(q_shift[1], q_shift[0]))
+		
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, t, P_quad, q_peri, phi_shift/n_peri)
 
 	
 def kepler_sol_sys(p, q, Neff, H, m, dt):
 
 	L_arr = np.zeros((len(m),Neff))
 
-
 	d_rel = np.zeros(Neff, dtype='float64')	
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p[0], p[1], q[0], q[1], Neff, m[0], m[1])
 		
 	for i in range(Neff):
-		d_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])
-	
+		d_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
 	
 	aphe_index = [index for index, item in enumerate(d_rel) if item == max(d_rel)]
 	peri_index = [index for index, item in enumerate(d_rel) if item == min(d_rel)]  
@@ -297,15 +308,13 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 	a = (d_rel[aphe_index] + d_rel[peri_index])/2.
 	b = math.sqrt(1. - e*e)*a 
 	
-	print(e, a ,b)
+	#print(e, a ,b)
 	
 	for i in range(len(m)):
 		L_temp = np.cross(q[i, :], p[i, :])
 		L_arr[i] = np.linalg.norm(L_temp, axis=-1) 	
 
 	L_tot = np.sum(L_arr, axis=0)
-
-	q_analit_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')	
 				   
 	#Dinamica Kepleriana#------------------#
 	
@@ -324,6 +333,7 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 	t = np.zeros(Neff, dtype='float64')	
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	
+	#theoretical shift
 	for i in range(0, Neff):
 		
 		'''	   
@@ -358,6 +368,26 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 		f_e = (1./((1. - e*e)**(7./2.)))*(1. + (73./24.)*(e*e) + (37./96.)*(e*e*e*e))
 		
 		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   
- 
-	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4)
+
+	#numerical shift	
+	#d_test = d_rel - np.mean(d_rel)
+	
+	peri_indexes = argrelextrema(d_rel, np.less)
+	peri_indexes = np.transpose(peri_indexes)
+	phi_shift = 0 
+	
+	n_peri = len(peri_indexes)
+	
+	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')	
+	
+	for i in range(0, n_peri):
+	
+		q_peri[i,:] = q_rel[peri_indexes[i], :]
+
+	#for i in range(1, n_peri):
+		
+		#q_shift = q_peri[i, :] - q_peri[i-1, :]
+		#phi_shift += np.float(math.atan2(q_shift[1], q_shift[0]))
+ 	
+	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri)#, phi_shift)
 	

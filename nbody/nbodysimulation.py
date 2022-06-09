@@ -44,7 +44,7 @@ Ms = 1.988e30
 
 #G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #G = 6.67e-11 
 
-# AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
+#AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
 
 #C = (299792458.*(u.m/u.s)).to(u.AU/u.d).value #299792458. 
 #Msun = (1.988e30*u.kg).to(u.solMass).value 
@@ -133,18 +133,17 @@ if __name__=="__main__":
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
     ''' 
-    
-    '''
+    '''   
     #actual natural initial coordinates    
     t = Time(datetime.now()) #Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())    
     
     masses = {
     'sun'     : Ms, #1st planet has to be the central attractor
     'mercury' : Mmerc, #2nd planet has to be the one which we want to test the GR dynamics effects on 
-    #'earth'   : Mearth,
-    #'mars'    : 0.1075*Mearth,
-    #'venus'   : 0.815*Mearth,
-    #'jupiter' : 317.8*Mearth,
+    'earth'   : Mearth,
+    'mars'    : 0.1075*Mearth,
+    'venus'   : 0.815*Mearth,
+    'jupiter' : 317.8*Mearth,
     #'saturn'  : 95.2*Mearth,
     #'uranus'  : 14.6*Mearth,
     #'neptune' : 17.2*Mearth,
@@ -154,10 +153,10 @@ if __name__=="__main__":
     planet_names = [
     'sun',
     'mercury',
-    #'earth',
-    #'mars',
-    #'venus',
-    #'jupiter',
+    'earth',
+    'mars',
+    'venus',
+    'jupiter',
     #'saturn',
     #'uranus',
     #'neptune',
@@ -191,8 +190,8 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-    '''
     
+    '''
     #custom initial coordinates
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -211,8 +210,8 @@ if __name__=="__main__":
     m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
     x[0], x[1] = -69.818e9, 0.*AU
-    y[0], y[1] = 0.*AU, 0.*AU
-    z[0], z[1] = 0.0*AU, 0.0*AU
+    y[0], y[1] = 0.00000, 0.00000
+    z[0], z[1] = 0.00000, 0.00000
 
     vx[0], vx[1] = 0., 0.
     vy[0], vy[1] = 38.86e3, 0.
@@ -221,7 +220,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-	
+    
     '''
     m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
     
@@ -258,9 +257,11 @@ if __name__=="__main__":
     '''
     
     #parameters for solution files management 
+    
     plot_step = 10
     buffer_lenght = 1000000
     data_thin = 1000
+    
     #---------------------------------------#
     
     dt = opts.dt
@@ -281,14 +282,10 @@ if __name__=="__main__":
         T_tot.append(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')))
         V_tot.append(pickle.load(open('potential_{}.pkl'.format(i),'rb')))       
         
-        #print(np.shape(s_tot), np.shape(H_tot), np.shape(T_tot), np.shape(V_tot))
-        
         s.append(s_tot[0][::plot_step])
         H.append(H_tot[0][::plot_step])
         T.append(T_tot[0][::plot_step])
-        V.append(V_tot[0][::plot_step])
-       
-        #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
+        V.append(V_tot[0][::plot_step])       
         
         del s_tot
         del H_tot
@@ -297,23 +294,16 @@ if __name__=="__main__":
         
         if (1+i) % (10*nout)//100 == 0 :
             print("Data deframmentation: {}%".format((100*i)/nout))
-    
-    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
-    
+       
     s = np.array(s, dtype=object)#.flatten()
     H = np.array(H, dtype=object)#.flatten()
     T = np.array(T, dtype=object)#.flatten()
-    V = np.array(V, dtype=object)#.flatten()
-    
-    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))
+    V = np.array(V, dtype=object)#.flatten()   
     
     s = np.concatenate((s[:]))
     H = np.concatenate((H[:]))
     T = np.concatenate((T[:]))
     V = np.concatenate((V[:])) 
-    
-    #print(np.shape(s), np.shape(H), np.shape(T), np.shape(V))      
-    #print(N, Neff, nout)
     
     if opts.animate == 1:
     
@@ -423,7 +413,6 @@ if __name__=="__main__":
             ax.plot(q[:,0], q[:,1], q[:,2], color=c, lw=0.5)
             ax.plot(q[:,0], q[:,1], q[:,2], color='w', alpha=0.5, lw=2, zorder=0)
                 
-
         f.set_facecolor('black')
         ax.set_facecolor('black')
         ax.xaxis.pane.fill = False
@@ -533,14 +522,13 @@ if __name__=="__main__":
             q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])            
             r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
                                 
-            r_dif, q_an_rel, r_kepler, L, a_p, t, P_quad = kepler(q1, q2, p1, p2, Neff, H, m, dt)
+            r_dif, q_an_rel, r_kepler, L, a_p, t, P_quad, q_peri, phi_shift = kepler(q1, q2, p1, p2, Neff, H, m, dt)
 
             #perihelion total shift
             
-            p_s = abs(a_p[0] - a_p[-1])
-            
-            
-            #-----------Plots-----------------#   
+            p_s = abs(a_p[0] - a_p[-1])  
+              
+            #-------------------  Plots  ------------------------#   
             
             f = plt.figure(figsize=(16,6))
             
@@ -557,11 +545,6 @@ if __name__=="__main__":
             ax.set_zlabel('z [m]')        
             
             plt.legend()
-            
-            #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
-            #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
-            #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
-            #plt.axis('auto')
             
             ax1 = f.add_subplot(132)
             ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical', alpha=0.9)
@@ -627,10 +610,24 @@ if __name__=="__main__":
             ax.grid()
             plt.show()
             
-            print('Perihelion shift = {}'.format(p_s))
+            print('Perihelion shift = {} [rad/revolution]'.format(a_p[0]))
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
-
-        
+            
+            f = plt.figure(figsize=(16,6))
+            
+            ax = f.add_subplot(121, projection = '3d')
+            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
+            for i in range(0, len(q_peri)): 
+            	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
+            ax.set_xlabel('x [m]')
+            ax.set_ylabel('y [m]')
+            ax.set_zlabel('z [m]')        
+            
+            plt.legend()
+            plt.show()
+            
+            print('Numerical shift: {} [rad/revolution]'.format(phi_shift))
+            
         else :
         
             #from poliastro.plotting.misc import plot_solar_system
@@ -691,14 +688,16 @@ if __name__=="__main__":
                 T_2body.append(t)
                 V_2body.append(v)
                                
-            L, P_quad, a_p1, a_p2, a_p3, a_p4 = kepler_sol_sys(p, q, Neff, H_2body, m, dt)
+            L, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift = kepler_sol_sys(p, q, Neff, H_2body, m, dt)
             
             #r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
             q_rel, p_rel, q_cm, p_cm = CM_system(p[0], p[1], q[0], q[1], Neff, m[0], m[1])
             
+            r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
+            
            	#perihelion total shift
             p_s = a_p1 + a_p2*a_p3 + a_p4
-            
+             
             #-----------Plots-----------------#
             
             #print(a_p1, a_p2, a_p3, a_p4)
@@ -707,16 +706,11 @@ if __name__=="__main__":
             
             ax = f.add_subplot(121, projection = '3d')  
             #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
-            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
-            ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num. starting point', alpha=0.9)     
-            #ax.plot(q_an_rel[:,0], q_an_rel[:,1], q_an_rel[:,2], label = 'Analitical solution')
-            #ax.plot(q_an_rel[0,0], q_an_rel[0,1], q_an_rel[0,2], 'o', label = 'Analit. starting point')
-            #ax.plot(q_cm[:,0], q_cm[:,1], q_cm[:,2], 'o', label = 'CM')
-            #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
+            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)
+            ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num. starting point', alpha=0.9)
             ax.set_xlabel('x [m]')
             ax.set_ylabel('y [m]')
             ax.set_zlabel('z [m]')        
-            
             plt.legend()
             #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
             #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
@@ -736,8 +730,7 @@ if __name__=="__main__":
             plt.grid()
             plt.legend()
 
-            #plot_solar_system(epoch=EPOCH)   
-                   
+            #plot_solar_system(epoch=EPOCH)          
             plt.show()
 
             f = plt.figure(figsize=(16,6))
@@ -755,8 +748,23 @@ if __name__=="__main__":
             plt.legend()
             
             plt.show()
-                        
-            print('GR standard shift = {};\nCoupling with other planets shift = {};\nGravitomagnetic shift = {}.'.format(a_p1[0], a_p2[0]*a_p3[0], a_p4[0])) #(a_p1[0]*415.203075824, a_p2[0]*a_p3[0]*415.203075824, a_p4[0]*415.203075824))
+            
+            
+            f = plt.figure(figsize=(16,6))
+            
+            ax = f.add_subplot(121, projection = '3d')
+            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)
+            for i in range(0, len(q_peri)): 
+            	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
+            ax.set_xlabel('x [m]')
+            ax.set_ylabel('y [m]')
+            ax.set_zlabel('z [m]')        
+            
+            plt.legend()
+            plt.show()         
+            
+            print('GR standard shift = {} [rad];\nCoupling with other planets shift = {} [rad];\nGravitomagnetic shift = {} [rad].'.format(a_p1[0], a_p2[0]*a_p3[0], a_p4[0]))
+            #print('Numerical shift: {} [rad]'.format(phi_shift))
         
         #if (opts.n!= 2):
         #    print("n do not equal 2: no CM plot")
