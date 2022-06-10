@@ -159,7 +159,7 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		
 		j = 0
 		
-		for j in range(0):
+		for j in range(1):
 		
 			m = E - e*math.sin(E)
 				
@@ -171,8 +171,6 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 			m_temp = E_temp - e*math.sin(E_temp)
 			
 			E = E_temp + (m - m_temp)/(1. - e*math.cos(E_temp))
-				
-			j += 1
 		
 		m = E - e*math.sin(E)
 				
@@ -278,35 +276,31 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 	
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')	
 	
-	for i in range(0, n_peri):
+	if (n_peri != 0):
 	
-		q_peri[i,:] = q_rel[peri_indexes[i], :]
+		for i in range(0, n_peri):
 	
-	for i in range(1, n_peri):
+			q_peri[i,:] = q_rel[peri_indexes[i], :]
+	
+		for i in range(1, n_peri):
 		
-		q_shift = q_peri[i, :] - q_peri[i-1, :]
-		phi_shift += np.float(math.atan2(q_shift[1], q_shift[0]))
+			q_shift = q_peri[i, :] - q_peri[i-1, :]
+			phi_shift += np.float(math.atan2(q_shift[1], q_shift[0]))
 		
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, t, P_quad, q_peri, phi_shift/n_peri)
+		print(phi_shift, n_peri)
+			
+		phi_shift = phi_shift/n_peri #shift per ogni rivoluzione	(phi_shift è lo shift totale)
+		
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, t, P_quad, q_peri, phi_shift)
 
 	
 def kepler_sol_sys(p, q, Neff, H, m, dt):
 
-	L_arr = np.zeros((len(m),Neff))
+	L_arr = np.zeros(len(m), Neff)
 
 	d_rel = np.zeros(Neff, dtype='float64')	
 	
-	q_rel, p_rel, q_cm, p_cm = CM_system(p[0], p[1], q[0], q[1], Neff, m[0], m[1])
-		
-	for i in range(Neff):
-		d_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
-	
-	aphe_index = [index for index, item in enumerate(d_rel) if item == max(d_rel)]
-	peri_index = [index for index, item in enumerate(d_rel) if item == min(d_rel)]  
-	
-	e = (d_rel[aphe_index] - d_rel[peri_index])/(d_rel[aphe_index] + d_rel[peri_index])
-	a = (d_rel[aphe_index] + d_rel[peri_index])/2.
-	b = math.sqrt(1. - e*e)*a 
+	q_rel, p_rel, q_cm, p_cm = CM_system(p[0], p[1], q[0], q[1], Neff, m[0], m[1])	
 	
 	#print(e, a ,b)
 	
@@ -318,9 +312,18 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 				   
 	#Dinamica Kepleriana#------------------#
 	
+	H -= (p_cm[:,0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])/(2*M) #ricavo H_rel
+	L_rel =	np.cross(q_rel, p_rel)
+	L = np.linalg.norm(L_rel, axis=-1)
+	H2 = H*H
+	L2 = L*L	
+		
+	k = G*M*mu
+	
 	M = m[0] + m[1]
 	mu = (m[0]*m[1])/M
-	 
+	
+	R = L2/(k*mu)
 	P_quad = np.zeros(Neff, dtype='float64')
 		
 	a_p1 = np.zeros(Neff, dtype='float64')	
@@ -334,8 +337,14 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	
 	#theoretical shift
-	for i in range(0, Neff):
+	for i in range(0, Neff):		
 		
+		d_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])
+		
+		e = np.float(math.sqrt(1 + (2*H[i]*L2[i])/(k*k*mu)))	
+		
+		a = np.float(R[i]/(1 - e*e)) # semi-major axis
+		b = np.float(R[i]/(math.sqrt(1 - e*e))) # semi-minor axis
 		'''	   
 		if (1 <= e):
 			a = (R[i]/(e*e - 1.)) # semi-major axis
@@ -359,7 +368,7 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 			
 		a_p2[i] = np.sum(a_p2_arr) 
 		
-		a_p3[i] = (1. + 0.5*(G*M*28. + 47.*e*e)/(C*C*a*(1. - e*e)*(1. - e*e)))
+		a_p3[i] = (1. + 0.5*(G*M*(28. + 47.*e*e))/(C*C*a*(1. - e*e)*(1. - e*e)))
 		
 		a_p4[i] = np.sum(a_p4_arr)
 		

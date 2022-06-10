@@ -45,59 +45,28 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
     cdef long double C2 = C*C
     cdef long double C4 = C2*C2
     
-    if order == 0:
-        # compute the kinetic part
-        for i in range(N):
-            T += _kinetic_energy(bodies[i])
-            # and the potential
-            
-            for j in range (i+1,N):
-                V += _potential_0pn(bodies[i], bodies[j])
-        
-        H = T + V
+    V = _potential(bodies, N, order)
+    
+    for i in range(N):
+        T += _kinetic_energy(bodies[i])
 
-        return (H, T, V)
-
-    if order == 1:    
-        # compute the kinetic part
+    if order >= 1:    
         for i in range(N):
             mi = bodies[i].mass
-            
-            T += _kinetic_energy(bodies[i])
 
             T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C2)
-#            print('2 T',i,T)
-            
-            # and the potential
-            #for j in range(i+1,N):
-            for j in range (i+1,N):
-                  V += _potential_0pn(bodies[i], bodies[j])
-                  V += _potential_1pn(bodies[i], bodies[j])
-                
-        H = T + V
-        
-        return (H, T, V)
 
-    if order == 2:
 
-        # compute the kinetic part
+    if order >= 2:
         for i in range(N):
             mi = bodies[i].mass
            
-            T += _kinetic_energy(bodies[i])   
-            T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C*C) 
             T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C*C*C*C)
-
-            # and the potential
-            #for j in range(i+1,N):
-            for j in range (i+1,N):
-                    V += _potential_0pn(bodies[i], bodies[j])
-                    V += _potential_1pn(bodies[i], bodies[j])                
-                    V += _potential_2pn(bodies[i], bodies[j])
-                
-        H = T + V
+   
+   
+    H = T + V
         
-        return (H, T, V)
+    return (H, T, V)
 
  
 cdef inline long double _kinetic_energy(body_t b) nogil:
@@ -345,13 +314,9 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     for k in range(3):
 
         # derivative wrt q
-        #out[k] += ( - 0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*( 14*p1_p2/m1m2 + 2*(n_p1)*(n_p2)/(m1m2*r2) + (-12*p12)/m1sq)/r3 + 0.25*G*m1m2*(b1.p[k]*(n_p2)/(m1m2*r2) + 2*b2.p[k]*(n_p1)/(m1m2*r2) - 4*dq[k]*(n_p1)*(n_p2)/(m1m2*r4))/r)/C2 # 1PN order
-       
         out[k] += ( -0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.125*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2
 
         # derivative wrt p
-        #out[3+k] +=  (0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*(n_p2)/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*(p12)/m1cu )/C2 #1PN order
-        
         out[k+3] += ( 0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*p12/m1cu )/C2
     
     free(dq)
@@ -406,16 +371,10 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
 
     for k in range(3):
         
-        # derivative wrt q
-        
-        #out[k] += ( 0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*(19*p22/m2sq + 10*p12/m1sq) - (0.5*m1 + 0.5*m2)*(27*p1_p2 + 6*n_p1*n_p2/r2)/m1m2)/r4 - 0.25*G*G*(0.5*m1 + 0.5*m2)*(6*b1.p[k]*n_p2/r2 + 6*b2.p[k]*n_p1/r2 - 12*dq[k]*n_p1*n_p2/r4)/r2 - 0.125*G*m1m2*dq[k]*(5*p12*p12*n_p2*n_p2/(m1m2sq*r2) - 5.5*p12*p22/m1m2sq - p1_p2*p1_p2/m1m2sq - 6*p1_p2*n_p1*n_p2/m1m2sq - 1.5*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r2) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.0*b1.p[k]*n_p1*n_p2*n_p2/(m1m2sq*r2) + 10*b2.p[k]*p12*p12*n_p2/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*n_p1/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*n_p2/(m1m2sq*r4) + 6.*dq[k]*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10.*dq[k]*p12*p12*n_p2*n_p2/(m1m2sq*r4) + 12.*dq[k]*p1_p2*n_p1*n_p2/(m1m2sq*r4))/r )/C4
-        
+        # derivative wrt q    
         out[k] += ( 0.125*G*G*G*m1m2*3*dq[k]*(m1sq + 5*m1m2 + m2sq)/r5 - 0.5*G*G*m1m2*dq[k]*(m2*(19.*p22/m2sq + 10*p12/m1sq) - 0.5*(m1+m2)*(27*p1_p2 + 6*n_p1*n_p2/r2)/m1m2)/r4 - 0.125*G*G*(m1 + m2)*(6*b1.p[k]*n_p2/r2 + 6*b2.p[k]*n_p1/r2 -12.*dq[k]*n_p1*n_p2/r4 )/r2 - 0.125*G*m1m2*dq[k]*(5*p12*n_p2*n_p2/(m1m2sq*r2) - 5.5*p12*p22/m1m2sq - p1_p2*p1_p2/m1m2sq - 6*p1_p2*n_p1*n_p2/(m1m2sq*r2) - 1.5*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r4) + 5*p12*p12/m1qu)/r3 + 0.125*G*m1m2*(-6*b1.p[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.0*b1.p[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 10*b2.p[k]*p12*p12*n_p2/(m1m2sq*r2) - 6*b2.p[k]*p1_p2*n_p1/(m1m2sq*r2) - 3.0*b2.p[k]*n_p1*n_p1*n_p2/(m1m2sq*r4) + 6.*dq[k]*n_p1*n_p1*n_p2*n_p2/(m1m2sq*r6) - 10.*dq[k]*p12*p12*p22*p22/(m1m2sq*r4) + 12.*dq[k]*p1_p2*n_p1*n_p2/(m1m2sq*r4))/r )/C4
 
         # derivative wrt p
-        
-        #out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*(n_p2)/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(20.0*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.*b1.p[k]*p12/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq -6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r2) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
-        
         out[k+3] += ( 0.25*G*G*m1m2*(-(0.5*m1 + 0.5*m2)*(27*b2.p[k] + 6*dq[k]*n_p2/r2)/m1m2 + 20*m2*b1.p[k]/m1sq)/r2 + 0.125*G*m1m2*(10*b1.p[k]*p12*n_p2*n_p2/(m1m2sq*r2) - 11.0*b1.p[k]*p22/m1m2sq - 2*b2.p[k]*p1_p2/m1m2sq - 6*b2.p[k]*n_p1*n_p2/(m1m2sq*r2) - 6*dq[k]*p1_p2*n_p2/(m1m2sq*r2) - 3.*dq[k]*n_p1*n_p2*n_p2/(m1m2sq*r4) + 20*b1.p[k]*p12/m1qu)/r + 0.375*b1.p[k]*p12*p12/m1fi )/C4
 
     free(dq)

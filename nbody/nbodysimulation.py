@@ -133,7 +133,8 @@ if __name__=="__main__":
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
     ''' 
-    '''   
+    
+    '''
     #actual natural initial coordinates    
     t = Time(datetime.now()) #Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())    
     
@@ -190,8 +191,8 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-    
-    '''
+    '''  
+
     #custom initial coordinates
     m = np.array((2,1)).astype(np.longdouble)
 
@@ -610,7 +611,7 @@ if __name__=="__main__":
             ax.grid()
             plt.show()
             
-            print('Perihelion shift = {} [rad/revolution]'.format(a_p[0]))
+            print('Theoretical perihelion shift = {} [rad/revolution]'.format(a_p[0]))
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
             
             f = plt.figure(figsize=(16,6))
@@ -626,7 +627,7 @@ if __name__=="__main__":
             plt.legend()
             plt.show()
             
-            print('Numerical shift: {} [rad/revolution]'.format(phi_shift))
+            print('Numerical perihelion shift: {} [rad/revolution]'.format(phi_shift))
             
         else :
         
@@ -763,7 +764,7 @@ if __name__=="__main__":
             plt.legend()
             plt.show()         
             
-            print('GR standard shift = {} [rad];\nCoupling with other planets shift = {} [rad];\nGravitomagnetic shift = {} [rad].'.format(a_p1[0], a_p2[0]*a_p3[0], a_p4[0]))
+            print('GR standard shift = {} [rad/rev];\nCoupling with other planets shift = {} [rad/rev];\nGravitomagnetic shift = {} [rad/rev].'.format(a_p1[0], a_p2[0]*a_p3[0], a_p4[0]))
             #print('Numerical shift: {} [rad]'.format(phi_shift))
         
         #if (opts.n!= 2):
