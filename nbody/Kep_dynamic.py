@@ -19,9 +19,9 @@ G = 6.67e-11 #(6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).val
 C = 299792458. #(3.0e8*(u.m/u.s)).to(u.AU/u.d).value
 Ms = 1.988e30 #(2e30*u.kg).to(u.solMass).value
 #GM = 1.32712440018e20
-
+C2 = C*C
 '''
-#work-in-progress --> lambert integrator for trascendental equation for E (eccentric anomaly)
+#work-in-progress --> lambert integrator to solve the trascendental equation for E (eccentric anomaly)
 
 n_branch = 1
 
@@ -79,14 +79,15 @@ def gen_3d_frame(p1, p2, q1, q2, Neff, m):
 
 		#h, t, v = _H_2body(np.ndarray(m[0:1]), np.ndarray(q1[i,0], q2[i,0]), np.ndarray(q1[i,1], q2[i,1]), np.ndarray(q1[i,2], q2[i,2]), np.ndarray(p1[i,0], p2[i,0]), np.ndarray(p1[i,1], p2[i,1]), np.ndarray(p1[i,2], p2[i,2]), np.ndarray(s1[i,0], s2[i,0]), np.ndarray(s1[i,1], s2[i,1]), np.ndarray((s1[i,2], s2[i,2])), order)	
 					
-	return(q1, q2, p1, p2)#, H)
+	return(q1, q2, p1, p2)#, H) 
 '''
-
 		
-def kepler(q1, q2, p1, p2, Neff, H, m, dt):
+def kepler(q1, q2, p1, p2, Neff, H, m, dt, order):
 
 
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
+	
+	#print(p_rel, p_cm)
 	
 	L_rel =	np.cross(q_rel, p_rel)
 	L = np.linalg.norm(L_rel, axis=-1)
@@ -102,12 +103,17 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 
 		r_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
 			   
-	#Dinamica Kepleriana#------------------#
+	#Dinamica Kepleriana#-------------------------------------------------#
 	
 	M = m[0] + m[1]
 	mu = (m[0]*m[1])/M
-
-	H -= (p_cm[:,0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])/(2*M) #ricavo H_rel
+	
+	#ricavo H_rel -----------------------
+	H -= (p_cm[:,0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])/(2*M)
+	
+	if (order >= 1):
+		H -= (-(1./8.)*((p_cm[:,0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])*(p_cm[:,0]*p_cm[:, 0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2]))/(M*M*M))/(C2)		
+	#------------------------------------		
 	
 	H2 = H*H
 	L2 = L*L	
@@ -177,10 +183,11 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		'''
 		#Development Of Closed-Form Approximation Of The Eccentric Anomaly For Circular And Elliptical Keplerian Orbit 
 
-		m = math.atan2(math.sqrt(1 - e*e)*math.sin(phi_orb)/(1+e*math.cos(phi_orb)), (e + math.cos(phi_orb))/(1 + e*math.cos(phi_orb))) - e*math.sqrt(1 - e*e)*math.sin(phi_orb)/(1 + e*math.cos(phi_orb))
+		#m = math.atan2(math.sqrt(1 - e*e)*math.sin(phi_orb)/(1+e*math.cos(phi_orb)), (e + math.cos(phi_orb))/(1 + e*math.cos(phi_orb))) - e*math.sqrt(1 - e*e)*math.sin(phi_orb)/(1 + e*math.cos(phi_orb))
 		
 		#m = E - e*math.sin(E)
 
+		
 		if (0.5 <= e <= 1):
 			A = -0.584013113 
 			B = 1.173439404
@@ -196,8 +203,8 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		theta = (B*math.sin(m) + D*math.cos(m))/(1./e - A*math.sin(m) - F*math.cos(m))
 
 		E = m + e*(math.sin(m + theta))
-		'''
-
+		'''		
+		
 		if (e<1):
 			x_kepler = (a*math.cos(E) - c)
 			y_kepler = b*math.sin(E)
@@ -251,8 +258,6 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		q_analit_rel[i,2] = q_rel[i,2]	
 		
 		r_dif[i] = abs(math.sqrt(q_analit_rel[i,0]*q_analit_rel[i,0] + q_analit_rel[i,1]*q_analit_rel[i,1] + q_analit_rel[i,2]*q_analit_rel[i,2]) - r_rel[i]) 
-		
-		#d_dif[i] = abs(r_kepler - d_rel) 
 
 		# Dediu, Adrian-Horia; Magdalena, Luis; Martín-Vide, Carlos (2015). Theory and Practice of Natural Computing: Fourth International Conference, TPNC 2015, Mieres, Spain, December 15–16, 2015. Proceedings (illustrated ed.); Springer. [p. 141]
 
@@ -264,34 +269,43 @@ def kepler(q1, q2, p1, p2, Neff, H, m, dt):
 		f_e = (1./((1. - e*e)**(7./2.)))*(1. + (73./24.)*(e*e) + (37./96.)*(e*e*e*e))
 		
 		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   	
-          	#---------------------------------------------------------
+          	#----------------------------------
         
         #numerical shift
-        	
+	phi_shift = 0 
+	
+	for i in range(0, Neff):
+        
+        		shift = math.sqrt(G*M*R[i])/(r_rel[i]*r_rel[i])
+        		phi_shift += shift
+
+	phi_shift = phi_shift/Neff #shift medio in tutta la simulazione
+	
 	peri_indexes = argrelextrema(r_rel, np.less)
 	peri_indexes = np.transpose(peri_indexes)
-	phi_shift = 0 
 		
 	n_peri = len(peri_indexes)
 	
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')	
+
 	
 	if (n_peri != 0):
-	
+		phi_shift = phi_shift/n_peri
 		for i in range(0, n_peri):
 	
 			q_peri[i,:] = q_rel[peri_indexes[i], :]
-	
+			
+		phi_shift_test = 0 			
 		for i in range(1, n_peri):
 		
 			q_shift = q_peri[i, :] - q_peri[i-1, :]
-			phi_shift += np.float(math.atan2(q_shift[1], q_shift[0]))
+			print(q_shift)
+			phi_shift_test += np.float(math.atan2(q_shift[1], q_shift[0]))
+				
+		#print(phi_shift, n_peri, peri_indexes)
+		phi_shift_test = phi_shift_test/n_peri
 		
-		print(phi_shift, n_peri)
-			
-		phi_shift = phi_shift/n_peri #shift per ogni rivoluzione	(phi_shift è lo shift totale)
-		
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, t, P_quad, q_peri, phi_shift)
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, t, P_quad, phi_shift, q_peri,  peri_indexes, phi_shift_test)
 
 	
 def kepler_sol_sys(p, q, Neff, H, m, dt):
@@ -301,8 +315,6 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 	d_rel = np.zeros(Neff, dtype='float64')	
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p[0], p[1], q[0], q[1], Neff, m[0], m[1])	
-	
-	#print(e, a ,b)
 	
 	for i in range(len(m)):
 		L_temp = np.cross(q[i, :], p[i, :])
@@ -376,7 +388,7 @@ def kepler_sol_sys(p, q, Neff, H, m, dt):
 		#dal maggiore
 		f_e = (1./((1. - e*e)**(7./2.)))*(1. + (73./24.)*(e*e) + (37./96.)*(e*e*e*e))
 		
-		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   
+		P_quad[i] = - (((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   
 
 	#numerical shift	
 	#d_test = d_rel - np.mean(d_rel)

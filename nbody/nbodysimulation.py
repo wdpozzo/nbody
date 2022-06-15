@@ -23,7 +23,6 @@ Number of seconds in a century = 3153600000
 More information at "https://math.ucr.edu/home/baez/physics/Relativity/GR/mercury_orbit.html"
 '''
 
-#
 #python nbodysimulation.py -n 5 --steps 1280000000 --dt 2.5 --ICN_order 2 --PN_order 1
 
 
@@ -259,9 +258,9 @@ if __name__=="__main__":
     
     #parameters for solution files management 
     
-    plot_step = 10
+    plot_step = 1000
     buffer_lenght = 1000000
-    data_thin = 1000
+    data_thin = 100
     
     #---------------------------------------#
     
@@ -269,6 +268,8 @@ if __name__=="__main__":
     N  = opts.steps
     Neff = int(N/(data_thin*plot_step))
     nout = int(N/buffer_lenght)    
+    
+    #print(N, Neff, nout)
     
     if not opts.p:
         run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
@@ -523,7 +524,7 @@ if __name__=="__main__":
             q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])            
             r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
                                 
-            r_dif, q_an_rel, r_kepler, L, a_p, t, P_quad, q_peri, phi_shift = kepler(q1, q2, p1, p2, Neff, H, m, dt)
+            r_dif, q_an_rel, r_kepler, L, a_p, t, P_quad, phi_shift, q_peri, peri_indexes, phi_shift_test = kepler(q1, q2, p1, p2, Neff, H, m, dt, order)
 
             #perihelion total shift
             
@@ -593,6 +594,7 @@ if __name__=="__main__":
             ax.set_xscale('log')
             ax.set_yscale('log')
             ax.grid()
+            
             plt.show()
             
             f = plt.figure(figsize=(6,4))
@@ -601,6 +603,7 @@ if __name__=="__main__":
             ax.set_xlabel('iteration')
             ax.set_ylabel('Angolar Momentum')
             ax.grid()
+            
             plt.show()
             
             f = plt.figure(figsize=(6,4))
@@ -609,26 +612,50 @@ if __name__=="__main__":
             ax.set_xlabel('iteration')
             ax.set_ylabel('Orbital period')
             ax.grid()
+            
             plt.show()
-            
-            print('Theoretical perihelion shift = {} [rad/revolution]'.format(a_p[0]))
-            #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
-            
+ 
             f = plt.figure(figsize=(16,6))
             
-            ax = f.add_subplot(121, projection = '3d')
-            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
+            ax = f.add_subplot(111, projection = '3d')
+            #ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
             for i in range(0, len(q_peri)): 
             	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
             ax.set_xlabel('x [m]')
             ax.set_ylabel('y [m]')
             ax.set_zlabel('z [m]')        
-            
             plt.legend()
-            plt.show()
+            
+            plt.show()      
+            
+            #peri_indexes = np.array(peri_indexes)
+            
+
+            f = plt.figure(figsize=(16,6))
+            
+            ax = f.add_subplot(111)
+            ax.scatter(N_arr, r_sim, label = 'Orbital radius', alpha=0.5)
+            
+            for i in range(0,len(peri_indexes)):
+            	index = peri_indexes[i]
+            	index = index[0]
+            	index_N = N_arr[index]
+
+            	ax.plot(index_N, r_sim[index], 'o', label = 'Perihelion orbit {}'.format(i))
+            	
+            ax.set_xlabel('iteration')
+            ax.set_ylabel('orbital radius [m]')       
+            plt.grid()
+            plt.legend()
+            
+            plt.show()                  
+
+            
+            print('Theoretical perihelion shift = {} [rad/revolution]'.format(a_p[0]))
+            #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
             
             print('Numerical perihelion shift: {} [rad/revolution]'.format(phi_shift))
-            
+            print('Numerical perihelion shift (test): {} [rad/revolution]'.format(phi_shift_test))
         else :
         
             #from poliastro.plotting.misc import plot_solar_system

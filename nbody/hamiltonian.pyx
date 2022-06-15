@@ -61,7 +61,7 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
         for i in range(N):
             mi = bodies[i].mass
            
-            T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C*C*C*C)
+            T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C4)
    
    
     H = T + V
