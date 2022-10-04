@@ -1,2 +1,2 @@
 # nbody
-nbody integrator in cytthon
+nbody integrator in cython

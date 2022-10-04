@@ -3,19 +3,22 @@ import math
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run, _H_2body
-from Kep_dynamic import kepler, kepler_sol_sys
+from Kep_dynamic import kepler, kepler_sol_sys, KepElemToCart
 from collections import deque 
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system
 import pickle
-
+            
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from mpl_toolkits import mplot3d
+            
 import random
 
 import astropy.units as u
 from datetime import datetime
 from astropy.time import Time
 from astropy.coordinates import solar_system_ephemeris, get_body_barycentric_posvel
-
 
 '''
 Precession of the perihelion of mercury = 43 seconds of arc per century (1 second of arch = 1/3600 degrees) 
@@ -24,7 +27,6 @@ More information at "https://math.ucr.edu/home/baez/physics/Relativity/GR/mercur
 '''
 
 #python nbodysimulation.py -n 5 --steps 1280000000 --dt 2.5 --ICN_order 2 --PN_order 1
-
 
 day = 86400. #*u.second
 year = day*365
@@ -39,14 +41,8 @@ Ms = 1.988e30 #*(u.kilogram) # 1.988e30 #
 Mmerc = 0.3301e24
 Mearth = 5.9722e24 
 AU = 149597870700. #*u.meter
+
 Ms = 1.988e30
-
-#G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value #G = 6.67e-11 
-
-#AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
-
-#C = (299792458.*(u.m/u.s)).to(u.AU/u.d).value #299792458. 
-#Msun = (1.988e30*u.kg).to(u.solMass).value 
 
 def gaussian_random_sphere(x, y, z, r, num, bulge):
 
@@ -81,7 +77,7 @@ if __name__=="__main__":
 
     parser = OptionParser()
     parser.add_option('-n', default=2, type='int', help='n bodies')
-    parser.add_option('--steps', default=5000000, type='long', help='n steps (must be a multiple of  1e7, which is the n. of datas in a file solution fragment)') #, type='longint'
+    parser.add_option('--steps', default= 5000000, type='long', help='n steps (must be a multiple of  1e7, which is the # of datas in a file solution fragment)') #, type='longint'
     parser.add_option('--PN_order', default=0, type='int', help='Post Newtonian approximation order')
     parser.add_option('--dt', default=1, type='float', help='dt')
     parser.add_option('-p', default = False, action = 'store_true', help='post process')
@@ -92,6 +88,7 @@ if __name__=="__main__":
     parser.add_option('--ICN_order', default=2, type='int', help='ICN iteration number')
     (opts,args) = parser.parse_args()
 
+    N = opts.steps
     nbodies = opts.n	
     ICN_it = opts.ICN_order
     order = opts.PN_order
@@ -131,8 +128,8 @@ if __name__=="__main__":
                   
         nbodies = opts.n + 1 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)  	
-    ''' 
-    
+    '''
+
     '''
     #actual natural initial coordinates    
     t = Time(datetime.now()) #Time("2021-05-21 12:05:50", scale="tdb") #Time(datetime.now())    
@@ -140,10 +137,10 @@ if __name__=="__main__":
     masses = {
     'sun'     : Ms, #1st planet has to be the central attractor
     'mercury' : Mmerc, #2nd planet has to be the one which we want to test the GR dynamics effects on 
-    'earth'   : Mearth,
-    'mars'    : 0.1075*Mearth,
-    'venus'   : 0.815*Mearth,
-    'jupiter' : 317.8*Mearth,
+    #'earth'   : Mearth,
+    #'mars'    : 0.1075*Mearth,
+    #'venus'   : 0.815*Mearth,
+    #'jupiter' : 317.8*Mearth,
     #'saturn'  : 95.2*Mearth,
     #'uranus'  : 14.6*Mearth,
     #'neptune' : 17.2*Mearth,
@@ -153,10 +150,10 @@ if __name__=="__main__":
     planet_names = [
     'sun',
     'mercury',
-    'earth',
-    'mars',
-    'venus',
-    'jupiter',
+    #'earth',
+    #'mars',
+    #'venus',
+    #'jupiter',
     #'saturn',
     #'uranus',
     #'neptune',
@@ -165,7 +162,7 @@ if __name__=="__main__":
     planets = []
     
     for planet in planet_names:
-        planets.append(get_body_barycentric_posvel(planet,t))
+         planets.append(get_body_barycentric_posvel(planet,t))
     
     nbodies = len(planets)
     #print(planets)
@@ -190,7 +187,8 @@ if __name__=="__main__":
     sz = np.zeros(len(m)).astype(np.longdouble)
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
-    '''  
+    '''
+ 
 
     #custom initial coordinates
     m = np.array((2,1)).astype(np.longdouble)
@@ -206,37 +204,38 @@ if __name__=="__main__":
     sx = np.array((2,1)).astype(np.longdouble)
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
-
-    m[0], m[1] = 1.e0*Mmerc, 1.e0*Ms
     
-    x[0], x[1] = -69.818e9, 0.*AU
-    y[0], y[1] = 0.00000, 0.00000
-    z[0], z[1] = 0.00000, 0.00000
+
+    m[0], m[1] = 1.e0*Ms, 1.e0*Mmerc
+    
+    x[0], x[1] =  0., 69.818e9
+    y[0], y[1] = 0., 0.
+    z[0], z[1] = 0., 0.
 
     vx[0], vx[1] = 0., 0.
-    vy[0], vy[1] = 38.86e3, 0.
+    vy[0], vy[1] = 0., 38.86e3
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    
+
+
     '''
-    m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
+    m[0], m[1] = 1.e-1*Ms, 1.e-2*Ms
     
-    x[0], x[1] = -1.*AU, 1.0*AU
+    x[0], x[1] = -0.5*AU, 0.5*AU
     y[0], y[1] = 0.*AU, 0.*AU
     z[0], z[1] = 0.*AU, 0.*AU
     
-    vx[0], vx[1] = -4.2e0, +9.2e1
-    vy[0], vy[1] = +3.86e0, +7.56e1
+    vx[0], vx[1] = -2e0, +2e1
+    vy[0], vy[1] = 3.e1, 7.7e1
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.    
     '''
-    
     '''
     #random initial coordinates
     
@@ -258,18 +257,17 @@ if __name__=="__main__":
     
     #parameters for solution files management 
     
-    plot_step = 1000
-    buffer_lenght = 1000000
-    data_thin = 100
-    
-    #---------------------------------------#
-    
+    plot_step = 250000
+    buffer_lenght = 500000
+    data_thin = 1
+    #------------------------------------------------------#   
     dt = opts.dt
     N  = opts.steps
     Neff = int(N/(data_thin*plot_step))
     nout = int(N/buffer_lenght)    
-    
-    #print(N, Neff, nout)
+
+    N_arr = np.linspace(0, N - N/Neff, Neff)
+    #------------------------------------------------------#
     
     if not opts.p:
         run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
@@ -279,11 +277,18 @@ if __name__=="__main__":
     for i in range(nout):  
         s_tot, H_tot, T_tot, V_tot = [], [], [], []
         
-        s_tot.append(pickle.load(open('solution_{}.pkl'.format(i),'rb')))
-        H_tot.append(pickle.load(open('hamiltonian_{}.pkl'.format(i),'rb')))
-        T_tot.append(pickle.load(open('kinetic_{}.pkl'.format(i),'rb')))
-        V_tot.append(pickle.load(open('potential_{}.pkl'.format(i),'rb')))       
-        
+        s_tot.append(pickle.load(open('solution_{}_order{}.pkl'.format(i, order),'rb')))
+        H_tot.append(pickle.load(open('hamiltonian_{}_order{}.pkl'.format(i, order),'rb')))
+        T_tot.append(pickle.load(open('kinetic_{}_order{}.pkl'.format(i, order),'rb')))
+        V_tot.append(pickle.load(open('potential_{}_order{}.pkl'.format(i, order),'rb')))       
+
+        #check
+        if (len(s_tot[0]) > buffer_lenght):
+            s_tot[0] = s_tot[0][0:buffer_lenght]
+            H_tot[0] = H_tot[0][0:buffer_lenght]
+            T_tot[0] = T_tot[0][0:buffer_lenght]   
+            V_tot[0] = V_tot[0][0:buffer_lenght]  
+                
         s.append(s_tot[0][::plot_step])
         H.append(H_tot[0][::plot_step])
         T.append(T_tot[0][::plot_step])
@@ -294,8 +299,9 @@ if __name__=="__main__":
         del T_tot
         del V_tot
         
-        if (1+i) % (10*nout)//100 == 0 :
-            print("Data deframmentation: {}%".format((100*i)/nout))
+        index = i*100/nout 
+        if (index) % 10 == 0 :
+            print("Data deframmentation: {}%".format(index))
        
     s = np.array(s, dtype=object)#.flatten()
     H = np.array(H, dtype=object)#.flatten()
@@ -306,13 +312,13 @@ if __name__=="__main__":
     H = np.concatenate((H[:]))
     T = np.concatenate((T[:]))
     V = np.concatenate((V[:])) 
+
+    #s = np.delete(s, -1)    
+    #H = np.delete(H, -1)
+    #T = np.delete(T, -1)
+    #V = np.delete(V, -1)
     
     if opts.animate == 1:
-    
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
-        from mpl_toolkits import mplot3d
-        from matplotlib.animation import FuncAnimation, writers
         
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111, projection = '3d')
@@ -362,31 +368,22 @@ if __name__=="__main__":
         anim.save('nbody.mp4', writer=writer)
            
     if opts.plot==1:
-    
-        import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
-        from mpl_toolkits import mplot3d
-        
-        N_arr = np.linspace(0, N, Neff)
+
         #plotting_step = np.maximum(64, Neff//int(0.1*Neff))
         
-        f = plt.figure(figsize=(6,4))
-
-        ax1 = f.add_subplot(121)
-        ax1.plot(N_arr, T, label = 'Kinetic energy')
-        ax1.plot(N_arr, V, label = 'Potential energy')
+        f = plt.figure(figsize=(8,6))
+        ax1 = f.add_subplot(111)
+        #ax1.plot(N_arr, T, label = 'Kinetic energy')
+        #ax1.plot(N_arr, V, label = 'Potential energy')
+        ax1.plot(N_arr, H, label = 'Hamiltonian')
         ax1.set_xlabel('iteration')
         ax1.set_ylabel('Energy')
         ax1.legend()
         ax1.grid()
-                
-        ax2 = f.add_subplot(122)
-        ax2.plot(N_arr, H, label = 'Hamiltonian')
-        ax2.set_xlabel('iteration')
-        ax2.grid()
-           
+        plt.show()
+                   
         colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))      
-                
+               
         qs = [[] for x in range(nbodies)]
             
         # this is the number of bodies active in each step of the solution
@@ -402,11 +399,9 @@ if __name__=="__main__":
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111, projection = '3d')
         
-        for i in range(0,Neff): #,plotting_step):
+        for i in range(0, Neff): #,plotting_step):
             for j in range(nbodies[i]):
                 qs[j].append(s[i][j]['q'])
-        
-        #print(np.shape(qs))
          
         for q in qs:
             q = np.array(q)# , dtype = 'object')
@@ -490,68 +485,59 @@ if __name__=="__main__":
   
     if opts.cm == 1:
     
-        #solar_system_ephemeris.set("jpl")
-
-        #EPOCH = Time("2021-05-21 12:05:50", scale="tdb")
-    
         if opts.n == 2:
             
-            #from poliastro.bodies import Sun, Mercury 
-            #from poliastro.twobody import Orbit                 
-            import matplotlib.pyplot as plt
-            import matplotlib.cm as cm
-            from mpl_toolkits import mplot3d
-            
-            N_arr = np.linspace(0, N, Neff)
-            
-            q_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-            p_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-            q1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-            p1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-            s1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-            q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
-            p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')       
-            s2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')    
+            q1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')
+            p1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')
+            s1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')
+            q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')
+            p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')       
+            s2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')    
                       
             for i in range(0, Neff):
+
                 q1[i,:] = s[i][0]['q']
                 p1[i,:] = s[i][0]['p']
                 s1[i,:] = s[i][0]['s']
+
                 q2[i,:] = s[i][1]['q']
                 p2[i,:] = s[i][1]['p']
                 s2[i,:] = s[i][1]['s']                      
-                        
-            q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])            
+            
+           
+            q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])        
             r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
-                                
-            r_dif, q_an_rel, r_kepler, L, a_p, t, P_quad, phi_shift, q_peri, peri_indexes, phi_shift_test = kepler(q1, q2, p1, p2, Neff, H, m, dt, order)
 
-            #perihelion total shift
+            N_shift = 6.488703338e-5
             
-            p_s = abs(a_p[0] - a_p[-1])  
-              
+            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, q_peri, peri_indexes, phi_shift_test = kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order)
+            
+                   
+            p_s = np.sum(phi_shift)
+            p_s = p_s/Neff 
+
+            a_shift = np.sum(a_p)
+            a_shift = a_shift/Neff 
+            
             #-------------------  Plots  ------------------------#   
-            
+            '''
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(131, projection = '3d')  
-            #ax.title(r"$m_{1} = {}$, $m_{2} = {}$".format(m[0], m[1]))
             ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.9)
             ax.plot(q_rel[0,0], q_rel[0,1], q_rel[0,2], 'o', label = 'Num. starting point', alpha=0.9)     
             ax.plot(q_an_rel[:,0], q_an_rel[:,1], q_an_rel[:,2], label = 'Analitical solution')
             ax.plot(q_an_rel[0,0], q_an_rel[0,1], q_an_rel[0,2], 'o', label = 'Analit. starting point')
-            #ax.plot(q_cm[:,0], q_cm[:,1], q_cm[:,2], 'o', label = 'CM')
-            #ax.plot(q_rel[-1,0], q_rel[-1,1], q_rel[-1,2], 'o', label = 'Num ending point', alpha=0.9)   
+            ax.plot(q_cm[:,0], q_cm[:,1], q_cm[:,2], 'o', label = 'CM')
             ax.set_xlabel('x [m]')
             ax.set_ylabel('y [m]')
-            ax.set_zlabel('z [m]')        
-            
+            ax.set_zlabel('z [m]')
             plt.legend()
             
             ax1 = f.add_subplot(132)
             ax1.plot(N_arr, r_dif, label = 'Analitycal vs. Numerical', alpha=0.9)
             ax1.set_xlabel('iterations')
-            ax1.set_ylabel('Orbital radius difference [m]')
+            ax1.set_ylabel('Orbital radial difference [m]')
             plt.grid()
             plt.legend()
             
@@ -563,49 +549,52 @@ if __name__=="__main__":
             plt.legend()
             
             plt.show()
-            
-            #Mercury.plot(EPOCH)
-            
             '''
-            q_merc = [x[0], y[0], z[0]] * u.km
-            v_merc = [vx[0], vy[0], vz[0]] * u.km / u.s
-            
-            orb = Orbit.from_vectors(Sun, q_merc, v_merc, epoch=EPOCH)
 
-            orb.plot()
-            '''
+            f = plt.figure(figsize=(16,8))
             
-            f = plt.figure(figsize=(16,6))
+            ax1 = f.add_subplot(121)
+            ax1.plot(N_arr, r_kepler - r_sim, label = 'Analitycal vs. Numerical', alpha=0.9)
+            ax1.set_xlabel('Iteration', fontsize = '14')
+            ax1.set_ylabel('Orbital radial difference [m]', fontsize = '14')
+            plt.legend(fontsize = '14')
+            plt.grid()
             
-            ax = f.add_subplot(121) 
-            ax.plot(N_arr, r_kepler - r_sim, label = 'Simul r_rel vs. Analit r_kepler', alpha=0.9)
+            ax2 = f.add_subplot(122)
+            #ax1.plot(N_arr, T, label = 'Kinetic energy')
+            #ax1.plot(N_arr, V, label = 'Potential energy')
+            ax2.plot(N_arr, H, label = 'Hamiltonian')
+            ax2.set_xlabel('Iteration', fontsize = '14')
+            ax2.set_ylabel('Energy [J]', fontsize = '14')
+            plt.legend(fontsize = '14')
+            plt.grid()
+
+            plt.show()
+
+            f = plt.figure(figsize=(16,8))
+            
+            ax = f.add_subplot(131) 
+            ax.plot(N_arr, r_dif, label = 'r_rel vs. r_kepler', alpha=0.9)
             ax.set_xlabel('iterations')
-            ax.set_ylabel('Displacement [m]')
+            ax.set_ylabel('Orbital displacement [m]')
+            plt.grid()
+            
+            ax1 = f.add_subplot(132)
+            ax1.plot(N_arr, L)
+            ax1.set_xlabel('iteration')
+            ax1.set_ylabel('Angolar Momentum')
+            plt.grid()
+
+            ax2 = f.add_subplot(133)
+            ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
+            ax2.set_xlabel('iterations')
+            ax2.set_ylabel('Power [J/s]')
             plt.grid()
             plt.legend()
-       
-            plt.show()
-            
-            f = plt.figure(figsize=(6,4))
-            ax = f.add_subplot(111)
-            ax.plot(N_arr, a_p)
-            ax.set_xlabel('iteration')
-            ax.set_ylabel('Apsidial precession [rad x revolution]')
-            ax.set_xscale('log')
-            ax.set_yscale('log')
-            ax.grid()
             
             plt.show()
             
-            f = plt.figure(figsize=(6,4))
-            ax = f.add_subplot(111)
-            ax.plot(N_arr, L)
-            ax.set_xlabel('iteration')
-            ax.set_ylabel('Angolar Momentum')
-            ax.grid()
-            
-            plt.show()
-            
+            '''
             f = plt.figure(figsize=(6,4))
             ax = f.add_subplot(111)
             ax.plot(N_arr, t)
@@ -614,29 +603,27 @@ if __name__=="__main__":
             ax.grid()
             
             plt.show()
- 
+            '''
+            
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(111, projection = '3d')
             #ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
-            for i in range(0, len(q_peri)): 
+            for i in range(0, len(peri_indexes)): 
             	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
             ax.set_xlabel('x [m]')
             ax.set_ylabel('y [m]')
             ax.set_zlabel('z [m]')        
             plt.legend()
             
-            plt.show()      
-            
-            #peri_indexes = np.array(peri_indexes)
-            
+            plt.show()                  
 
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(111)
             ax.scatter(N_arr, r_sim, label = 'Orbital radius', alpha=0.5)
             
-            for i in range(0,len(peri_indexes)):
+            for i in range(0, len(peri_indexes)):
             	index = peri_indexes[i]
             	index = index[0]
             	index_N = N_arr[index]
@@ -649,33 +636,25 @@ if __name__=="__main__":
             plt.legend()
             
             plt.show()                  
-
             
-            print('Theoretical perihelion shift = {} [rad/revolution]'.format(a_p[0]))
+            print('Newtonian shift {} [rad/rev]'.format(N_shift)) 
+            print('Standard GR shift = {} [rad/revolution]'.format(a_shift))
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
             
-            print('Numerical perihelion shift: {} [rad/revolution]'.format(phi_shift))
+            print('Numerical perihelion shift: {} [rad/revolution]'.format(p_s))
             print('Numerical perihelion shift (test): {} [rad/revolution]'.format(phi_shift_test))
+            
         else :
-        
-            #from poliastro.plotting.misc import plot_solar_system
-            #from poliastro.bodies import Earth, Sun, Mercury, Venus, Mars
-            
-            import matplotlib.pyplot as plt
-            import matplotlib.cm as cm
-            from mpl_toolkits import mplot3d
-            
-            N_arr = np.linspace(0, N, Neff)
-            
+
             H_2body = []
             V_2body = []
             T_2body = []   
             
             mass = np.array([m[0], m[1]]).astype(np.longdouble)
                     
-            q = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='float64')
-            p = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='float64')
-            spn = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='float64')
+            q = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')#.astype(np.longdouble)
+            p = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')#.astype(np.longdouble)
+            spn = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')#.astype(np.longdouble)
      
             for k in range(len(m)):
             
@@ -716,7 +695,7 @@ if __name__=="__main__":
                 T_2body.append(t)
                 V_2body.append(v)
                                
-            L, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift = kepler_sol_sys(p, q, Neff, H_2body, m, dt)
+            L, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift, phi_shift_test = kepler_sol_sys(p, q, Neff, H_2body, m, dt, order)
             
             #r = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
             q_rel, p_rel, q_cm, p_cm = CM_system(p[0], p[1], q[0], q[1], Neff, m[0], m[1])
@@ -724,8 +703,15 @@ if __name__=="__main__":
             r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
             
            	#perihelion total shift
+            
+            N_shift = 6.488703338e-5
             p_s = a_p1 + a_p2*a_p3 + a_p4
-             
+            p_s_t = np.sum(p_s)
+            p_s_t = p_s_t/Neff
+            
+            p_shift = np.sum(phi_shift)
+            p_shift = p_shift/Neff 
+
             #-----------Plots-----------------#
             
             #print(a_p1, a_p2, a_p3, a_p4)
@@ -740,10 +726,6 @@ if __name__=="__main__":
             ax.set_ylabel('y [m]')
             ax.set_zlabel('z [m]')        
             plt.legend()
-            #ax.set_xlim(min(q_rel[:,0]), max(q_rel[:,0]))
-            #ax.set_ylim(min((q_rel[:,0]) - max(q_rel[:,0])/2, max(q_rel[:,0]))
-            #ax.set_ylim(min(q_rel[:,2]), max(q_rel[:,2]))
-            #plt.axis('auto')
 
             ax1 = f.add_subplot(122)
             ax1.plot(N_arr, p_s, label = 'Total', alpha=0.9)
@@ -756,9 +738,8 @@ if __name__=="__main__":
             ax1.set_ylabel('Perihelion shift [rad/revolution]')
             ax1.set_yscale('log')
             plt.grid()
-            plt.legend()
+            plt.legend()      
 
-            #plot_solar_system(epoch=EPOCH)          
             plt.show()
 
             f = plt.figure(figsize=(16,6))
@@ -780,8 +761,8 @@ if __name__=="__main__":
             
             f = plt.figure(figsize=(16,6))
             
-            ax = f.add_subplot(121, projection = '3d')
-            ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)
+            ax = f.add_subplot(111, projection = '3d')
+            ax.scatter(q[1,:,0], q[1,:,1], q[1,:,2], label = 'Numerical solution', alpha=0.5)
             for i in range(0, len(q_peri)): 
             	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
             ax.set_xlabel('x [m]')
@@ -791,7 +772,10 @@ if __name__=="__main__":
             plt.legend()
             plt.show()         
             
-            print('GR standard shift = {} [rad/rev];\nCoupling with other planets shift = {} [rad/rev];\nGravitomagnetic shift = {} [rad/rev].'.format(a_p1[0], a_p2[0]*a_p3[0], a_p4[0]))
+            print('GR standard shift = {} [rad/rev];\nCoupling with other planets shift = {} [rad/rev];\nGravitomagnetic shift = {} [rad/rev].'.format(np.sum(a_p1)/Neff, (np.sum(a_p2)/Neff)*(np.sum(a_p3)/Neff), np.sum(a_p4)/Neff))
+            print('Total theorethical shift = {} [rad/rev];\nNumerical shift = {} [rad/rev];\nNumerical shift (test) = {} [rad/rev].'.format(p_s_t, p_shift, phi_shift_test))
+            
+            print('Newtonian shift {} [rad/rev]'.format(N_shift))
             #print('Numerical shift: {} [rad]'.format(phi_shift))
         
         #if (opts.n!= 2):

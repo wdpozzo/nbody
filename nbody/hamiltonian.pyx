@@ -49,18 +49,16 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
     
     for i in range(N):
         T += _kinetic_energy(bodies[i])
-
-    if order >= 1:    
-        for i in range(N):
-            mi = bodies[i].mass
+        
+        mi = bodies[i].mass
+        
+        if (order >= 1):    
 
             T += (-(1./8.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi))/(C2)
 
 
-    if order >= 2:
-        for i in range(N):
-            mi = bodies[i].mass
-           
+        if (order >= 2):
+
             T += ((1./16.)*(_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2])*_modulus(bodies[i].p[0],bodies[i].p[1],bodies[i].p[2]))/(mi*mi*mi*mi*mi))/(C4)
    
    
@@ -107,7 +105,7 @@ cdef long double _potential_0pn(body_t b1, body_t b2) nogil:
                             
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
 
-    return -G*b1.mass*b2.mass/(r)
+    return - G*b1.mass*b2.mass/(r)
     
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -129,7 +127,7 @@ cdef long double _potential_1pn(body_t b1, body_t b2) nogil:
     for k in range(3):
         normal[k] = (b1.q[k]-b2.q[k])/r
         
-    V += ((1./8.)*V0*(-12.*p12/m1m2 +14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
+    V += ((1./8.)*V0*(-12.*p12/(m1*m1) + 14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
 
     V += (0.25*V0*G*(m1+ m2)/r)/C2
     
@@ -161,7 +159,6 @@ cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
              
     cdef long double V0 = -_potential_0pn(b1, b2)    
     cdef long double V = 0.0
-    #cdef long double V = _potential_1pn(b1, b2)   
     cdef long double *normal = <long double *>malloc(3*sizeof(long double))
     
     cdef long double C2 = C*C
@@ -170,9 +167,9 @@ cdef long double _potential_2pn(body_t b1, body_t b2) nogil:
     for k in range(3):
         normal[k] = (b1.q[k]-b2.q[k])/r
           
-    V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - (1./2.)*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
+    V += ((1./8.)*V0*(5.*p14/m1qu - (11./2.)*p12*p22/m1m2sq - (p1_p2)*(p1_p2)/m1m2sq + 5.*(p12*_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq - 6.*(p1_p2*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2sq - (3./2.)*(_dot(normal,b1.p)*_dot(normal,b1.p))*(_dot(normal,b2.p)*_dot(normal,b2.p))/m1m2sq) + (1./4.)*(G*G*m1m2/r2)*(m2*(10.*p12/m1sq + 19.*p22/m2sq) - 0.5*(m1+m2)*(27.*p1_p2 + 6.*_dot(normal,b1.p)*_dot(normal,b2.p))/m1m2 ))/C4
     
-    V += - ((1./8.)*V0*G*G*(m1sq+5.*m1m2+m2sq)/r2)/C4
+    V += - ((1./8.)*V0*G*G*(m1sq + 5.*m1m2+m2sq)/r2)/C4
     
     free(normal)
     
@@ -228,10 +225,12 @@ cdef void _gradient(long double *out, body_t b1, body_t b2, int order) nogil:
 @cython.nonecheck(False)
 @cython.cdivision(True)
 cdef void _gradient_free_particle(long double *out, body_t b1) nogil:
+
     # first 3 elements are the derivative wrt to q
     out[0] = 0.
     out[1] = 0.
     out[2] = 0.
+    
     # second 3 elements are the derivative wrt p
     out[3] = b1.p[0]/b1.mass
     out[4] = b1.p[1]/b1.mass
@@ -239,6 +238,10 @@ cdef void _gradient_free_particle(long double *out, body_t b1) nogil:
     
     return
 
+"""
+We are going to include the minus sign in Hamilton equations directly in the gradient
+"""
+    
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
@@ -271,10 +274,6 @@ cdef void _gradient_0pn(long double *out, body_t b1, body_t b2) nogil:
 @cython.nonecheck(False)
 @cython.cdivision(True)
 cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
-
-    """
-    We are going to include the minus sign in Hamilton equations directly in the gradient
-    """
     
     cdef unsigned int k
     cdef long double r  = sqrt(_modulus(b1.q[0]-b2.q[0],b1.q[1]-b2.q[1],b1.q[2]-b2.q[2]))
@@ -287,8 +286,8 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     for k in range(3):
         dq[k]     = b1.q[k]-b2.q[k]
         
-        #normal without normalization...why? cause in the following expression the every member is explicit and so the factor 1/r is already counted there
-        normal[k] = dq[k] # /r
+        #normal without normalization...why? cause in the following expression every component is explicit and so the factor 1/r is already counted there
+        normal[k] = dq[k]#/r
 
     cdef long double m1 = b1.mass
     cdef long double m2 = b2.mass
@@ -305,8 +304,8 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
 
     cdef long double C2 = C*C
     
-    cdef long double n_p1 = _dot(normal,b1.p)
-    cdef long double n_p2 = _dot(normal,b2.p)
+    cdef long double n_p1 = _dot(b1.p, normal)
+    cdef long double n_p2 = _dot(b2.p, normal)
     cdef long double dq_p1 = _dot(dq,b1.p)
     cdef long double dq_p2 = _dot(dq,b2.p)
     cdef long double p1_p2 = _dot(b1.p,b2.p)
@@ -317,7 +316,7 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         out[k] += ( -0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.125*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2
 
         # derivative wrt p
-        out[k+3] += ( 0.125*G*m1m2*(14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq)/r - 0.5*b1.p[k]*p12/m1cu )/C2
+        out[k+3] += ( 0.125*G*m1m2*( 14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq )/r - 0.5*b1.p[k]*p12/m1cu )/C2
     
     free(dq)
     free(normal)
@@ -365,9 +364,9 @@ cdef void _gradient_2pn(long double *out, body_t b1, body_t b2) nogil:
     cdef long double C2 = C*C
     cdef long double C4 = C2*C2
     
-    cdef long double n_p1 = _dot(normal,b1.p)
-    cdef long double n_p2 = _dot(normal,b2.p)
-    cdef long double p1_p2 = _dot(b1.p,b2.p)
+    cdef long double n_p1 = _dot(b1.p, normal)
+    cdef long double n_p2 = _dot(b2.p, normal)
+    cdef long double p1_p2 = _dot(b1.p, b2.p)
 
     for k in range(3):
         
