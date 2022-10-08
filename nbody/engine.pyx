@@ -5,6 +5,7 @@ from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 from nbody.body cimport body_t, _create_system, _find_mergers, _merge_bodies
 from nbody.hamiltonian cimport _hamiltonian, _gradients
+from cpython cimport array
 #from __future__ import print_function
 
 cdef unsigned int _merge(body_t *bodies, unsigned int nbodies):
@@ -22,7 +23,7 @@ cdef unsigned int _merge(body_t *bodies, unsigned int nbodies):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it):
+cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it):
 
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
@@ -39,6 +40,7 @@ cdef void _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, in
     cdef body_t *K = <body_t *>malloc(nbodies*sizeof(body_t))
     if K == NULL:
         raise MemoryError 
+
 
         
         
@@ -59,13 +61,16 @@ cdef void _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, in
     _gradients(g, bodies, nbodies, order)
 
 
-    '''
-    cdef body_t *D = <body_t *>malloc(nbodies*sizeof(body_t))
-    if K == NULL:
-        raise MemoryError 
-    '''
-
-
+    
+    cdef long double **D = <long double **>malloc(nbodies*sizeof(long double *))    
+    if D == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        D[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if D[i] == NULL:
+            raise MemoryError
+        memset(D[i], 0, 6*sizeof(long double))
 
     for k in range(nbodies):
         start[k] = bodies[k] 
@@ -153,21 +158,40 @@ cdef void _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, in
                 #bodies[k].q[j] = tmp.q[j] + start[k].q[j]
 
 
-            #D[k].q[j] = tmp.q[j]*tmp.q[j] + dt2*dt2
-            #D[k].p[j] = tmp.p[j]*tmp.p[j] + dt2*dt2
+            D[k][j+3] = tmp.q[j]*tmp.q[j] + dt2*dt2
+            D[k][j] = tmp.p[j]*tmp.p[j] + dt2*dt2
                      
     _free(start)
     _free(K)
-    #_free(tmp)
-
-    #print(D.q, D.p)
-
         
     for i in range(nbodies):
         free(g[i])
  
     free(g);
-    return
+    
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
+
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
+    for k in range(nbodies): 
+        dx.append(D[k][3])
+        dy.append(D[k][4])
+        dz.append(D[k][5])
+
+        dpx.append(D[k][0])
+        dpy.append(D[k][1])
+        dpz.append(D[k][2])
+
+    for i in range(nbodies):
+        free(D[i])
+ 
+    free(D);
+
+    return (dx, dy, dz, dpx, dpy, dpz, dt2)
 
 
 @cython.boundscheck(False)
@@ -731,7 +755,7 @@ cdef void _free(body_t *s) nogil:
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def _H_2body(np.ndarray[long double, mode="c", ndim=1] mass,
+cpdef _H_2body(np.ndarray[long double, mode="c", ndim=1] mass,
           np.ndarray[long double, mode="c", ndim=1] x,
           np.ndarray[long double, mode="c", ndim=1] y,
           np.ndarray[long double, mode="c", ndim=1] z,
@@ -760,7 +784,7 @@ def _H_2body(np.ndarray[long double, mode="c", ndim=1] mass,
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def run(long long int nsteps, long double dt, int order,
+cpdef run(long long int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] mass,
           np.ndarray[long double, mode="c", ndim=1] x,
           np.ndarray[long double, mode="c", ndim=1] y,
@@ -774,38 +798,82 @@ def run(long long int nsteps, long double dt, int order,
           unsigned int ICN_it,
           int nthin,                                   
   #kernel-core-5.15.11-200.fc35.x86_64          
-          unsigned int buffer_length):
+          unsigned int buffer_length, unsigned int plot_step):
     
     from tqdm import tqdm
     import pickle
+
+    cdef int f_index
+    cdef unsigned int n = len(mass)
+    cdef int Neff = nsteps/(nthin*plot_step)
+    #cdef body_t tmp
+
+    '''    
+    cdef long double ***D = <long double ***>malloc(Neff*sizeof(long double **))    
+    if D == NULL:
+        raise MemoryError
+        
+    for j in range(Neff):
+        D[j] = <long double **>malloc(nbodies*sizeof(long double *)) #FIXME: for the spins
+        if D[j] == NULL:
+            raise MemoryError
+
+        for k in range(6):
+            D[j][k] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+            if D[j][k] == NULL:
+                raise MemoryError
+            memset(D[j][k], 0, 6*sizeof(long double))
+    '''
+
+    cdef list t_sim = []
+    cdef list D = [[[0 for u in range(6)] for k in range(n)] for i in range(Neff)]
+
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
     cdef long long int i
-    cdef int n = len(mass)
+
     cdef body_t *bodies = <body_t *> malloc(n * sizeof(body_t))
     cdef list solution = []
     cdef list H = []
     cdef list V = []
     cdef list T = []
     cdef long double h, t, v
+    cdef long double time = 0.
+    cdef long double dt_tmp = 0.
+
     #cdef long int nsteps = nsteps
     
     _initialise(bodies, n, mass, x, y, z,
                 px, py, pz, sx, sy, sz)
                 
     
-    cdef long int n_sol = 0
+    cdef unsigned int n_sol = 0
     
     #for i in range(nsteps):
     for i in tqdm(np.arange(nsteps)):
-        
         #'''
         #store the initial configuration 
-        if (i == 0.):
+        if (i == 0):
             solution.append([bodies[j] for j in range(n)])
             h, t, v = _hamiltonian(bodies, n, order)
         
             H.append(h)
             T.append(t)
-            V.append(v)       
+            V.append(v)      
+
+            t_sim.append(0.) 
+
+            D[i][:][0] = 0. 
+            D[i][:][1] = 0.  
+            D[i][:][2] = 0. 
+            D[i][:][3] = 0.  
+            D[i][:][4] = 0.
+            D[i][:][5] = 0.    
         #'''
 
         # check for mergers
@@ -815,11 +883,13 @@ def run(long long int nsteps, long double dt, int order,
         #_one_step_eu(bodies, n, dt, order)
         #_one_step_lp(bodies, n, dt, order)
         #_one_step_rk(bodies, n, dt, order)
-        _one_step_icn(bodies, n, dt, order, ICN_it)
+        dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
+
+        time += dt_tmp    
         
         # store 1 every nthin steps 
-        if (i != 0.): 
-            if ( (i)%nthin == 0.):    
+        if (i != 0): 
+            if ((i)%nthin == 0.):    
                 solution.append([bodies[j] for j in range(n)])
                 h, t, v = _hamiltonian(bodies, n, order)
         
@@ -839,5 +909,24 @@ def run(long long int nsteps, long double dt, int order,
                 T        = []
                 V        = []
                 solution = []
-            
-    return 0
+
+
+            if ( (i)%(nthin*plot_step) == 0):
+
+                f_index = (i)/(nthin*plot_step)               
+                t_sim.append(time)     
+                #print(f_index, i+1, Neff)
+
+                for k in range(n):
+                    D[f_index][k][0] = dx[k] 
+                    D[f_index][k][1] = dy[k]  
+                    D[f_index][k][2] = dz[k] 
+                    D[f_index][k][3] = dpx[k]  
+                    D[f_index][k][4] = dpy[k]
+                    D[f_index][k][5] = dpz[k] 
+ 
+                #print('end')
+            #print('end')        
+        #print('end')
+    
+    return (D, t_sim)

@@ -48,9 +48,9 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
     V = _potential(bodies, N, order)
     
     for i in range(N):
-        T += _kinetic_energy(bodies[i])
         
         mi = bodies[i].mass
+        T = _kinetic_energy(bodies[i])
         
         if (order >= 1):    
 
