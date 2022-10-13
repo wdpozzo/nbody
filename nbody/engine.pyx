@@ -128,7 +128,7 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
 
 
             if (tmp.q[j] != 0):
-                K[k].q[j] = dt2/(tmp.p[j]) #*tmp.p[j])
+                K[k].q[j] = dt2/(tmp.p[j])
                 #K[k].q[j] = dt2/(0.5*tmp.p[j])
 
             #if (K[k].q[j] > 1):
@@ -138,7 +138,7 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
 
                 
             if (tmp.p[j] != 0):
-                K[k].p[j] = dt2/(tmp.q[j]) #*tmp.q[j])
+                K[k].p[j] = dt2/(tmp.q[j])
                 #K[k].p[j] = dt2/(0.5*tmp.q[j])  
             
             #if (K[k].p[j] > 1):
@@ -149,12 +149,12 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
 
             if (K[k].q[j] > 0.5):
                 #tmp.p[j] = np.sqrt(2*dt2)
-                dt2 = 0.99*tmp.p[j]/2 #*tmp.p[j]
+                dt2 = 0.99*tmp.p[j]*0.5
                 #bodies[k].p[j] = tmp.p[j] + start[k].p[j]
                 
             if (K[k].p[j] > 0.5):
                 #tmp.q[j] = np.sqrt(2*dt2)
-                dt2 = 0.99*tmp.q[j]/2 #*tmp.q[j]
+                dt2 = 0.99*tmp.q[j]*0.5
                 #bodies[k].q[j] = tmp.q[j] + start[k].q[j]
 
 
@@ -292,18 +292,18 @@ cdef void _one_step_lp(body_t *bodies, unsigned int nbodies, long double dt, int
             '''
 
             if (tmp.q[j] != 0):
-                K[k].q[j] = dt2/(0.5*tmp.p[j])
+                K[k].q[j] = dt2/(tmp.p[j]*tmp.p[j])
 
             if (K[k].q[j] > 1):
-                dt2 = 2*tmp.p[j]
+                dt2 = 0.5*tmp.p[j]*tmp.p[j]
                 #tmp.p[j] = dt2*0.5 
                 #bodies[k].p[j] = tmp.p[j] + start[k].p[j]
                 
             if (tmp.p[j] != 0):
-                K[k].p[j] = dt2/(0.5*tmp.q[j])  
+                K[k].p[j] = dt2/(tmp.q[j]*tmp.q[j])  
             
             if (K[k].p[j] > 1):
-                dt2 = 2*tmp.q[j]
+                dt2 = 0.5*tmp.q[j]*tmp.q[j]
                 #tmp.q[j] = dt2*0.5 
                 #bodies[k].q[j] = tmp.q[j] + start[k].q[j]
             
@@ -868,12 +868,12 @@ cpdef run(long long int nsteps, long double dt, int order,
 
             t_sim.append(0.) 
 
-            D[i][:][0] = 0. 
-            D[i][:][1] = 0.  
-            D[i][:][2] = 0. 
-            D[i][:][3] = 0.  
-            D[i][:][4] = 0.
-            D[i][:][5] = 0.    
+            D[0][:][0] = 0. 
+            D[0][:][1] = 0.  
+            D[0][:][2] = 0. 
+            D[0][:][3] = 0.  
+            D[0][:][4] = 0.
+            D[0][:][5] = 0.    
         #'''
 
         # check for mergers
@@ -883,10 +883,9 @@ cpdef run(long long int nsteps, long double dt, int order,
         #_one_step_eu(bodies, n, dt, order)
         #_one_step_lp(bodies, n, dt, order)
         #_one_step_rk(bodies, n, dt, order)
-        dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
+        dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
 
-        time += dt_tmp    
-        
+        time += dt2_tmp    
         # store 1 every nthin steps 
         if (i != 0): 
             if ((i)%nthin == 0.):    
@@ -911,19 +910,22 @@ cpdef run(long long int nsteps, long double dt, int order,
                 solution = []
 
 
-            if ( (i)%(nthin*plot_step) == 0):
-
-                f_index = (i)/(nthin*plot_step)               
+            if ( (i+1)%(nthin*plot_step) == 0):
+                f_index = (i+1)/(nthin*plot_step)          
                 t_sim.append(time)     
-                #print(f_index, i+1, Neff)
+                
+                if (f_index != Neff):
+                
+                    for k in range(n):
+                        D[f_index][k][0] = dx[k] 
+                        D[f_index][k][1] = dy[k]  
+                        D[f_index][k][2] = dz[k] 
+                        D[f_index][k][3] = dpx[k]  
+                        D[f_index][k][4] = dpy[k]
+                        D[f_index][k][5] = dpz[k] 
 
-                for k in range(n):
-                    D[f_index][k][0] = dx[k] 
-                    D[f_index][k][1] = dy[k]  
-                    D[f_index][k][2] = dz[k] 
-                    D[f_index][k][3] = dpx[k]  
-                    D[f_index][k][4] = dpy[k]
-                    D[f_index][k][5] = dpz[k] 
+                if (f_index == Neff):
+                    continue
  
                 #print('end')
             #print('end')        

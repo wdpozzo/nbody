@@ -431,14 +431,13 @@ def kepler_sol_sys(p, q, Neff, H, m, dt, order):
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	phi_shift = np.zeros(Neff, dtype='float64')
 	
-	#a = (np.max(d_rel) + np.min(d_rel))/2.
-	#b = np.sqrt(np.max(d_rel)*np.min(d_rel))
-	#e = np.sqrt(1 - (b*b)/(a*a))
+	a = (np.max(d_rel) + np.min(d_rel))/2.
+	b = np.sqrt(np.max(d_rel)*np.min(d_rel))
+	e = np.sqrt(1 - (b*b)/(a*a))
 
 	#theoretical shift
 	for i in range(0, Neff):		
-		
-
+		'''
 		e = np.float(math.sqrt(1 + (2*H[i]*L2[i])/(k*k*mu)))	
 		
 		a = np.float(R[i]/(1 - e*e)) # semi-major axis
@@ -446,8 +445,8 @@ def kepler_sol_sys(p, q, Neff, H, m, dt, order):
 		   
 		if (1 <= e):
 			a = (R[i]/(e*e - 1.)) # semi-major axis
-			b = (R[i]/(math.sqrt(e*e - 1.))) # semi-minor axis   	
-
+			b = (R[i]/(math.sqrt(e*e - 1.))) # semi-minor axis
+		'''
 		
 		#apsidial precession given by GR [#rad per revolution]
 		a_p1[i] = 6.*math.pi*G*M/(C*C*a*(1. - e*e))

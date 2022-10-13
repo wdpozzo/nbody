@@ -14,21 +14,20 @@ G = 6.67e-11 #*(u.meter**3)/(u.kilogram*u.second**2) # 6.67e-11 #
 #AU**3/((d**2)*solMass) = (86400 * 86400) /( 2e30 * 1.5e11 * 1.5e11)
 
 C = 299792458. #*(u.meter/u.second) #299792458. #
-Ms = 1.988e30 #*(u.kilogram) # 1.988e30 #
 
 Mmerc = 0.3301e24
-Mearth = 5.9722e24 
+Mearth = 5.97216787e24 
 AU = 149597870700. #*u.meter
-Ms = 1.988e30
+Ms = 1.98840987e30
 
-plot_step = 100000
+plot_step = 20000
 buffer_lenght = 2000000
-data_thin = 5
+data_thin = 100
 
 ICN_it = 2
 
-dt = 0.05
-N  = 1500000000
+dt = 0.5
+N  = 500000000
 p = 0
 
 Neff = int(N/(data_thin*plot_step))
@@ -48,7 +47,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 	nbodies = len(m)
 	
 	if (p == 0):
-		run(N, np.longdouble(dt), 0, m, x, y, z, px, py, pz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
+		D_N, t_sim_N = run(N, np.longdouble(dt), 0, m, x, y, z, px, py, pz, sx, sy, sz, ICN_it, data_thin, buffer_lenght, plot_step)
 
 	s_N, H_N, T_N, V_N = [], [], [], []
 
@@ -86,7 +85,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 	V_N = np.concatenate((V_N[:])) 		
 
 	if (p == 0):		    
-		run(N, np.longdouble(dt), 1, m, x, y, z, px, py, pz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
+		D_1PN, t_sim_1PN = run(N, np.longdouble(dt), 1, m, x, y, z, px, py, pz, sx, sy, sz, ICN_it, data_thin, buffer_lenght, plot_step)
 	
 	s_1PN, H_1PN, T_1PN, V_1PN = [], [], [], []
         
@@ -471,9 +470,9 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		for k in range(len(m)):  
 
 			if (k<2):
-				ax1.scatter(N_arr, abs(q_N[k,:,0] - q_1PN[k,:,0]), label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
+				ax1.scatter(N_arr, q_N[k,:,0] - q_1PN[k,:,0], label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
 			else :
-				ax1.scatter(N_arr, abs(q_N[k,:,0] - q_1PN[k,:,0]), label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
+				ax1.scatter(N_arr, q_N[k,:,0] - q_1PN[k,:,0], label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
 		ax1.set_xlabel('iteration')
 		ax1.set_ylabel(r'$\Delta x$ [m]')
 		plt.grid()
@@ -483,9 +482,9 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		for k in range(len(m)):  
 
 			if (k<2):
-				ax2.scatter(N_arr, abs(q_N[k,:,1] - q_1PN[k,:,1]), label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
+				ax2.scatter(N_arr, q_N[k,:,1] - q_1PN[k,:,1], label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
 			else :
-				ax2.scatter(N_arr, abs(q_N[k,:,1] - q_1PN[k,:,1]), label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
+				ax2.scatter(N_arr, q_N[k,:,1] - q_1PN[k,:,1], label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
 		ax2.set_xlabel('iteration')
 		ax2.set_ylabel(r'$\Delta y$ [m]')
 		plt.grid()
@@ -495,9 +494,9 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		for k in range(len(m)):  
 
 			if (k<2):
-				ax3.scatter(N_arr, abs(q_N[k,:,2] - q_1PN[k,:,2]), label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
+				ax3.scatter(N_arr, q_N[k,:,2] - q_1PN[k,:,2], label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
 			else :
-				ax3.scatter(N_arr, abs(q_N[k,:,2] - q_1PN[k,:,2]), label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
+				ax3.scatter(N_arr, q_N[k,:,2] - q_1PN[k,:,2], label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
 		ax3.set_xlabel('iteration')
 		ax3.set_ylabel(r'$\Delta z$ [m]')
 		plt.grid()
@@ -610,30 +609,35 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 
 #natural initial coordinates
   
-t = Time(datetime.now())   
+t0 = Time('1999-01-01T0:0:00.0', scale='tdb')
+
+t = t0
 masses = {
-'sun'     : Ms, #1st planet has to be the central attractor
-'mercury' : Mmerc, #2nd planet has to be the one which we want to test the GR dynamics effects on 
-'earth'   : Mearth,
-'mars'    : 0.1075*Mearth,
-'venus'   : 0.815*Mearth,
-'jupiter' : 317.8*Mearth,
-#'saturn'  : 95.2*Mearth,
+'Sun'     : Ms, #1st planet has to be the central attractor
+'Mercury' : 0.0553*Mearth, #2nd planet has to be the corpse on which we want to test the GR dynamics effects
+'Venus'   : 0.815*Mearth,
+'Earth'   : Mearth,
+'Moon'    : 0.0123*Mearth,
+'Mars'    : 0.1075*Mearth,
+'Jupiter' : 317.83*Mearth,
+'Saturn'  : 95.16*Mearth,
 #'uranus'  : 14.6*Mearth,
 #'neptune' : 17.2*Mearth,
 #'pluto'   : 0.00218*Mearth,
 }
 
 planet_names = [
-'sun',
-'mercury',
-'earth',
-'mars',
-'venus',
-'jupiter',
-#'saturn',
+'Sun',
+'Mercury',
+'Venus',
+'Earth',
+'Moon',
+'Mars',
+'Jupiter',
+'Saturn',
 #'uranus',
 #'neptune',
+#'pluto' 
 ]
 
 planets = []

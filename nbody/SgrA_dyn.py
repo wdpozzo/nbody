@@ -225,9 +225,8 @@ f = plt.figure(figsize=(16,6))
 ax = f.add_subplot(111, projection = '3d')
 
 for i in range(Neff):
-    if (i <= Neff-2):
-        for k in range(len(masses)):
-            ax.scatter(float(q[k][i][0]/AU), float(q[k][i][1]/AU), float(q[k][i][2]/AU), s = 0.1, c = colors[k], alpha=0.8)
+    for k in range(len(masses)):
+        ax.scatter(float(q[k][i][0]/AU), float(q[k][i][1]/AU), float(q[k][i][2]/AU), s = 0.1, c = colors[k], alpha=0.8)
             
     if (i == Neff-1):
         ax.scatter(float(q[0][i][0]/AU), float(q[0][i][1]/AU), float(q[0][i][2]/AU),s = 0.1, label = 'Sgr-A', c = colors[0],alpha=0.8)
