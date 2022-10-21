@@ -511,7 +511,7 @@ def kepler_sol_sys(p, q, Neff, H, m, dt, order):
 		phi_shift_test = phi_shift_test/n_peri
 
  	
-	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift, phi_shift_test)
+	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift, phi_shift_test, peri_indexes)
 	
 
 def KepElemToCart(a, T, e, Omega, i, w, N, Neff):

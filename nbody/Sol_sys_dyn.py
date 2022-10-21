@@ -22,17 +22,17 @@ AU = 149597870700. #*u.meter
 Ms = 1.98840987e30
 
 #parameters for solution files management     
-plot_step = 20000
-buffer_lenght = 2000000
+plot_step = 1000
+buffer_lenght = 100000
 data_thin = 100
 
-PN_order = 1
+PN_order = 0
 ICN_it = 2 
 
 #nbodies = 6
-dt = 0.05
+dt = 0.01
 dt2 = 0.5*dt
-N  = 300000000
+N  = 250000000
 p = 0
 
 Neff = int(N/(data_thin*plot_step)) #number of final datas in the plots
@@ -40,7 +40,7 @@ nout = int(N/buffer_lenght) #number of files generated
 
 #---------------------------------------#
 #actual natural initial coordinates 
-t0 = Time('1999-01-01T0:0:00.0', scale='tdb')
+t0 = Time('2001-01-01T0:0:00.0', scale='tdb')
 
 masses = {
 'Sun'     : Ms, #1st planet has to be the central attractor
@@ -51,9 +51,9 @@ masses = {
 'Mars'    : 0.1075*Mearth,
 'Jupiter' : 317.83*Mearth,
 'Saturn'  : 95.16*Mearth,
-#'uranus'  : 14.6*Mearth,
-#'neptune' : 17.2*Mearth,
-#'pluto'   : 0.00218*Mearth,
+'Uranus'  : 14.54*Mearth,
+'Neptune' : 17.15*Mearth,
+'Pluto'   : 0.00218*Mearth,
 }
 
 planet_names = [
@@ -65,9 +65,9 @@ planet_names = [
 'Mars',
 'Jupiter',
 'Saturn',
-#'uranus',
-#'neptune',
-#'pluto' 
+'Uranus',
+'Neptune',
+#'Pluto',
 ]
 
 AstPy_err = np.array([ #in meters [m]
@@ -75,10 +75,12 @@ AstPy_err = np.array([ #in meters [m]
 300000., #Mercury
 800000., #Venus
 4600., #Earth
-90000., #Moon 
+95400., #Moon 
 7700000., #Mars
 76000000.,  #Jupiter
-267000000.  #Saturn 
+267000000.,  #Saturn 
+712000000., #Uranus
+253000000., #Neptune
 ]).astype(np.longdouble) 
 
 
@@ -107,24 +109,35 @@ sz = np.array([[0 for i in range(0, len(m))] for k in range(0, Neff)]).astype(np
 #find initial coordinates
 
 #planet_periods = np.array([0., 87.969, 224.701, 365.256,  686.980, 4332.589, 10759.22]) 
-planet_0 = []
+planets_0 = []
+
+x_0  = np.zeros(len(m)).astype(np.longdouble)
+y_0  = np.zeros(len(m)).astype(np.longdouble)
+z_0 = np.zeros(len(m)).astype(np.longdouble)
+
+vx_0  = np.zeros(len(m)).astype(np.longdouble)
+vy_0  = np.zeros(len(m)).astype(np.longdouble)
+vz_0 = np.zeros(len(m)).astype(np.longdouble)
+
+sx_0  = np.zeros(len(m)).astype(np.longdouble)
+sy_0  = np.zeros(len(m)).astype(np.longdouble)
+sz_0 = np.zeros(len(m)).astype(np.longdouble)
 
 for k in range(len(m)):
     planets_0 = (get_body_barycentric_posvel(planet_names[k], t0, ephemeris= 'DE440'))
          
-    x[0][k] = planets_0[0].x.to(u.meter).value 
-    y[0][k] = planets_0[0].y.to(u.meter).value 
-    z[0][k] = planets_0[0].z.to(u.meter).value 
+    x_0[k] = planets_0[0].x.to(u.meter).value 
+    y_0[k] = planets_0[0].y.to(u.meter).value 
+    z_0[k] = planets_0[0].z.to(u.meter).value 
 
-    vx[0][k] = planets_0[1].x.to(u.meter/u.second).value 
-    vy[0][k] = planets_0[1].y.to(u.meter/u.second).value 
-    vz[0][k] = planets_0[1].z.to(u.meter/u.second).value
+    vx_0[k] = planets_0[1].x.to(u.meter/u.second).value 
+    vy_0[k] = planets_0[1].y.to(u.meter/u.second).value 
+    vz_0[k] = planets_0[1].z.to(u.meter/u.second).value
       
 
 #run the simulation
 if (p == 0):
-    D, t_sim = run(N, np.longdouble(dt), PN_order, m, x[0][:], y[0][:], z[0][:], m*vx[0][:], m*vy[0][:], m*vz[0][:], sx[0][:], sy[0][:], sz[0][:], ICN_it, data_thin, buffer_lenght, plot_step)
-    #D, t_sim = run(N, np.longdouble(dt), PN_order, m, x_0[:], y_0[:], z_0[:], m*vx_0[:], m*vy_0[:], m*vz_0[:], sx[0][:], sy[0][:], sz[0][:], ICN_it, data_thin, buffer_lenght, plot_step)
+    D, t_sim = run(N, np.longdouble(dt), PN_order, m, x_0, y_0, z_0, m*vx_0, m*vy_0, m*vz_0, sx_0, sy_0, sz_0, ICN_it, data_thin, buffer_lenght, plot_step)
 
 
 s, H, T, V = [], [], [], []
@@ -162,7 +175,7 @@ T = np.concatenate((T[:]), axis=0)
 V = np.concatenate((V[:]), axis=0) 
 
 #collect SS data
-for i in range(1, Neff):
+for i in range(Neff):
 
     t = t0 + t_sim[i]*u.second
 
@@ -170,13 +183,13 @@ for i in range(1, Neff):
 
         planets.append(get_body_barycentric_posvel(planet, t, ephemeris='DE440'))   
 
-    x[i][:] = np.array([planet[0].x.to(u.meter).value for planet in planets[len(m)*(i-1) : len(m)*(i)]]).astype(np.longdouble)
-    y[i][:] = np.array([planet[0].y.to(u.meter).value for planet in planets[len(m)*(i-1) : len(m)*(i)]]).astype(np.longdouble)
-    z[i][:] = np.array([planet[0].z.to(u.meter).value for planet in planets[len(m)*(i-1) : len(m)*(i)]]).astype(np.longdouble)
+    x[i][:] = np.array([planet[0].x.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
+    y[i][:] = np.array([planet[0].y.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
+    z[i][:] = np.array([planet[0].z.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
 
-    vx[i][:] = np.array([planet[1].x.to(u.meter/u.second).value for planet in planets[len(m)*(i-1) : len(m)*(i)]]).astype(np.longdouble)
-    vy[i][:] = np.array([planet[1].y.to(u.meter/u.second).value for planet in planets[len(m)*(i-1) : len(m)*(i)]]).astype(np.longdouble)
-    vz[i][:] = np.array([planet[1].z.to(u.meter/u.second).value for planet in planets[len(m)*(i-1) : len(m)*(i)]]).astype(np.longdouble)
+    vx[i][:] = np.array([planet[1].x.to(u.meter/u.second).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
+    vy[i][:] = np.array([planet[1].y.to(u.meter/u.second).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
+    vz[i][:] = np.array([planet[1].z.to(u.meter/u.second).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
  
     #vcm[i] = np.array([np.sum(vx[i]*m/Mtot), np.sum(vy[i]*m/Mtot), np.sum(vz[i]*m/Mtot)])
 
@@ -192,14 +205,14 @@ for i in range(1, Neff):
 
     #print(t, (t - t0).sec, (i)*(N/Neff)*dt2, i)
     
-t_s = (N)*dt2 - (N/Neff)*dt2 #sec
+t_s = (N)*dt2 #sec
 t_s = t_s/(60*60*24*365) #year
 t_nat = (t_sim[-1])/(60*60*24*365) # sec --> year
 
 print('Simulation time: nominal = {} - ICN condition = {}'.format(t_s, t_nat)) #, len(t_nat), len(t_sim))
 
 
-N_arr = np.linspace(0, N - N/Neff, Neff)
+N_arr = np.linspace(0, N, Neff)
 
 q = np.array([[[0 for i in range(0, 3)] for j in range(0, Neff)] for k in range(0,len(m))]).astype(np.longdouble)
 p = np.array([[[0 for i in range(0, 3)] for j in range(0, Neff)] for k in range(0,len(m))]).astype(np.longdouble)
@@ -215,8 +228,8 @@ for k in range(len(m)):
 
            #------------   PLOTS  -------------#
 
-col_rainbow = cm.rainbow(np.linspace(0, 1, len(masses)))    
-col_viridis = cm.viridis(np.linspace(0, 1, len(masses)))  
+col_rainbow = cm.rainbow(np.linspace(0, 1, len(m)))    
+col_viridis = cm.viridis(np.linspace(0, 1, len(m)))  
 
 f = plt.figure(figsize=(6,4))
 ax = f.add_subplot(111)

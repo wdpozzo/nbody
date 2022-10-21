@@ -20,14 +20,17 @@ Mearth = 5.97216787e24
 AU = 149597870700. #*u.meter
 Ms = 1.98840987e30
 
-plot_step = 20000
-buffer_lenght = 2000000
+#parameters for solution files management     
+plot_step = 1000
+buffer_lenght = 100000
 data_thin = 100
 
-ICN_it = 2
+ICN_it = 2 
 
-dt = 0.5
-N  = 500000000
+#nbodies = 6
+dt = 1
+dt2 = 0.5*dt
+N  = 5000000
 p = 0
 
 Neff = int(N/(data_thin*plot_step))
@@ -158,7 +161,6 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		T_2PN = np.concatenate((T_2PN[:]))
 		V_2PN = np.concatenate((V_2PN[:])) 
 	'''
-	#print(H_N, T_N, V_N)
 	
 	#Numerical PN-order confrontation 
 
@@ -173,7 +175,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 	ax.plot(N_arr, V_1PN, label= "1PN")
 	#ax.plot(range(Neff), V_2PN, label= "2PN")
 	ax.set_xlabel('iteration')
-	ax.set_ylabel('Potential')
+	ax.set_ylabel('Potential energy [J]')
 	ax.grid()
 	ax.legend()
 	#colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
@@ -183,7 +185,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 	ax2.plot(N_arr, T_1PN, label= "1PN")
 	#ax2.plot(range(Neff), T_2PN, label= "2PN")
 	ax2.set_xlabel('iteration')
-	ax2.set_ylabel('Kinetic energy')
+	ax2.set_ylabel('Kinetic energy [J]')	
 	ax2.grid()
 	ax2.legend()
 	#colors = iter(cm.rainbow(np.linspace(0, 1, nbodies)))
@@ -193,7 +195,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 	ax3.plot(N_arr, H_1PN, label= "1PN")
 	#ax.plot(range(Neff), H_2PN, label= "2PN")
 	ax3.set_xlabel('iteration')
-	ax3.set_ylabel('Hamiltonian')
+	ax3.set_ylabel('Energy [J]')
 	ax3.grid()
 	ax3.legend()
 
@@ -209,14 +211,14 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 
 	for i in range(0, Neff):
 
-		H_1PN_N.append(np.sign(H_1PN[i])*(H_1PN[i]/H_N[i]))    
+		H_1PN_N.append((H_1PN[i]/H_N[i]))    
 		#H_2PN_N.append(H_2PN[i]/H_N[i])
 
 	f = plt.figure(figsize=(8,6))
 	
 	ax = f.add_subplot(111)
-	ax.plot(N_arr, arr, label= "Newtonian")
-	ax.plot(N_arr, H_1PN_N, label= "1PN")
+	ax.plot(N_arr, arr, label= "Normalized N Hamiltonian")
+	ax.plot(N_arr, H_1PN_N, label= "Normalized 1PN Hamiltonian")
 	#ax.plot(range(Neff), H_2PN_N, label= "2PN")
 	ax.set_xlabel('iteration')
 	ax.set_ylabel(r'$H/H_{N}$')
@@ -227,17 +229,17 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 	#f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsHamiltonianNorm.pdf', bbox_inches='tight')
 	
 	#prepare data to evaluate the radius
-	q_N = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')
-	p_N = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')
-	spn_N = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')
+	q_N = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,nbodies)], dtype='longdouble')
+	p_N = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,nbodies)], dtype='longdouble')
+	spn_N = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,nbodies)], dtype='longdouble')
 	
-	q_1PN = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')
-	p_1PN = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')
-	spn_1PN = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,len(m))], dtype='longdouble')
+	q_1PN = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,nbodies)], dtype='longdouble')
+	p_1PN = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,nbodies)], dtype='longdouble')
+	spn_1PN = np.array([[[0 for i in range(0, 3)] for Neff in range(0, Neff)] for m in range(0,nbodies)], dtype='longdouble')
 	
 	for j in range(nbodies):
 	
-		for i in range(0, Neff):
+		for i in range(Neff):
 
 			q_N[j][i][0] = s_N[i][j]['q'][0]
 			q_N[j][i][1] = s_N[i][j]['q'][1]
@@ -263,8 +265,13 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 			spn_1PN[j][i][1]  = s_1PN[i][j]['s'][1] 
 			spn_1PN[j][i][2]  = s_1PN[i][j]['s'][2] 
 			
-		#for j in range(nbodies):
-		    #qs_2PN[j].append(s_2PN[i][j]['q'])     
+	D_tot_q = np.array([[[0 for j in range(3)] for i in range(Neff)] for k in range(nbodies)]).astype(np.longdouble)
+
+	for i in range(Neff):
+		for j in range(nbodies):
+			D_tot_q[j,i,0] = np.sqrt(D_1PN[i][j][0]*D_1PN[i][j][0] + D_N[i][j][0]*D_N[i][j][0])
+			D_tot_q[j,i,1] = np.sqrt(D_1PN[i][j][1]*D_1PN[i][j][1] + D_N[i][j][1]*D_N[i][j][1])
+			D_tot_q[j,i,2] = np.sqrt(D_1PN[i][j][2]*D_1PN[i][j][2] + D_N[i][j][2]*D_N[i][j][2])
 
 	#2 body case	       
 	if (nbodies==2): 
@@ -277,7 +284,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		#1PN order quantities
 		q_1PN_rel, p_1PN_rel, q_1PN_cm, p_1PN_cm = CM_system(p_1PN[0], p_1PN[1], q_1PN[0], q_1PN[1], Neff, m[0], m[1])
 		
-		r_dif_1PN, q_an_rel_1PN, r_kepler_1PN, L_1PN, a_p_1PN, P_quad_1PN, phi_shift_1PN, q_peri_1PN, peri_indexes_1PN, phi_shift_test_1PN = kepler(q_1PN[0], q_1PN[1], p_1PN[0], p_1PN[1], N, Neff, H_N, m, dt, 1)
+		r_dif_1PN, q_an_rel_1PN, r_kepler_1PN, L_1PN, a_p_1PN, P_quad_1PN, phi_shift_1PN, q_peri_1PN, peri_indexes_1PN, phi_shift_test_1PN = kepler(q_1PN[0], q_1PN[1], p_1PN[0], p_1PN[1], N, Neff, H_1PN, m, dt, 1)
 		
 
 		#plots	
@@ -289,14 +296,18 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		r_N = np.sqrt(q_N_rel[:,0]*q_N_rel[:,0] + q_N_rel[:,1]*q_N_rel[:,1]+ q_N_rel[:,2]*q_N_rel[:,2])
 		r_1PN = np.sqrt(q_1PN_rel[:,0]*q_1PN_rel[:,0] + q_1PN_rel[:,1]*q_1PN_rel[:,1] + q_1PN_rel[:,2]*q_1PN_rel[:,2])
 
-			#r_2PN.append(np.sqrt(q_2PN[i,0]**2 + q_2PN[i,1]**2 + q_2PN[i,2]**2))
-
-		#r_N_merc = np.sqrt(q_N[1,:,0]*q_N[1,:,0] + q_N[1,:,1]*q_N[1,:,1]+ q_N[1,:,2]*q_N[1,:,2])
-		#r_1PN_merc = np.sqrt(q_1PN[1,:,0]*q_1PN[1,:,0] + q_1PN[1,:,1]*q_1PN[1,:,1] + q_1PN[1,:,2]*q_1PN[1,:,2])
+		D_tot_q_peri = np.array([[0 for j in range(3)] for i in range(len(peri_indexes_N))]).astype(np.longdouble)
+		
+		for i in range(len(peri_indexes_N)):
+			index_N = peri_indexes_N[i]
+			index_1PN = peri_indexes_1PN[i]
+			D_tot_q_peri[i,0] = np.sqrt(D_1PN[index_1PN][1][0]*D_1PN[index_1PN][1][0] + D_N[index_N][1][0]*D_N[index_N][1][0])
+			D_tot_q_peri[i,1] = np.sqrt(D_1PN[index_1PN][1][1]*D_1PN[index_1PN][1][1] + D_N[index_N][1][1]*D_N[index_N][1][1])
+			D_tot_q_peri[i,2] = np.sqrt(D_1PN[index_1PN][1][2]*D_1PN[index_1PN][1][2] + D_N[index_N][1][2]*D_N[index_N][1][2])
 
 		f = plt.figure(figsize=(6,4))
 		ax = f.add_subplot(111)
-		ax.plot(N_arr, abs(r_N - r_1PN), label= "N orbit vs. 1PN orbit")
+		ax.plot(N_arr, r_N - r_1PN, label= "Mercury relative N vs. 1PN distance")
 		#ax.plot(range(Neff), r_2PN, label= "2PN")
 		ax.set_xlabel('iteration')
 		ax.set_ylabel('Orbital radius difference [m]')
@@ -311,21 +322,21 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		f = plt.figure(figsize=(16,10))
 
 		ax1 = f.add_subplot(131)
-		ax1.scatter(N_arr, abs(q_N[1,:,0] - q_1PN[1,:,0]), label = 'Newtonian vs. 1PN')
+		ax1.scatter(N_arr, q_N[1,:,0] - q_1PN[1,:,0], label = 'Newtonian vs. 1PN')
 		ax1.set_xlabel('iteration')
 		ax1.set_ylabel(r'$\Delta x$ [m]')
 		plt.grid()
 		plt.legend()
 
 		ax2 = f.add_subplot(132)
-		ax2.scatter(N_arr, abs(q_N[1,:,1] - q_1PN[1,:,1]), label = 'Newtonian vs. 1PN')
+		ax2.scatter(N_arr, q_N[1,:,1] - q_1PN[1,:,1], label = 'Newtonian vs. 1PN')
 		ax2.set_xlabel('iteration')
 		ax2.set_ylabel(r'$\Delta y$ [m]')
 		plt.grid()
 		plt.legend()
 
 		ax3 = f.add_subplot(133)
-		ax3.scatter(N_arr, abs(q_N[1,:,2] - q_1PN[1,:,2]), label = 'Newtonian vs. 1PN')
+		ax3.scatter(N_arr, q_N[1,:,2] - q_1PN[1,:,2], label = 'Newtonian vs. 1PN')
 		ax3.set_xlabel('iteration')
 		ax3.set_ylabel(r'$\Delta z$ [m]')
 		plt.grid()
@@ -387,7 +398,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		V_2body_1PN = []
 		T_2body_1PN = []    
 		
-		for i in range(0, Neff):
+		for i in range(Neff):
 			x_N = np.array([q_N[0,i,0], q_N[1,i,0]]).astype(np.longdouble)
 			y_N = np.array([q_N[0,i,1], q_N[1,i,1]]).astype(np.longdouble)
 			z_N = np.array([q_N[0,i,2], q_N[1,i,2]]).astype(np.longdouble)
@@ -428,12 +439,12 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		#coordinate Newton
 		q_N_rel, p_N_rel, q_N_cm, p_N_cm = CM_system(p_N[0], p_N[1], q_N[0], q_N[1], Neff, m[0], m[1])
 		
-		L_N, P_quad_N, a_p1_N, a_p2_N, a_p3_N, a_p4_N, q_peri_N, phi_shift_N, phi_shift_test_N = kepler_sol_sys(p_N, q_N, Neff, H_2body_N, m, dt, 0)
+		L_N, P_quad_N, a_p1_N, a_p2_N, a_p3_N, a_p4_N, q_peri_N, phi_shift_N, phi_shift_test_N, peri_indexes_N = kepler_sol_sys(p_N, q_N, Neff, H_2body_N, m, dt, 0)
 
 		#coordinate 1PN
 		q_1PN_rel, p_1PN_rel, q_1PN_cm, p_1PN_cm = CM_system(p_1PN[0], p_1PN[1], q_1PN[0], q_1PN[1], Neff, m[0], m[1])
 		
-		L_1PN, P_quad_1PN, a_p1_1PN, a_p2_1PN, a_p3_1PN, a_p4_1PN, q_peri_1PN, phi_shift_1PN, phi_shift_test_1PN = kepler_sol_sys(p_1PN, q_1PN, Neff, H_2body_1PN, m, dt, 1)
+		L_1PN, P_quad_1PN, a_p1_1PN, a_p2_1PN, a_p3_1PN, a_p4_1PN, q_peri_1PN, phi_shift_1PN, phi_shift_test_1PN, peri_indexes_1PN = kepler_sol_sys(p_1PN, q_1PN, Neff, H_2body_1PN, m, dt, 1)
 		
 		r_N = []
 		r_1PN = []
@@ -444,10 +455,21 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 			
 		col_rainbow = cm.rainbow(np.linspace(0, 1, len(masses)))   
 
+
+		D_tot_q_peri = np.array([[0 for j in range(3)] for i in range(len(peri_indexes_N))]).astype(np.longdouble)
+		
+		for i in range(len(peri_indexes_N)):
+			index_N = peri_indexes_N[i]
+			index_1PN = peri_indexes_1PN[i]
+			D_tot_q_peri[i,0] = np.sqrt(D_1PN[index_1PN][1][0]*D_1PN[index_1PN][1][0] + D_N[index_N][1][0]*D_N[index_N][1][0])
+			D_tot_q_peri[i,1] = np.sqrt(D_1PN[index_1PN][1][1]*D_1PN[index_1PN][1][1] + D_N[index_N][1][1]*D_N[index_N][1][1])
+			D_tot_q_peri[i,2] = np.sqrt(D_1PN[index_1PN][1][2]*D_1PN[index_1PN][1][2] + D_N[index_N][1][2]*D_N[index_N][1][2])
+
+
 		#PLOTS
 		f = plt.figure(figsize=(18,18))
 		ax = f.add_subplot(111, projection = '3d')
-		for k in range(len(m)):  
+		for k in range(nbodies):  
 
 			if (k<2):
 				ax.plot(q_N[k,:,0], q_N[k,:,1], q_N[k,:,2], label= "{} (N)".format(planet_names[k]), alpha=1, color = col_rainbow[k])
@@ -467,38 +489,26 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		f = plt.figure(figsize=(16,10))
 
 		ax1 = f.add_subplot(131)
-		for k in range(len(m)):  
-
-			if (k<2):
-				ax1.scatter(N_arr, q_N[k,:,0] - q_1PN[k,:,0], label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
-			else :
-				ax1.scatter(N_arr, q_N[k,:,0] - q_1PN[k,:,0], label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
+		for k in range(nbodies):  
+			ax1.errorbar(N_arr, q_N[k,:,0] - q_1PN[k,:,0], yerr = D_tot_q[k,:,0], label= "{} N vs. 1PN".format(planet_names[k]), alpha=1, color = col_rainbow[k])
 		ax1.set_xlabel('iteration')
-		ax1.set_ylabel(r'$\Delta x$ [m]')
+		ax1.set_ylabel('Orbit difference: x [m]')
 		plt.grid()
 		plt.legend()
 
 		ax2 = f.add_subplot(132)
-		for k in range(len(m)):  
-
-			if (k<2):
-				ax2.scatter(N_arr, q_N[k,:,1] - q_1PN[k,:,1], label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
-			else :
-				ax2.scatter(N_arr, q_N[k,:,1] - q_1PN[k,:,1], label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
-		ax2.set_xlabel('iteration')
-		ax2.set_ylabel(r'$\Delta y$ [m]')
+		for k in range(nbodies):  
+			ax2.errorbar(N_arr, q_N[k,:,1] - q_1PN[k,:,1], yerr = D_tot_q[k,:,1], label= "{} N vs. 1PN".format(planet_names[k]), alpha=1, color = col_rainbow[k])
+		ax1.set_xlabel('iteration')
+		ax1.set_ylabel('Orbit difference: y [m]')
 		plt.grid()
 		plt.legend()
 
 		ax3 = f.add_subplot(133)
-		for k in range(len(m)):  
-
-			if (k<2):
-				ax3.scatter(N_arr, q_N[k,:,2] - q_1PN[k,:,2], label= "{} orbit difference".format(planet_names[k]), alpha=1, color = col_rainbow[k])
-			else :
-				ax3.scatter(N_arr, q_N[k,:,2] - q_1PN[k,:,2], label= "{} orbit difference".format(planet_names[k]), alpha=0.5, color = col_rainbow[k])
-		ax3.set_xlabel('iteration')
-		ax3.set_ylabel(r'$\Delta z$ [m]')
+		for k in range(nbodies):  
+			ax3.errorbar(N_arr, q_N[k,:,2] - q_1PN[k,:,2], yerr = D_tot_q[k,:,2], label= "{} N vs. 1PN".format(planet_names[k]), alpha=1, color = col_rainbow[k])
+		ax1.set_xlabel('iteration')
+		ax1.set_ylabel('Orbit difference: z [m]')
 		plt.grid()
 		plt.legend()
 
@@ -507,10 +517,10 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 
 		f = plt.figure(figsize=(14,8))	
 		ax1 = f.add_subplot(1,1,1)
-		ax1.plot(N_arr, abs(r_N - r_1PN), label= "N orbit vs. 1PN orbit")
+		ax1.plot(N_arr, r_N - r_1PN, label= "Mercury N vs. 1PN orbit")
 		#ax.plot(range(Neff), H_2PN_N, label= "2PN")
 		ax1.set_xlabel('iteration')
-		ax1.set_ylabel('Orbital displacement [m]')
+		ax1.set_ylabel('Relative displacement [m]')
 		ax1.grid()
 		ax1.legend()	
 		plt.show()	
@@ -519,8 +529,9 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		f = plt.figure(figsize=(18,12))
 		
 		ax1 = f.add_subplot(1,2,1)
-		ax1.plot(N_arr, H_N, label= "Hamiltonian (N)")
-		ax1.plot(N_arr, H_1PN, label= "Hamiltonian (1PN)")
+		ax1.plot(N_arr, H_N, label= "N")
+		ax1.plot(N_arr, H_1PN, label= "1PN")
+
 		#ax.plot(range(Neff), H_2PN_N, label= "2PN")
 		ax1.set_xlabel('iteration')
 		ax1.set_ylabel('Energy [J]')
@@ -531,11 +542,11 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		#f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsOrbRadius.pdf', bbox_inches='tight')
 
 		ax2 = f.add_subplot(1,2,2)
-		ax2.plot(N_arr, P_quad_N, label= "Quadrupole radiation (N)")
-		ax2.plot(N_arr, P_quad_1PN, label= "Quadrupole radiation (1PN)")
+		ax2.plot(N_arr, P_quad_N, label= "N")
+		ax2.plot(N_arr, P_quad_1PN, label= "1PN")
 		#ax.plot(range(Neff), r_2PN, label= "2PN")
 		ax2.set_xlabel('iteration')
-		ax2.set_ylabel('Power emission [J/s]')
+		ax2.set_ylabel('Quadrupole radiation [J/s]')
 		ax2.grid()
 		ax2.legend()		
 
@@ -549,9 +560,9 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		#ax.plot(q_N[1,:,0], q_N[1,:,1], q_N[1,:,2], label = 'Numerical solution', alpha=0.5)
 		#ax.plot(q_1PN[1,:,0], q_1PN[1,:,1], q_1PN[1,:,2], label = 'Numerical solution', alpha=0.5)
 		for i in range(0, len(q_peri_N)): 
-			ax.plot(q_peri_N[i,0], q_peri_N[i,1], q_peri_N[i,2], 'o', label = 'Perihelion orbit {} (N)'.format(i), color = col_rainbow[i])
+			ax.plot(q_peri_N[i,0], q_peri_N[i,1], q_peri_N[i,2], 'o', label = 'Perihelion n. {} (N)'.format(i), color = col_rainbow[i])
 		for i in range(0, len(q_peri_1PN)): 
-			ax.plot(q_peri_1PN[i,0], q_peri_1PN[i,1], q_peri_1PN[i,2], 'o', label = 'Perihelion orbit {} (1PN)'.format(i), color = col_viridis[i])
+			ax.plot(q_peri_1PN[i,0], q_peri_1PN[i,1], q_peri_1PN[i,2], 'o', label = 'Perihelion n. {} (1PN)'.format(i), color = col_viridis[i])
 		ax.set_xlabel('x [m]')
 		ax.set_ylabel('y [m]')
 		ax.set_zlabel('z [m]')
@@ -561,23 +572,24 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		f = plt.figure(figsize=(16,10))
 
 		ax1 = f.add_subplot(131)
-		ax1.scatter(np.linspace(0, N, len(q_peri_N)), abs(q_peri_N[:,0] - q_peri_1PN[:,0]), alpha=1)
+		ax1.errorbar(np.linspace(0, N - N/Neff, len(q_peri_N)), q_peri_N[:,0] - q_peri_1PN[:,0], yerr= D_tot_q_peri[:,0], alpha=1, label='Perihelion N vs. 1PN displacement')
 		ax1.set_xlabel('iteration')
-		ax1.set_ylabel(r'$\Delta x$ [m]')
+		ax1.set_ylabel('Displacement x [m]')
 		plt.grid()
 		plt.legend()
 
 		ax2 = f.add_subplot(132)
-		ax2.scatter(np.linspace(0, N, len(q_peri_N)), abs(q_peri_N[:,1] - q_peri_1PN[:,1]), alpha=1)
+		ax2.errorbar(np.linspace(0, N - N/Neff, len(q_peri_N)), q_peri_N[:,1] - q_peri_1PN[:,1],yerr= D_tot_q_peri[:,1], alpha=1, label='Perihelion N vs. 1PN displacement')
+
 		ax2.set_xlabel('iteration')
-		ax2.set_ylabel(r'$\Delta y$ [m]')
+		ax1.set_ylabel('Displacement y [m]')
 		plt.grid()
 		plt.legend()
 
 		ax3 = f.add_subplot(133)
-		ax3.scatter(np.linspace(0, N, len(q_peri_N)), abs(q_peri_N[:,2] - q_peri_1PN[:,2]), alpha=1)
+		ax3.errorbar(np.linspace(0, N - N/Neff, len(q_peri_N)), q_peri_N[:,2] - q_peri_1PN[:,2], yerr= D_tot_q_peri[:,2], alpha=1, label='Perihelion N vs. 1PN displacement')
 		ax3.set_xlabel('iteration')
-		ax3.set_ylabel(r'$\Delta z$ [m]')
+		ax1.set_ylabel('Displacement z [m]')
 		plt.grid()
 		plt.legend()
 
@@ -621,9 +633,9 @@ masses = {
 'Mars'    : 0.1075*Mearth,
 'Jupiter' : 317.83*Mearth,
 'Saturn'  : 95.16*Mearth,
-#'uranus'  : 14.6*Mearth,
-#'neptune' : 17.2*Mearth,
-#'pluto'   : 0.00218*Mearth,
+'Uranus'  : 14.54*Mearth,
+'Neptune' : 17.15*Mearth,
+#'Pluto'   : 0.00218*Mearth,
 }
 
 planet_names = [
@@ -635,9 +647,9 @@ planet_names = [
 'Mars',
 'Jupiter',
 'Saturn',
-#'uranus',
-#'neptune',
-#'pluto' 
+'Uranus',
+'Neptune',
+#'Pluto' 
 ]
 
 planets = []

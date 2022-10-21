@@ -784,7 +784,7 @@ cpdef _H_2body(np.ndarray[long double, mode="c", ndim=1] mass,
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cpdef run(long long int nsteps, long double dt, int order,
+cpdef run(long long int nsteps, long double dt, unsigned int order,
           np.ndarray[long double, mode="c", ndim=1] mass,
           np.ndarray[long double, mode="c", ndim=1] x,
           np.ndarray[long double, mode="c", ndim=1] y,
@@ -796,16 +796,16 @@ cpdef run(long long int nsteps, long double dt, int order,
           np.ndarray[long double, mode="c", ndim=1] sy,
           np.ndarray[long double, mode="c", ndim=1] sz,
           unsigned int ICN_it,
-          int nthin,                                   
+          unsigned int nthin,                                   
   #kernel-core-5.15.11-200.fc35.x86_64          
           unsigned int buffer_length, unsigned int plot_step):
     
     from tqdm import tqdm
     import pickle
 
-    cdef int f_index
+    cdef unsigned int f_index
     cdef unsigned int n = len(mass)
-    cdef int Neff = nsteps/(nthin*plot_step)
+    cdef unsigned int Neff = nsteps/(nthin*plot_step)
     #cdef body_t tmp
 
     '''    
@@ -856,7 +856,7 @@ cpdef run(long long int nsteps, long double dt, int order,
     
     #for i in range(nsteps):
     for i in tqdm(np.arange(nsteps)):
-        #'''
+        '''
         #store the initial configuration 
         if (i == 0):
             solution.append([bodies[j] for j in range(n)])
@@ -874,7 +874,7 @@ cpdef run(long long int nsteps, long double dt, int order,
             D[0][:][3] = 0.  
             D[0][:][4] = 0.
             D[0][:][5] = 0.    
-        #'''
+        '''
 
         # check for mergers
         n = _merge(bodies, n)
@@ -887,48 +887,41 @@ cpdef run(long long int nsteps, long double dt, int order,
 
         time += dt2_tmp    
         # store 1 every nthin steps 
-        if (i != 0): 
-            if ((i)%nthin == 0.):    
-                solution.append([bodies[j] for j in range(n)])
-                h, t, v = _hamiltonian(bodies, n, order)
+
+        if ( (i+1)%nthin == 0.):    
+            solution.append([bodies[j] for j in range(n)])
+            h, t, v = _hamiltonian(bodies, n, order)
         
-                H.append(h)
-                T.append(t)
-                V.append(v)
+            H.append(h)
+            T.append(t)
+            V.append(v)
             
         # divide in files with buffer_lenght steps each    
-            if ( (i+1)%buffer_length == 0.):
+        if ( (i+1)%buffer_length == 0.):
         
-                pickle.dump(solution, open('solution_{}_order{}.pkl'.format(n_sol, order),'wb'))
-                pickle.dump(T, open('kinetic_{}_order{}.pkl'.format(n_sol, order),'wb'))
-                pickle.dump(V, open('potential_{}_order{}.pkl'.format(n_sol, order),'wb'))
-                pickle.dump(H, open('hamiltonian_{}_order{}.pkl'.format(n_sol, order),'wb'))
-                n_sol += 1
-                H        = []
-                T        = []
-                V        = []
-                solution = []
+            pickle.dump(solution, open('solution_{}_order{}.pkl'.format(n_sol, order),'wb'))
+            pickle.dump(T, open('kinetic_{}_order{}.pkl'.format(n_sol, order),'wb'))
+            pickle.dump(V, open('potential_{}_order{}.pkl'.format(n_sol, order),'wb'))
+            pickle.dump(H, open('hamiltonian_{}_order{}.pkl'.format(n_sol, order),'wb'))
+            n_sol += 1
+            H        = []
+            T        = []
+            V        = []
+            solution = []
 
+        if ( (i+1)%(nthin*plot_step) == 0):
 
-            if ( (i+1)%(nthin*plot_step) == 0):
-                f_index = (i+1)/(nthin*plot_step)          
-                t_sim.append(time)     
+            f_index = (i+1)/(nthin*plot_step) - 1         
+            t_sim.append(time)     
                 
-                if (f_index != Neff):
-                
-                    for k in range(n):
-                        D[f_index][k][0] = dx[k] 
-                        D[f_index][k][1] = dy[k]  
-                        D[f_index][k][2] = dz[k] 
-                        D[f_index][k][3] = dpx[k]  
-                        D[f_index][k][4] = dpy[k]
-                        D[f_index][k][5] = dpz[k] 
 
-                if (f_index == Neff):
-                    continue
- 
-                #print('end')
-            #print('end')        
-        #print('end')
+            for k in range(n):
+                D[f_index][k][0] = dx[k] 
+                D[f_index][k][1] = dy[k]  
+                D[f_index][k][2] = dz[k] 
+                D[f_index][k][3] = dpx[k]  
+                D[f_index][k][4] = dpy[k]
+                D[f_index][k][5] = dpz[k] 
+
     
     return (D, t_sim)

@@ -5,7 +5,7 @@ from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 from nbody.body cimport body_t, merger, _merge_bodies
-from cython.parallel import prange
+#from cython.parallel import prange
 #import astropy.units as u
 
 cdef long double G = 6.67e-11 #G = (6.67e-11*u.m**3/(u.kg*u.s**2)).to(u.AU**3/(u.d**2*u.solMass)).value 
@@ -47,10 +47,10 @@ cdef (long double, long double, long double) _hamiltonian(body_t *bodies, unsign
     
     V = _potential(bodies, N, order)
     
-    for i in prange(N):
+    for i in range(N):
         
         mi = bodies[i].mass
-        T = _kinetic_energy(bodies[i])
+        T += _kinetic_energy(bodies[i])
         
         if (order >= 1):    
 
@@ -79,8 +79,8 @@ cdef long double _potential(body_t *bodies, unsigned int N, int order) nogil:
     cdef unsigned int i,j
     cdef long double V = 0.0
 
-    for i in prange(N):
-        for j in prange(i+1,N):
+    for i in range(N):
+        for j in range(i+1,N):
             V += _potential_0pn(bodies[i], bodies[j])
             
             if order >= 1:
@@ -183,14 +183,14 @@ cdef void _gradients(long double **out, body_t *bodies, unsigned int N, int orde
 
     cdef unsigned int i,j,k
     cdef long double *tmp = <long double *>malloc(6*sizeof(long double))
-    for i in prange(N):
+    for i in range(N):
 
         _gradient_free_particle(tmp, bodies[i])
         
         for k in range(6):
             out[i][k] = out[i][k] + tmp[k]
             
-        for j in prange(N):
+        for j in range(N):
             if i == j:
                 continue
       

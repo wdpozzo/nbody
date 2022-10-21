@@ -17,24 +17,36 @@ ext_modules=[
             Extension("nbody.body",
                        sources=["nbody/body.pyx"],
                        libraries=["m"], # Unix-like specific
-                       extra_compile_args=["-O3","-ffast-math"],
+                       extra_compile_args=["-O3","-ffast-math"],# '-fopenmp'],
+                       #extra_link_args=['-fopenmp'],
                        include_dirs=[numpy.get_include(),"nbody"],
                        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
                        ),
              Extension("nbody.hamiltonian",
                        sources=["nbody/hamiltonian.pyx"],
                        libraries=["m"], # Unix-like specific
-                       extra_compile_args=["-O3","-ffast-math"],
+                       extra_compile_args=["-O3","-ffast-math"],# '-fopenmp'],
+                       #extra_link_args=['-fopenmp'],
                        include_dirs=[numpy.get_include(),"nbody"],
                        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
                        ),
             Extension("nbody.engine",
                        sources=["nbody/engine.pyx"],
                        libraries=["m"], # Unix-like specific
-                       extra_compile_args=["-O3","-ffast-math"],
+                       extra_compile_args=["-O3","-ffast-math"],# '-fopenmp'],
+                       #extra_link_args=['-fopenmp'],
                        include_dirs=[numpy.get_include(),"nbody"],
                        define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
                        ),
+
+                       Extension("nbody.CM_coord_system",
+                       sources=["nbody/CM_coord_system.pyx"],
+                       libraries=["m"], # Unix-like specific
+                       extra_compile_args=["-O3","-ffast-math"],# '-fopenmp'],
+                       #extra_link_args=['-fopenmp'],
+                       include_dirs=[numpy.get_include(),"nbody"],
+                       define_macros=[("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")],
+                        ),
              ]
 
 setup(
