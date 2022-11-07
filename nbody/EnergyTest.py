@@ -328,7 +328,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 
 		f = plt.figure(figsize=(16,14))
 		ax = f.add_subplot(111)
-		ax.plot(N_arr, r_N - r_1PN, label= "Mercury relative N vs. 1PN distance")
+		ax.plot(N_arr, r_1PN - r_N, label= "Mercury relative distance 1PN vs. N")
 		#ax.plot(range(Neff), r_2PN, label= "2PN")
 		ax.set_xlabel('iteration', fontsize="x-large")
 		ax.set_ylabel('Orbital radius difference [m]', fontsize="x-large")
@@ -368,7 +368,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 
 		f = plt.figure(figsize=(16,14))
 		ax1 = f.add_subplot(1,2,1)
-		ax1.plot(N_arr, L_N - L_1PN, label= 'Newtonian vs. 1PN')
+		ax1.plot(N_arr, L_1PN - L_N, label= '1PN vs. N')
 		#ax.plot(range(Neff), r_2PN, label= "2PN")
 		ax1.set_xlabel('iteration', fontsize="x-large")
 		ax1.set_ylabel('Angolar momentum', fontsize="x-large")
@@ -600,7 +600,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
  
 		f = plt.figure(figsize=(16,14))
 		ax1 = f.add_subplot(1,1,1)
-		ax1.plot(N_arr, r_N - r_1PN, label= "Mercury N vs. 1PN orbit")
+		ax1.plot(N_arr,  abs(r_1PN - r_N), label= "Mercury 1PN vs. N orbital radius")
 		#ax.plot(range(Neff), H_2PN_N, label= "2PN")
 		ax1.set_xlabel('iteration', fontsize="x-large")
 		ax1.set_ylabel('Relative displacement [m]', fontsize="x-large")
@@ -608,12 +608,15 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		ax1.legend(fontsize="large")	
 
 		plt.show()	
-
+		
+		H_2body_1PN = np.array(H_2body_1PN)	
+		H_2body_N = np.array(H_2body_N)
+	
 		f = plt.figure(figsize=(16,14))
 		
 		ax1 = f.add_subplot(1,2,1)
-		ax1.plot(N_arr, H_2body_N, label= "N")
-		ax1.plot(N_arr, H_2body_1PN, label= "1PN")
+		ax1.plot(N_arr, H_2body_1PN - H_2body_N, label= "1PN vs.N")
+		#ax1.plot(N_arr, H_2body_1PN, label= "1PN")
 
 		#ax.plot(range(Neff), H_2PN_N, label= "2PN")
 		ax1.set_xlabel('iteration', fontsize="x-large")
@@ -625,9 +628,9 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		#f.savefig('/home/FGeroni/Università/PROGETTI/Tesi/ThesisProject/LaTex/Immagini/SimulationsOrbRadius.pdf', bbox_inches='tight')
 
 		ax2 = f.add_subplot(1,2,2)
-		#ax2.plot(N_arr, P_quad_1PN - P_quad_N, label= "1PN vs. N")
-		ax2.plot(N_arr, P_quad_N, label= "N")
-		ax2.plot(N_arr, P_quad_1PN, label= "1PN")
+		ax2.plot(N_arr, P_quad_1PN - P_quad_N, label= "1PN vs. N")
+		#ax2.plot(N_arr, P_quad_N, label= "N")
+		#ax2.plot(N_arr, P_quad_1PN, label= "1PN")
 		#ax.plot(range(Neff), r_2PN, label= "2PN")
 		ax2.set_xlabel('iteration', fontsize="x-large")
 		ax2.set_ylabel('Quadrupole radiation [J/s]', fontsize="x-large")
