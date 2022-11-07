@@ -29,7 +29,7 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
     cdef long double dt2 = 0.5*dt
     cdef body_t tmp_b
   
-    
+
 
     cdef body_t tmp
 
@@ -157,7 +157,6 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
                 dt2 = 0.99*tmp.q[j]*0.5
                 #bodies[k].q[j] = tmp.q[j] + start[k].q[j]
 
-
             D[k][j+3] = tmp.q[j]*tmp.q[j] + dt2*dt2
             D[k][j] = tmp.p[j]*tmp.p[j] + dt2*dt2
                      
@@ -168,7 +167,7 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
         free(g[i])
  
     free(g);
-    
+
     cdef list dx = []
     cdef list dy = []
     cdef list dz = []
@@ -430,7 +429,7 @@ cdef void _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int order):
+cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int order):
 
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
@@ -447,7 +446,8 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
     cdef np.ndarray[long double,mode="c",ndim=1] k5_p = np.zeros(3, dtype = np.longdouble)    
     cdef np.ndarray[long double,mode="c",ndim=1] k6_q = np.zeros(3, dtype = np.longdouble)    
     cdef np.ndarray[long double,mode="c",ndim=1] k6_p = np.zeros(3, dtype = np.longdouble)
-               
+
+    '''               
     cdef body_t *tmp_q = <body_t *>malloc(nbodies*sizeof(body_t))
     if tmp_q == NULL:
         raise MemoryError
@@ -485,12 +485,20 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
         if g_p[i] == NULL:
             raise MemoryError
         memset(g_p[i], 0, 6*sizeof(long double))
+    '''
+      
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError    
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))
 
-
-
-
-
-    cdef body_t tmp
+    cdef body_t *tmp = <body_t *>malloc(nbodies*sizeof(body_t))
+    if tmp == NULL:
+        raise MemoryError
 
     cdef body_t *start = <body_t *>malloc(nbodies*sizeof(body_t))
     if start == NULL:
@@ -503,10 +511,80 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
     for k in range(nbodies):
         start[k] = bodies[k]
 
+ 
+    _gradients(g, bodies, nbodies, order)
+   
+    for k in range(nbodies):      
+            
+        mass = bodies[k].mass        
+        #tmp_q[k].mass = mass
+        #tmp_p[k].mass = mass               
+
+        #k1   
+        for j in range(3):
+            
+            k1_q[j] = dt2*g[k][3+j]
+            k1_p[j] = -dt2*g[k][j] 
+                     
+            tmp.q[j] = bodies[k].q[j] + 0.5*k1_q[j]    
+            tmp.p[j] = bodies[k].p[j] + 0.5*k1_p[j]   
+
+        # update the gradient
+
+        memset(g[k], 0, 6*sizeof(long double))
+            
+    _gradients(g, tmp, nbodies, order)                     
+
+    for k in range(nbodies): 
+        #k2
+        for j in range(3):
+            
+            k2_q[j] = dt2*g[k][3+j]   
+            k2_p[j] = -dt2*g[k][j]         
+                        
+            tmp.q[j] = bodies[k].q[j] + 0.5*k2_q[j]    
+            tmp.p[j] = bodies[k].p[j] + 0.5*k2_p[j]     
+                                
+        memset(g[k], 0, 6*sizeof(long double))
+
+    _gradients(g, tmp, nbodies, order)                           
+
+    for k in range(nbodies):                       
+        #k3
+        for j in range(3):
+            
+            k3_q[j] = dt2*g[k][3+j]   
+            k3_p[j] = -dt2*g[k][j]         
+                        
+            tmp.q[j] = bodies[k].q[j] + k3_q[j]    
+            tmp.p[j] = bodies[k].p[j] + k3_p[j]     
+                              
+
+        memset(g[k], 0, 6*sizeof(long double))
+
+    _gradients(g, tmp, nbodies, order)           
+
+    for k in range(nbodies):           
+        #k4
+        for j in range(3):
+            
+            k4_q[j] = dt2*g[k][3+j]   
+            k4_p[j] = -dt2*g[k][j]
+
+            bodies[k].q[j] += (1./6.)*k1_q[j] + (1./3.)*k2_q[j] + (1./3.)*k3_q[j] + (1./6.)*k4_q[j]   
+            bodies[k].p[j] += (1./6.)*k1_p[j] + (1./3.)*k2_p[j] + (1./3.)*k3_p[j] + (1./6.)*k4_p[j]
 
 
+    for i in range(nbodies):
+        free(g[i])
+        #free(g_p[i])
+        #free(g_q[i])
+        
+    free(g);
+    #free(g_p);
+    #free(g_q);
 
-               
+    '''              
     _gradients(g, bodies, nbodies, order)
    
     for k in range(nbodies):      
@@ -577,7 +655,7 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
 
             bodies[k].q[j] += (1./6.)*k1_q[j] + (1./3.)*k2_q[j] + (1./3.)*k3_q[j] + (1./6.)*k4_q[j]   
             bodies[k].p[j] += (1./6.)*k1_p[j] + (1./3.)*k2_p[j] + (1./3.)*k3_p[j] + (1./6.)*k4_p[j]
-
+    '''
     '''        
         #k1   
         for j in range(3):
@@ -680,18 +758,30 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
             bodies[k].q[j] += (16./135.)*k1_q[j] + (6656./12825.)*k3_q[j] + (28561./56430.)*k4_q[j] - (9./50.)*k5_q[j] + (2./55.)*k6_q[j]            
             bodies[k].p[j] += (16./135.)*k1_p[j] + (6656./12825.)*k3_p[j] + (28561./56430.)*k4_p[j] - (9./50.)*k5_p[j] + (2./55.)*k6_p[j]       
     '''   
-    _free(tmp_q)
-    _free(tmp_p)
 
+    #_free(tmp_q)
+    #_free(tmp_p)
+    _free(tmp)
 
+    cdef body_t tmp_cond
+
+    cdef long double **D = <long double **>malloc(nbodies*sizeof(long double *))    
+    if D == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        D[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if D[i] == NULL:
+            raise MemoryError
+        memset(D[i], 0, 6*sizeof(long double))
 
 
     for k in range(nbodies): 
         for j in range(3):    
         
-            tmp.q[j] = bodies[k].q[j] - start[k].q[j]
-            tmp.p[j] = bodies[k].p[j] - start[k].p[j]
-             
+            tmp_cond.q[j] = bodies[k].q[j] - start[k].q[j]
+            tmp_cond.p[j] = bodies[k].p[j] - start[k].p[j]
+            '''
             if (tmp.q[j] == 0):
                 K[k].q[j] = 0
    
@@ -699,33 +789,46 @@ cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int
                 K[k].p[j] = 0
 
             if (tmp.q[j] != 0):
-                K[k].q[j] = dt2/(tmp.p[j]*tmp.p[j])
+                K[k].q[j] = dt2/(tmp_cond.p[j]*tmp_cond.p[j])
                 
             if (tmp.p[j] != 0):
-                K[k].p[j] = dt2/(tmp.q[j]*tmp.q[j])
+                K[k].p[j] = dt2/(tmp_cond.q[j]*tmp_cond.q[j])
 
             if (K[k].q[j] > 0.5):
-                dt2 = tmp.p[j]*tmp.p[j]*0.5
+                dt2 = tmp_cond.p[j]*tmp_cond.p[j]*0.5
 
             if (K[k].p[j] > 0.5):
-                dt2 = tmp.q[j]*tmp.q[j]*0.5
-  
+                dt2 = tmp_cond.q[j]*tmp_cond.q[j]*0.5
+            '''
+            D[k][j+3] = tmp_cond.q[j]*tmp_cond.q[j] + dt2*dt2
+            D[k][j] = tmp_cond.p[j]*tmp_cond.p[j] + dt2*dt2
+
     _free(start)
     _free(K)
  
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
 
-  
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
+    for k in range(nbodies): 
+        dx.append(D[k][3])
+        dy.append(D[k][4])
+        dz.append(D[k][5])
+
+        dpx.append(D[k][0])
+        dpy.append(D[k][1])
+        dpz.append(D[k][2])
 
     for i in range(nbodies):
-        free(g[i])
-        free(g_p[i])
-        free(g_q[i])
-        
-    free(g);
-    free(g_p);
-    free(g_q);
+        free(D[i])
+ 
+    free(D);
     
-    return
+    return (dx, dy, dz, dpx, dpy, dpz, dt2) 
    
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -825,8 +928,9 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
             memset(D[j][k], 0, 6*sizeof(long double))
     '''
 
-    cdef list t_sim = []
-    cdef list D = [[[0 for u in range(6)] for k in range(n)] for i in range(Neff)]
+    #cdef list t_sim = []
+    cdef list D_tmp = [[0 for u in range(6)] for k in range(n)]
+    cdef list D = []
 
     cdef list dx = []
     cdef list dy = []
@@ -845,6 +949,7 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
     cdef long double h, t, v
     cdef long double time = 0.
     cdef long double dt_tmp = 0.
+    cdef list t_sim = []
 
     #cdef long int nsteps = nsteps
     
@@ -882,7 +987,7 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
         # evolve forward in time
         #_one_step_eu(bodies, n, dt, order)
         #_one_step_lp(bodies, n, dt, order)
-        #_one_step_rk(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_rk(bodies, n, dt, order)
         dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
 
         time += dt2_tmp    
@@ -891,11 +996,21 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
         if ( (i+1)%nthin == 0.):    
             solution.append([bodies[j] for j in range(n)])
             h, t, v = _hamiltonian(bodies, n, order)
+
+            for k in range(n):
+                D_tmp[k][0] = dx[k] 
+                D_tmp[k][1] = dy[k]  
+                D_tmp[k][2] = dz[k] 
+                D_tmp[k][3] = dpx[k]  
+                D_tmp[k][4] = dpy[k]
+                D_tmp[k][5] = dpz[k] 
         
             H.append(h)
             T.append(t)
             V.append(v)
-            
+            D.append(D_tmp) 
+            t_sim.append(time) 
+         
         # divide in files with buffer_lenght steps each    
         if ( (i+1)%buffer_length == 0.):
         
@@ -903,17 +1018,25 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
             pickle.dump(T, open('kinetic_{}_order{}.pkl'.format(n_sol, order),'wb'))
             pickle.dump(V, open('potential_{}_order{}.pkl'.format(n_sol, order),'wb'))
             pickle.dump(H, open('hamiltonian_{}_order{}.pkl'.format(n_sol, order),'wb'))
+
+            pickle.dump(t_sim, open('time_{}_order{}.pkl'.format(n_sol, order),'wb'))
+            pickle.dump(D, open('error_{}_order{}.pkl'.format(n_sol, order),'wb'))
+
             n_sol += 1
             H        = []
             T        = []
             V        = []
             solution = []
+            D = []
+            t_sim = []
 
+        '''
         if ( (i+1)%(nthin*plot_step) == 0):
 
             f_index = (i+1)/(nthin*plot_step) - 1         
             t_sim.append(time)     
                 
+            pickle.dump(t_sim, open('error_{}_order{}.pkl'.format(f_index, order),'wb'))
 
             for k in range(n):
                 D[f_index][k][0] = dx[k] 
@@ -923,5 +1046,7 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
                 D[f_index][k][4] = dpy[k]
                 D[f_index][k][5] = dpz[k] 
 
-    
-    return (D, t_sim)
+            pickle.dump(t_sim, open('error_{}_order{}.pkl'.format(f_index, order),'wb'))
+        ''' 
+
+    return #() D, t_sim)

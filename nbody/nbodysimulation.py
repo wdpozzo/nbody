@@ -39,10 +39,9 @@ C = 299792458. #*(u.meter/u.second) #299792458. #
 Ms = 1.988e30 #*(u.kilogram) # 1.988e30 #
 
 Mmerc = 0.3301e24
-Mearth = 5.9722e24 
+Mearth = 5.97216787e24 
 AU = 149597870700. #*u.meter
-
-Ms = 1.988e30
+Ms = 1.98840987e30
 
 def gaussian_random_sphere(x, y, z, r, num, bulge):
 
@@ -72,7 +71,8 @@ def gaussian_random_sphere(x, y, z, r, num, bulge):
         z_a[i] = iz
                         
     return ((x_a).astype(np.longdouble), (y_a).astype(np.longdouble), (z_a).astype(np.longdouble))
-        
+
+
 if __name__=="__main__":
 
     parser = OptionParser()
@@ -222,21 +222,6 @@ if __name__=="__main__":
 
 
     '''
-    m[0], m[1] = 1.e-1*Ms, 1.e-2*Ms
-    
-    x[0], x[1] = -0.5*AU, 0.5*AU
-    y[0], y[1] = 0.*AU, 0.*AU
-    z[0], z[1] = 0.*AU, 0.*AU
-    
-    vx[0], vx[1] = -2e0, +2e1
-    vy[0], vy[1] = 3.e1, 7.7e1
-    vz[0], vz[1] = 0., 0.
-    
-    sx[0], sx[1] = 0., 0.
-    sy[0], sy[1] = 0., 0.
-    sz[0], sz[1] = 0., 0.    
-    '''
-    '''
     #random initial coordinates
     
     m = np.random.uniform(1e0, 1e0,size = nbodies).astype(np.longdouble)
@@ -256,48 +241,50 @@ if __name__=="__main__":
     '''
     
     #parameters for solution files management 
-    
-    plot_step = 250000
+  
+    plot_step = 2500
     buffer_lenght = 500000
-    data_thin = 1
-    #------------------------------------------------------#   
+    data_thin = 100
+
+    #------------------------------------------------------#  
+ 
     dt = opts.dt
     N  = opts.steps
     Neff = int(N/(data_thin*plot_step))
     nout = int(N/buffer_lenght)    
 
-    N_arr = np.linspace(0, N - N/Neff, Neff)
+    N_arr = np.linspace(0, N, Neff)
+
     #------------------------------------------------------#
     
     if not opts.p:
-        run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght)
+        run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght, plot_step)
     
-    s, H, T, V = [], [], [], []
+    s, H, T, V, D, t_sim = [], [], [], [], [], []
     
     for i in range(nout):  
-        s_tot, H_tot, T_tot, V_tot = [], [], [], []
+        s_tot, H_tot, T_tot, V_tot, t_tot, D_tot = [], [], [], [], [], []
         
         s_tot.append(pickle.load(open('solution_{}_order{}.pkl'.format(i, order),'rb')))
         H_tot.append(pickle.load(open('hamiltonian_{}_order{}.pkl'.format(i, order),'rb')))
         T_tot.append(pickle.load(open('kinetic_{}_order{}.pkl'.format(i, order),'rb')))
-        V_tot.append(pickle.load(open('potential_{}_order{}.pkl'.format(i, order),'rb')))       
+        V_tot.append(pickle.load(open('potential_{}_order{}.pkl'.format(i, order),'rb')))
+        t_tot.append(pickle.load(open('time_{}_order{}.pkl'.format(i, order),'rb')))
+        D_tot.append(pickle.load(open('error_{}_order{}.pkl'.format(i, order),'rb'))) 
 
-        #check
-        if (len(s_tot[0]) > buffer_lenght):
-            s_tot[0] = s_tot[0][0:buffer_lenght]
-            H_tot[0] = H_tot[0][0:buffer_lenght]
-            T_tot[0] = T_tot[0][0:buffer_lenght]   
-            V_tot[0] = V_tot[0][0:buffer_lenght]  
-                
         s.append(s_tot[0][::plot_step])
         H.append(H_tot[0][::plot_step])
         T.append(T_tot[0][::plot_step])
-        V.append(V_tot[0][::plot_step])       
+        V.append(V_tot[0][::plot_step])
+        D.append(D_tot[0][::plot_step])
+        t_sim.append(t_tot[::plot_step])        
         
         del s_tot
         del H_tot
         del T_tot
         del V_tot
+        del D_tot
+        del t_tot
         
         index = i*100/nout 
         if (index) % 10 == 0 :
@@ -306,17 +293,17 @@ if __name__=="__main__":
     s = np.array(s, dtype=object)#.flatten()
     H = np.array(H, dtype=object)#.flatten()
     T = np.array(T, dtype=object)#.flatten()
-    V = np.array(V, dtype=object)#.flatten()   
+    V = np.array(V, dtype=object)#.flatten()
+    D = np.array(D, dtype=object)
+    t_sim = np.array(t_sim, dtype=object)
     
     s = np.concatenate((s[:]))
     H = np.concatenate((H[:]))
     T = np.concatenate((T[:]))
-    V = np.concatenate((V[:])) 
+    V = np.concatenate((V[:]))
+    D = np.concatenate((D[:]), axis=0)
+    t_sim = np.concatenate((t_sim[:]), axis=0) 
 
-    #s = np.delete(s, -1)    
-    #H = np.delete(H, -1)
-    #T = np.delete(T, -1)
-    #V = np.delete(V, -1)
     
     if opts.animate == 1:
         
@@ -368,8 +355,6 @@ if __name__=="__main__":
         anim.save('nbody.mp4', writer=writer)
            
     if opts.plot==1:
-
-        #plotting_step = np.maximum(64, Neff//int(0.1*Neff))
         
         f = plt.figure(figsize=(8,6))
         ax1 = f.add_subplot(111)
@@ -555,18 +540,18 @@ if __name__=="__main__":
             
             ax1 = f.add_subplot(121)
             ax1.plot(N_arr, r_kepler - r_sim, label = 'Analitycal vs. Numerical', alpha=0.9)
-            ax1.set_xlabel('Iteration', fontsize = '14')
-            ax1.set_ylabel('Orbital radial difference [m]', fontsize = '14')
-            plt.legend(fontsize = '14')
+            ax1.set_xlabel('Iteration', fontsize = 'x-large')
+            ax1.set_ylabel('Orbital radial difference [m]', fontsize = 'x-large')
+            plt.legend(fontsize = 'large')
             plt.grid()
             
             ax2 = f.add_subplot(122)
             #ax1.plot(N_arr, T, label = 'Kinetic energy')
             #ax1.plot(N_arr, V, label = 'Potential energy')
             ax2.plot(N_arr, H, label = 'Hamiltonian')
-            ax2.set_xlabel('Iteration', fontsize = '14')
-            ax2.set_ylabel('Energy [J]', fontsize = '14')
-            plt.legend(fontsize = '14')
+            ax2.set_xlabel('Iteration', fontsize = 'x-large')
+            ax2.set_ylabel('Energy [J]', fontsize = 'x-large')
+            plt.legend(fontsize = 'large')
             plt.grid()
 
             plt.show()
@@ -575,22 +560,22 @@ if __name__=="__main__":
             
             ax = f.add_subplot(131) 
             ax.plot(N_arr, r_dif, label = 'r_rel vs. r_kepler', alpha=0.9)
-            ax.set_xlabel('iterations')
-            ax.set_ylabel('Orbital displacement [m]')
+            ax.set_xlabel('iterations', fontsize="x-large")
+            ax.set_ylabel('Orbital displacement [m]', fontsize="x-large")
             plt.grid()
             
             ax1 = f.add_subplot(132)
             ax1.plot(N_arr, L)
-            ax1.set_xlabel('iteration')
-            ax1.set_ylabel('Angolar Momentum')
+            ax1.set_xlabel('iteration', fontsize="x-large")
+            ax1.set_ylabel('Angolar Momentum', fontsize="x-large")
             plt.grid()
 
             ax2 = f.add_subplot(133)
             ax2.plot(N_arr, P_quad, label = 'Quadrupole power loss', alpha=0.9)
-            ax2.set_xlabel('iterations')
-            ax2.set_ylabel('Power [J/s]')
+            ax2.set_xlabel('iterations', fontsize="x-large")
+            ax2.set_ylabel('Power [J/s]', fontsize="x-large")
             plt.grid()
-            plt.legend()
+            plt.legend(fontsize="large")
             
             plt.show()
             
@@ -610,11 +595,11 @@ if __name__=="__main__":
             ax = f.add_subplot(111, projection = '3d')
             #ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
             for i in range(0, len(peri_indexes)): 
-            	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
-            ax.set_xlabel('x [m]')
-            ax.set_ylabel('y [m]')
-            ax.set_zlabel('z [m]')        
-            plt.legend()
+                ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
+            ax.set_xlabel('x [m]', fontsize="x-large")
+            ax.set_ylabel('y [m]', fontsize="x-large")
+            ax.set_zlabel('z [m]', fontsize="x-large")        
+            plt.legend(fontsize="large")
             
             plt.show()                  
 
@@ -630,13 +615,36 @@ if __name__=="__main__":
 
             	ax.plot(index_N, r_sim[index], 'o', label = 'Perihelion orbit {}'.format(i))
             	
-            ax.set_xlabel('iteration')
-            ax.set_ylabel('orbital radius [m]')       
+            ax.set_xlabel('iteration', fontsize="x-large")
+            ax.set_ylabel('orbital radius [m]', fontsize="x-large")       
             plt.grid()
-            plt.legend()
+            plt.legend(fontsize="large")
             
             plt.show()                  
-            
+
+            f = plt.figure(figsize=(16,16))
+
+            ax1 = f.add_subplot(121)
+            for k in range(len(m)):
+                ax1.plot(N_arr, D[:][k][0], label= "Numerical Error")
+            ax1.set_xlabel('iteration', fontsize="x-large")
+            ax1.set_ylabel(r'$\Delta x$ [m]', fontsize="x-large")
+            plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.grid() 
+            plt.legend(fontsize="large")
+
+            ax2 = f.add_subplot(122)
+            for k in range(len(m)):
+                ax2.plot(N_arr, D[:][k][1], label= "Numerical Error")
+            ax2.set_xlabel('iteration', fontsize="x-large")
+            ax2.set_ylabel(r'$\Delta y$ [m]', fontsize="x-large")
+            plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            plt.grid()
+            plt.legend(fontsize="large")
+
+            plt.show()       
+
+      
             print('Newtonian shift {} [rad/rev]'.format(N_shift)) 
             print('Standard GR shift = {} [rad/revolution]'.format(a_shift))
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))

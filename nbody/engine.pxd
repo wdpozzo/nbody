@@ -23,4 +23,4 @@ cdef void _one_step_lp(body_t *bodies, unsigned int nbodies, long double dt, int
 
 cdef void _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int order)
 
-cdef void _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int order)
+cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int order)

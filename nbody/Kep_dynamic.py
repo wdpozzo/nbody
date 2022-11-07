@@ -365,7 +365,7 @@ def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
 	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, q_peri, peri_indexes, phi_shift_test)
 
 	
-def kepler_sol_sys(p, q, Neff, H, m, dt, order):
+def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 
 	L_arr = np.array([[0 for i in range(0, Neff)] for n_peri in range(0, len(m))], dtype='float64')
 	normal = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')		
@@ -411,7 +411,8 @@ def kepler_sol_sys(p, q, Neff, H, m, dt, order):
 					
 	L_rel =	np.cross(q_rel, p_rel)
 	L = np.linalg.norm(L_rel, axis=-1)
-	
+
+	#H = np.array(H)	
 	H2 = H*H
 	L2 = L*L	
 		
@@ -431,23 +432,23 @@ def kepler_sol_sys(p, q, Neff, H, m, dt, order):
 	r_kepler = np.zeros(Neff, dtype='float64')	
 	phi_shift = np.zeros(Neff, dtype='float64')
 	
-	a = (np.max(d_rel) + np.min(d_rel))/2.
-	b = np.sqrt(np.max(d_rel)*np.min(d_rel))
-	e = np.sqrt(1 - (b*b)/(a*a))
+	#a = (np.max(d_rel) + np.min(d_rel))/2.
+	#b = np.sqrt(np.max(d_rel)*np.min(d_rel))
+	#e = np.sqrt(1 - (b*b)/(a*a))
 
 	#theoretical shift
 	for i in range(0, Neff):		
-		'''
+
 		e = np.float(math.sqrt(1 + (2*H[i]*L2[i])/(k*k*mu)))	
-		
-		a = np.float(R[i]/(1 - e*e)) # semi-major axis
-		b = np.float(R[i]/(math.sqrt(1 - e*e))) # semi-minor axis
+
+		if (1 > e):		
+			a = np.float(R[i]/(1 - e*e)) # semi-major axis
+			b = np.float(R[i]/(math.sqrt(1 - e*e))) # semi-minor axis
 		   
 		if (1 <= e):
 			a = (R[i]/(e*e - 1.)) # semi-major axis
 			b = (R[i]/(math.sqrt(e*e - 1.))) # semi-minor axis
-		'''
-		
+
 		#apsidial precession given by GR [#rad per revolution]
 		a_p1[i] = 6.*math.pi*G*M/(C*C*a*(1. - e*e))
 		
@@ -491,27 +492,43 @@ def kepler_sol_sys(p, q, Neff, H, m, dt, order):
 	peri_indexes = np.transpose(peri_indexes)
 		
 	n_peri = len(peri_indexes)
-	
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+	Dq_shift_tmp2 = np.zeros(3, dtype='float64')
+	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
 	
-	phi_shift_test = 0 	
+	diff = np.zeros(n_peri-1)
+	
+	phi_shift_test = 0 
+	Dq_shift = 0	
+
 	if (n_peri != 0):
-		#phi_shift = phi_shift/n_peri
 		for i in range(0, n_peri):
 	
 			q_peri[i,:] = q[1, peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
-					
-		for i in range(1, n_peri):
-		
-			#q_shift = q_peri[i, :] - q_peri[i-1, :]
-			#phi_shift_test += np.float(math.atan2(q_shift[1], q_shift[0]))
 			
-			phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
+			if (i != 0):					
+				Dx = D[peri_indexes[i], 1, 0:3] 
+				Dy = D[peri_indexes[i-1], 1, 0:3]			
+			
+				phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
 
+				Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
+			
 		phi_shift_test = phi_shift_test/n_peri
 
- 	
-	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift, phi_shift_test, peri_indexes)
+		'''
+		for i in range(1, n_peri):		
+			diff[i-1] = (np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))) - phi_shift_test)*(np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))) - phi_shift_test)
+	
+		Dq_shift_sigma = (1/(np.sqrt(n_peri - 1)))*(np.sqrt(np.sum(diff)/n_peri))
+		'''
+
+		Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
+		Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
+
+		#print(Dq_shift, Dq_shift_sigma)
+	        
+	return (L_tot, P_quad, a_p1, a_p2, a_p3, a_p4, q_peri, phi_shift, phi_shift_test, peri_indexes, Dq_shift)
 	
 
 def KepElemToCart(a, T, e, Omega, i, w, N, Neff):
@@ -532,4 +549,4 @@ def KepElemToCart(a, T, e, Omega, i, w, N, Neff):
 	vel = ke.xyzVel(0)
 	
 	return (pos[:][0], pos[:][1], pos[:][2], vel[:][0], vel[:][1], vel[:][2])#, radius)
-		
+	

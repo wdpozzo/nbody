@@ -1,14 +1,14 @@
 import numpy as np
 cimport numpy as np
 cimport cython
+import math
 #from libc.stdlib cimport malloc
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-
-def CM_system(np.ndarray[long double, mode="c", ndim=2] p1, np.ndarray[long double, mode="c", ndim=2] p2, np.ndarray[long double, mode="c", ndim=2] q1, np.ndarray[long double, mode="c", ndim=2] q2, long int Neff, double m1, double m2):
+cpdef CM_system(np.ndarray[long double, mode="c", ndim=2] p1, np.ndarray[long double, mode="c", ndim=2] p2, np.ndarray[long double, mode="c", ndim=2] q1, np.ndarray[long double, mode="c", ndim=2] q2, long int Neff, double m1, double m2):
 
     cdef unsigned int i
     cdef np.ndarray[long double,mode="c",ndim=2] q_1 = q1
@@ -20,10 +20,7 @@ def CM_system(np.ndarray[long double, mode="c", ndim=2] p1, np.ndarray[long doub
     cdef np.ndarray[long double,mode="c",ndim=2] p_rel = np.zeros((Neff,3), dtype = np.longdouble)
     cdef np.ndarray[long double,mode="c",ndim=2] q_cm = np.zeros((Neff,3), dtype = np.longdouble)
     cdef np.ndarray[long double,mode="c",ndim=2] p_cm = np.zeros((Neff,3), dtype = np.longdouble)
-    #cdef np.ndarray[long double,mode="c",ndim=2] q = np.zeros((Neff,3), dtype = np.longdouble)
-    #cdef np.ndarray[long double,mode="c",ndim=2] p = np.zeros((Neff,3), dtype = np.longdouble)
-    
-    
+
     for i in range(Neff):
 
         q_rel[i,:] = np.array([q_1[i,:] - q_2[i,:]])       
@@ -31,8 +28,40 @@ def CM_system(np.ndarray[long double, mode="c", ndim=2] p1, np.ndarray[long doub
         
         q_cm[i,:] = np.array([(m1*q_1[i,:] + m2*q_2[i,:])/(m1 + m2)])
         p_cm[i,:] = np.array([p_1[i,:] + p_2[i,:]])
-    
-    #p_rel -= p_cm
-    #p_cm -= p_cm 
 
     return (q_rel, p_rel, q_cm, p_cm)
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cpdef SpherToCart(np.ndarray[double, mode="c", ndim=1] RA, np.ndarray[double, mode="c", ndim=1] Decl, long double r):
+
+    cdef unsigned int i
+    cdef x = np.zeros(len(RA))
+    cdef y = np.zeros(len(RA))
+    cdef z = np.zeros(len(RA))
+    
+    for i in range(len(RA)):
+
+        x[i] = r*math.sin(Decl[i])*math.cos(RA[i])
+        y[i] = r*math.sin(Decl[i])*math.sin(RA[i])
+        z[i] = r*math.cos(Decl[i])
+
+    return (x, y, z)
+
+'''
+cpdef CartToSpher(np.ndarray[double, mode="c", ndim=1] x, np.ndarray[double, mode="c", ndim=1] y, np.ndarray[double, mode="c", ndim=1] z):
+
+    cdef unsigned int i
+    cdef RA = np.zeros(len(RA))
+    cdef Decl = np.zeros(len(RA))
+    
+    for i in range(len(RA)):
+
+        x[i] = r*math.sin(Decl[i])*math.cos(RA[i])
+        y[i] = r*math.sin(Decl[i])*math.sin(RA[i])
+        z[i] = r*math.cos(Decl[i])
+
+    return (RA, Decl)
+'''
