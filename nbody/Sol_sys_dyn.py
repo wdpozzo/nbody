@@ -25,17 +25,17 @@ Ms = 1.98840987e30
 #parameters for solution files management     
 plot_step = 5000
 buffer_lenght = 10000000 # buffer_lenght >= plot_step*data_thin
-data_thin = 1000
+data_thin = 2000
 
 PN_order = 0
 ICN_it = 2 
 
 #nbodies = 6
-dt = 0.075
-N  = 900000000
+dt = 0.2
+N  = 600000000
 
 dt2 = 0.5*dt
-p = 1
+p = 0
 
 Neff = int(N/(data_thin*plot_step)) #number of final datas in the plots
 nout = int(N/buffer_lenght) #number of files generated   
@@ -54,7 +54,7 @@ masses = {
 'Jupiter' : 317.83*Mearth,
 'Saturn'  : 95.16*Mearth,
 'Uranus'  : 14.54*Mearth,
-'Neptune' : 17.15*Mearth,
+#'Neptune' : 17.15*Mearth,
 #'Pluto'   : 0.00218*Mearth,
 }
 
@@ -68,7 +68,7 @@ planet_names = [
 'Jupiter',
 'Saturn',
 'Uranus',
-'Neptune',
+#'Neptune',
 #'Pluto',
 ]
 
@@ -81,8 +81,8 @@ AstPy_err = np.array([ #in meters [m]
 7700000., #Mars
 76000000.,  #Jupiter
 267000000.,  #Saturn 
-712000000., #Uranus
-253000000., #Neptune
+#712000000., #Uranus
+#253000000., #Neptune
 ]).astype(np.longdouble) 
 
 
@@ -130,7 +130,7 @@ for k in range(len(m)):
          
     x_0[k] = planets_0[0].x.to(u.meter).value 
     y_0[k] = planets_0[0].y.to(u.meter).value 
-    z_0[k] = planets_0[0].z.to(u.meter).value 
+    z_0[k] = planets_0[0].z.to(u.meter).value  
 
     vx_0[k] = planets_0[1].x.to(u.meter/u.second).value 
     vy_0[k] = planets_0[1].y.to(u.meter/u.second).value 
@@ -185,6 +185,10 @@ T = np.concatenate((T[:]), axis=0)
 V = np.concatenate((V[:]), axis=0) 
 D = np.concatenate((D[:]), axis=0)
 t_sim = np.concatenate((t_sim[:]), axis=0)
+
+
+#print(np.shape(s))
+
 
 #print(Neff, np.shape(t_sim), len(V))
 #collect SS data
@@ -259,10 +263,10 @@ f = plt.figure(figsize=(16,14))
 ax = f.add_subplot(111, projection = '3d')
 for k in range(len(m)):
     for i in range(Neff):
-        ax.scatter(float(q[k,i,0]/AU), float(q[k,i,1]/AU), float(q[k,i,2]/AU), color = col_rainbow[k])
+        ax.scatter(float(q[k,i,0]/AU), float(q[k,i,1]/AU), float(q[k,i,2]/AU), color = col_rainbow[k], s = 0.75)
         #ax.scatter(x[i][k]/AU, y[i][k]/AU, z[i][k]/AU, color = col_viridis[k])
         if (i==Neff-1):
-            ax.scatter(float(q[k,i,0]/AU), float(q[k,i,1]/AU), float(q[k,i,2]/AU), color = col_rainbow[k], label = 'Sim-{}'.format(planet_names[k]))
+            ax.scatter(float(q[k,i,0]/AU), float(q[k,i,1]/AU), float(q[k,i,2]/AU), color = col_rainbow[k], label = '{} orbit'.format(planet_names[k]), s = 0.75)
             #ax.scatter(x[i][k]/AU, y[i][k]/AU, z[i][k]/AU, color = col_viridis[k], label = 'Astro-{}'.format(planet_names[k]))
 ax.set_xlabel('x [AU]', fontsize="x-large")
 ax.set_ylabel('y [AU]', fontsize="x-large")
@@ -270,15 +274,81 @@ ax.set_zlabel('z [AU]', fontsize="x-large")
 plt.legend(fontsize="large")
 plt.show()
 
+'''
+f = plt.figure(figsize=(16,14))
+ax1 = f.add_subplot(131)
+for k in range(0, 2):
+    for i in range(0, Neff):
+        ax1.scatter(N_arr[i], q[k,i,0], color = col_rainbow[k])
+        ax1.scatter(N_arr[i], x[i][k], color = col_viridis[k])
+        if (i==Neff-1):
+            ax1.scatter(N_arr[i],  x[i][k], color = col_viridis[k], label = '{}'.format(planet_names[k]))
+            ax1.scatter(N_arr[i], q[k,i,0], color = col_rainbow[k], label = '{}'.format(planet_names[k]))
+ax1.set_xlabel('iteration', fontsize="x-large")
+ax1.set_ylabel('Displacement: x [m]', fontsize="x-large")
+plt.grid()
+plt.legend(fontsize="large")
+
+ax2 = f.add_subplot(132)
+for k in range(0, 2):
+    for i in range(0, Neff):
+        ax2.scatter(N_arr[i], q[k,i,1], color = col_rainbow[k])
+        ax2.scatter(N_arr[i], y[i][k], color = col_viridis[k])
+        if (i==Neff-1):
+            ax2.scatter(N_arr[i],  y[i][k], color = col_viridis[k], label = '{}'.format(planet_names[k]))
+            ax2.scatter(N_arr[i], q[k,i,1], color = col_rainbow[k], label = '{}'.format(planet_names[k]))
+ax2.set_xlabel('iteration', fontsize="x-large")
+ax2.set_ylabel('Displacement: y [m]', fontsize="x-large")
+plt.grid()
+plt.legend(fontsize="large")
+
+ax3 = f.add_subplot(133)
+for k in range(0, 2):
+    for i in range(0, Neff):
+        ax3.scatter(N_arr[i], q[k,i,2], color = col_rainbow[k])
+        ax3.scatter(N_arr[i], z[i][k], color = col_viridis[k])
+        if (i==Neff-1):
+            ax3.scatter(N_arr[i],  z[i][k], color = col_viridis[k], label = '{}'.format(planet_names[k]))
+            ax3.scatter(N_arr[i], q[k,i,2], color = col_rainbow[k], label = '{}'.format(planet_names[k]))
+ax3.set_xlabel('iteration', fontsize="x-large")
+ax3.set_ylabel('Displacement: z [m]', fontsize="x-large")
+plt.grid()
+plt.legend(fontsize="large")
+
+plt.show()  
+'''
 
 D_tot_q = np.array([[[0 for j in range(3)] for i in range(Neff)] for k in range(len(m))]).astype(np.longdouble)
 
+D_rel_planets_diff = np.array([[0 for i in range(Neff)] for k in range(len(m))]).astype(np.longdouble)
+
+r_rel_planets = np.array([[0 for i in range(Neff)] for k in range(len(m))]).astype(np.longdouble)
+r_AstPy_planets = np.array([[0 for i in range(Neff)] for k in range(len(m))]).astype(np.longdouble)
 for i in range(Neff):
     for j in range(len(m)):
         D_tot_q[j][i][0] = np.sqrt(AstPy_err[j]*AstPy_err[j] + D[i][j][0]*D[i][j][0])
         D_tot_q[j][i][1] = np.sqrt(AstPy_err[j]*AstPy_err[j] + D[i][j][1]*D[i][j][1])
         D_tot_q[j][i][2] = np.sqrt(AstPy_err[j]*AstPy_err[j] + D[i][j][2]*D[i][j][2])
 
+        D_rel_planets_diff[j][i] = np.sqrt((np.sqrt(D[i][j][0]*D[i][j][0] + D[i][j][1]*D[i][j][1] + D[i][j][2]*D[i][j][2]))**2 + AstPy_err[j]*AstPy_err[j])
+        r_rel_planets[j,i] = np.sqrt(q[j,i,0]*q[j,i,0] + q[j,i,1]*q[j,i,1] + q[j,i,2]*q[j,i,2])
+        r_AstPy_planets[j,i] = np.sqrt(x[i][j]*x[i][j] + y[i][j]*y[i][j] + z[i][j]*z[i][j])
+
+
+f = plt.figure(figsize=(16,14))
+ax1 = f.add_subplot(111)
+for k in range(0, len(m)):
+    for i in range(0, Neff):
+        ax1.scatter(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), color = col_rainbow[k])
+        #ax1.errorbar(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), yerr = D_rel_planets_diff[k][i], fmt='o', color = col_rainbow[k])
+        if (i==Neff-1):
+            ax1.scatter(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), color = col_rainbow[k], label = 'Simulation vs. AstroPy {} relative distance'.format(planet_names[k]))
+            #ax1.errorbar(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), yerr = D_rel_planets_diff[k][i], fmt='o', color = col_rainbow[k], label = 'Simulation vs. AstroPy {} relative distance'.format(planet_names[k]))
+ax1.set_xlabel('iteration', fontsize="x-large")
+ax1.set_ylabel('Relative displacement [m]', fontsize="x-large")
+plt.grid()
+plt.legend(fontsize="large")
+plt.show()
 
 f = plt.figure(figsize=(16,14))
 

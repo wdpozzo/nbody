@@ -50,6 +50,21 @@ cpdef SpherToCart(np.ndarray[double, mode="c", ndim=1] RA, np.ndarray[double, mo
 
     return (x, y, z)
 
+cpdef CartToSpher(np.ndarray[long double, mode="c", ndim=1] x, np.ndarray[long double, mode="c", ndim=1] y, np.ndarray[long double, mode="c", ndim=1] z):
+
+    cdef unsigned int i
+    cdef r = np.zeros(len(x))
+    cdef theta = np.zeros(len(x))
+    cdef phi = np.zeros(len(x))
+    
+    for i in range(len(x)):
+
+        r[i] = math.sqrt(x[i]*x[i] + y[i]*y[i] + z[i]*z[i])
+        theta[i] = math.atan2(y[i], x[i])
+        phi[i] = math.atan2(math.sqrt(x[i]*x[i] + y[i]*y[i]), z[i])
+
+    return (r, theta, phi)
+
 '''
 cpdef CartToSpher(np.ndarray[double, mode="c", ndim=1] x, np.ndarray[double, mode="c", ndim=1] y, np.ndarray[double, mode="c", ndim=1] z):
 

@@ -326,21 +326,29 @@ def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
 	
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
 	
-	phi_shift_test = 0 	
-	if (n_peri != 0):
+	phi_shift_test = 0 
+	Dq_shift = 0	
 
+	if (n_peri != 0):
 		for i in range(0, n_peri):
 	
-			q_peri[i,:] = q2[peri_indexes[i], :] #- q_cm[peri_indexes[i], :] #- q_rel[peri_indexes[i], :]
+			q_peri[i,:] = q[1, peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
+			
+			if (i != 0):					
+				Dx = D[peri_indexes[i], 1, 0:3] 
+				Dy = D[peri_indexes[i-1], 1, 0:3]			
+			
+				phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
 
-		
-		for i in range(1, n_peri):
-			phi_shift_test += math.acos(np.dot(q_peri[i-1, :] , q_peri[i, :])/(np.linalg.norm(q_peri[i-1, :])*np.linalg.norm(q_peri[i, :])))
-
-			#q_shift = q_peri[i, :] - q_peri[i-1,:]
-			#phi_shift_test += np.float(math.atan2(q_shift[1], q_shift[0])) 
-
+				Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
+			
 		phi_shift_test = phi_shift_test/n_peri
+
+
+		Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
+		Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
+
+		#print(Dq_shift, Dq_shift_sigma)
 
 	'''
 	N_arr = np.linspace(0, N - N/Neff, Neff)
@@ -362,7 +370,8 @@ def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
 	plt.show()         
 	'''
 
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, q_peri, peri_indexes, phi_shift_test)
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad,  q_peri, phi_shift, phi_shift_test, peri_indexes, Dq_shift)
+
 
 	
 def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
@@ -496,14 +505,16 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 	Dq_shift_tmp2 = np.zeros(3, dtype='float64')
 	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
 	
-	diff = np.zeros(n_peri-1)
+	#diff = np.zeros(n_peri-1)
 	
 	phi_shift_test = 0 
 	Dq_shift = 0	
 
 	if (n_peri != 0):
 		for i in range(0, n_peri):
-	
+
+			#q_peri[i,:] = q_rel[peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
+
 			q_peri[i,:] = q[1, peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
 			
 			if (i != 0):					

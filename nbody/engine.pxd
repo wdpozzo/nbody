@@ -19,8 +19,8 @@ cdef void _initialise(body_t *bodies,
 
 cdef void _free(body_t *s) nogil
 
-cdef void _one_step_lp(body_t *bodies, unsigned int nbodies, long double dt, int order) 
+cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int order) 
 
-cdef void _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int order)
+cdef _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int order)
 
 cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int order)
