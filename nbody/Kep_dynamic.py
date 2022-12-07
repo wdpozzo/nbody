@@ -86,7 +86,7 @@ def gen_3d_frame(p1, p2, q1, q2, Neff, m):
 	return(q1, q2, p1, p2)#, H) 
 '''
 		
-def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
+def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
 	
@@ -319,27 +319,28 @@ def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
         	shift = math.sqrt(G*M*R[i])/(r_rel[i]*r_rel[i]) #in keplerian motion this is constant (2nd law)
         	phi_shift[i] = shift
 
-	'''
-	peri_indexes = argrelextrema(r_rel, np.less)
-	peri_indexes = np.transpose(peri_indexes)
-		
-	n_peri = len(peri_indexes)
-	
-	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+	#
+	q_long_rel, p_long_rel, q_long_cm, p_long_cm = CM_system(p1_long, p2_long, q1_long, q2_long, N_thin, m[0], m[1])   
+	r_long_rel = np.sqrt(q_long_rel[:,0]*q_long_rel[:,0] + q_long_rel[:,1]*q_long_rel[:,1] + q_long_rel[:,2]*q_long_rel[:,2])
 
-	v_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
-        '''
+	peri_indexes = argrelextrema(r_long_rel, np.less)
+	peri_indexes = np.transpose(peri_indexes)
+
+	n_peri = len(peri_indexes)
+	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+	
+	if (n_peri != 0):
+		for i in range(0, n_peri):
+			q_peri[i,:] = q2_long[peri_indexes[i], :] 
+	#
 
 	n_peri = len(q_peri)
 	
-	#Dq_shift_tmp2 = np.zeros(3, dtype='float64')
-	#Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
-	
-	#diff = np.zeros(n_peri-1)
+	Dq_shift_tmp2 = np.zeros(3, dtype='float64')
+	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
 	
 	phi_shift_test = 0 
 	Dq_shift = 0
-
 
 	test = np.ones((n_peri), dtype='float64')
 	acos_test = np.zeros((n_peri), dtype='float64')
@@ -410,7 +411,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
 	plt.legend()
 	plt.show()   
 
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift)
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri)
 
 	#return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, q_peri, phi_shift, peri_indexes, phi_shift_test, Dq_shift)
 

@@ -258,9 +258,9 @@ if __name__=="__main__":
     
     #parameters for solution files management 
   
-    plot_step = 1000000
+    plot_step = 2000
     buffer_lenght = 1000000
-    data_thin = 5
+    data_thin = 500
 
     #------------------------------------------------------#  
  
@@ -542,23 +542,6 @@ if __name__=="__main__":
 
                 q2_long[i,:] = s_long[i][1]['q']
                 p2_long[i,:] = s_long[i][1]['p']
-            
-            #
-            q_long_rel, p_long_rel, q_long_cm, p_long_cm = CM_system(p1_long, p2_long, q1_long, q2_long, int(N/data_thin), m[0], m[1])   
-
-            r_long_rel = np.sqrt(q_long_rel[:,0]*q_long_rel[:,0] + q_long_rel[:,1]*q_long_rel[:,1] + q_long_rel[:,2]*q_long_rel[:,2])
-            
-            peri_indexes = argrelextrema(r_long_rel, np.less)
-            peri_indexes = np.transpose(peri_indexes)            
- 
-            n_peri = len(peri_indexes)
-
-            q_peri_long = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
- 
-            if (n_peri != 0):
-                for i in range(0, n_peri):
-                    q_peri_long[i,:] = q2_long[peri_indexes[i], :] 
-            #
 
 
             q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])        
@@ -566,7 +549,7 @@ if __name__=="__main__":
 
             N_shift = 6.488703338e-5
             
-            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test = kepler(q1, q2, p1, p2, D_long, N, Neff, H, m, dt, order, q_peri_long) #peri_indexes, Dq_shift
+            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri = kepler(q1, q2, p1, p2, D_long, N, (N/data_thin), Neff, H, m, dt, order, q1_long, q2_long, p1_long, p2_long) #peri_indexes, Dq_shift
             
                    
             p_s = np.sum(phi_shift)
@@ -660,15 +643,15 @@ if __name__=="__main__":
             
             plt.show()
             '''
-            col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri_long)))   
+            col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri)))   
             
             
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(111, projection = '3d')
             #ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
-            for i in range(0, len(q_peri_long)): 
-                ax.plot(q_peri_long[i,0], q_peri_long[i,1], q_peri_long[i,2], 'o', label = 'Perihelion orbit {}'.format(i), color = col_rainbow[i])
+            for i in range(0, len(q_peri)): 
+                ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i), color = col_rainbow[i])
             ax.set_xlabel('x [m]', fontsize="x-large")
             ax.set_ylabel('y [m]', fontsize="x-large")
             ax.set_zlabel('z [m]', fontsize="x-large")        
@@ -686,7 +669,7 @@ if __name__=="__main__":
             ax = f.add_subplot(111)
             ax.scatter(N_arr_long, r_long_rel, label = 'Orbital radius', alpha=0.5)
    
-            for i in range(0, len(q_peri_long)):
+            for i in range(0, len(q_peri)):
             	index = peri_indexes[i]
             	index = index[0]
             	index_N = N_arr_long[index]
