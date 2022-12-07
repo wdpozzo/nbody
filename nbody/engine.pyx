@@ -413,7 +413,7 @@ cdef _one_step_icn_mod(body_t *bodies, unsigned int nbodies, long double dt, int
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int order):
+cdef _one_step_lp(body_t *bodies, unsigned int nbodies, long double dt, int order):
     
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
@@ -553,7 +553,161 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cdef _one_step_mid(body_t *bodies, unsigned int nbodies, long double dt, int order):
+cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int order):
+    
+    cdef unsigned int i,j,k
+    cdef long double dt2 = 0.5*dt
+
+    cdef body_t *tmp1 = <body_t *>malloc(nbodies*sizeof(body_t))
+    if tmp1 == NULL:
+        raise MemoryError
+    cdef body_t *tmp2 = <body_t *>malloc(nbodies*sizeof(body_t))
+    if tmp2 == NULL:
+        raise MemoryError
+        
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))    
+
+
+    cdef body_t tmp
+
+    cdef body_t *start = <body_t *>malloc(nbodies*sizeof(body_t))
+    if start == NULL:
+        raise MemoryError
+    
+    '''    
+    cdef body_t *K = <body_t *>malloc(nbodies*sizeof(body_t))
+    if K == NULL:
+        raise MemoryError 
+
+    for k in range(nbodies):
+        start[k] = bodies[k]
+    '''
+
+    cdef long double **D = <long double **>malloc(nbodies*sizeof(long double *))    
+    if D == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        D[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if D[i] == NULL:
+            raise MemoryError
+        memset(D[i], 0, 6*sizeof(long double))
+
+    _gradients(g, bodies, nbodies, order)
+
+
+    for k in range(nbodies):
+        start[k] = bodies[k] 
+
+
+    for k in range(nbodies):            
+        for j in range(3):
+                
+            tmp1[k].q[j] = bodies[k].q[j] 
+            tmp1[k].p[j] = bodies[k].p[j] - dt2*g[k][j]
+            tmp1[k].s[j] = bodies[k].s[j]
+
+    for k in range(nbodies):
+        memset(g[k], 0, 6*sizeof(long double))
+    _gradients(g, tmp1, nbodies, order)       
+
+
+    for k in range(nbodies):  
+        for j in range(3):
+
+            tmp2[k].q[j] = bodies[k].q[j] + dt*g[k][3+j]
+            tmp2[k].p[j] = tmp1[k].p[j] 
+            tmp2[k].s[j] = tmp1[k].s[j] 
+
+    for k in range(nbodies):
+        memset(g[k], 0, 6*sizeof(long double))
+    _gradients(g, tmp2, nbodies, order)   
+
+
+    for k in range(nbodies):            
+        for j in range(3):
+
+            bodies[k].q[j] = tmp2[k].q[j]
+            bodies[k].p[j] = tmp2[k].p[j] - dt2*g[k][j]
+            bodies[k].s[j] = tmp2[k].s[j]
+
+    _free(tmp1)
+    _free(tmp2)
+
+    for k in range(nbodies): 
+        for j in range(3):    
+        
+            tmp.q[j] = bodies[k].q[j] - start[k].q[j]
+            tmp.p[j] = bodies[k].p[j] - start[k].p[j]
+            
+            '''
+            if (tmp.q[j] != 0):
+                K[k].q[j] = dt2/(tmp.p[j]*tmp.p[j])
+
+            if (K[k].q[j] > 1):
+                dt2 = 0.5*tmp.p[j]*tmp.p[j]
+                #tmp.p[j] = dt2*0.5 
+                #bodies[k].p[j] = tmp.p[j] + start[k].p[j]
+                
+            if (tmp.p[j] != 0):
+                K[k].p[j] = dt2/(tmp.q[j]*tmp.q[j])  
+            
+            if (K[k].p[j] > 1):
+                dt2 = 0.5*tmp.q[j]*tmp.q[j]
+                #tmp.q[j] = dt2*0.5 
+                #bodies[k].q[j] = tmp.q[j] + start[k].q[j]
+            '''
+
+            D[k][j+3] = tmp.q[j] + dt2*dt2
+            D[k][j] = tmp.p[j] + dt2*dt2
+                                    
+    _free(start)
+    #_free(K)
+        
+    for i in range(nbodies):
+        free(g[i])
+ 
+    free(g);
+
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
+
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
+    for k in range(nbodies): 
+        dx.append(D[k][3])
+        dy.append(D[k][4])
+        dz.append(D[k][5])
+
+        dpx.append(D[k][0])
+        dpy.append(D[k][1])
+        dpz.append(D[k][2])
+
+    for i in range(nbodies):
+        free(D[i])
+ 
+    free(D);
+
+    return (dx, dy, dz, dpx, dpy, dpz, dt2)
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef _one_step_gar(body_t *bodies, unsigned int nbodies, long double dt, int order):
     
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
@@ -1618,10 +1772,11 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
         
         # evolve forward in time
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp = _one_step_eu(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lp(bodies, n, dt, order)
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_sv(bodies, n, dt, order)
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lw(bodies, n, dt, order)
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_rk(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_mid(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_gar(bodies, n, dt, order)
         dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn_mod(bodies, n, dt, order, ICN_it)
 

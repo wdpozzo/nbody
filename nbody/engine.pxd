@@ -23,7 +23,9 @@ cdef void _free(body_t *s) nogil
 
 cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int order) 
 
-cdef _one_step_mid(body_t *bodies, unsigned int nbodies, long double dt, int order) 
+cdef _one_step_lp(body_t *bodies, unsigned int nbodies, long double dt, int order)
+
+cdef _one_step_gar(body_t *bodies, unsigned int nbodies, long double dt, int order) 
 
 cdef _one_step_lw(body_t *bodies, unsigned int nbodies, long double dt, int order) 
 

@@ -709,22 +709,18 @@ if __name__=="__main__":
             ax1.set_xlabel('iteration', fontsize="x-large")
             ax1.set_ylabel('Relative distance [m]', fontsize="x-large")
             plt.grid()
-            plt.legend(fontsize="large")
 
             ax2 = f.add_subplot(132)
             ax2.plot(N_arr, theta_spher_rel, label = '')
             ax2.set_xlabel('iteration', fontsize="x-large")
             ax2.set_ylabel('Righ ascension [rad]', fontsize="x-large")
             plt.grid()
-            plt.legend(fontsize="large")
 
             ax3 = f.add_subplot(133)
             ax3.plot(N_arr, phi_spher_rel, label = '')
             ax3.set_xlabel('iteration', fontsize="x-large")
             ax3.set_ylabel('Declination [rad]', fontsize="x-large")
             plt.grid()
-            plt.legend(fontsize="large")
-
             plt.show()
  
 
@@ -762,7 +758,7 @@ if __name__=="__main__":
             f = plt.figure(figsize=(16,6))
             ax = f.add_subplot(111)
             ax.errorbar(q2[:,0], q2[:,1], yerr = D[:,1, 1], xerr = D[:,1, 0], label = 'Numerical solution', alpha=0.7)  
-            ax.errorbar(q2_an[:,0], q2_an[:,1], yerr = D_q2_an[:, 1], xerr = D_q2_an[:,0], label = 'Analytical solution' )
+            ax.errorbar(q2_an[:,0], q2_an[:,1], yerr = D_q2_an[:, 1], xerr = D_q2_an[:,0], label = 'Analytical solution')
             ax.set_xlabel('x [m]', fontsize="x-large")
             ax.set_ylabel('y [m]', fontsize="x-large")      
             plt.legend(fontsize="large")
@@ -773,7 +769,7 @@ if __name__=="__main__":
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
             
             print('Numerical perihelion shift: {} [rad/revolution]'.format(p_s))
-            print('Numerical perihelion shift (test): {} +- {} [rad/revolution]'.format(phi_shift_test, 0)) #Dq_shift))
+            print('Numerical perihelion shift (test): {} +- {} [rad/revolution]'.format(phi_shift_test, Dq_shift)) #Dq_shift))
             
         else :
 

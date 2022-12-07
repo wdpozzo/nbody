@@ -352,8 +352,8 @@ def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
 			#v_peri[i,:] = p2[peri_indexes[i], :]/m[1] #- q_cm[peri_indexes[i], :]
 			
 			if (i != 0):		
-				#Dx = D[peri_indexes[i], 1, 0:3] 
-				#Dy = D[peri_indexes[i-1], 1, 0:3]
+				Dx = D[peri_indexes[i], 1, 0:3] 
+				Dy = D[peri_indexes[i-1], 1, 0:3]
 			
 				#Dx = D[peri_indexes[i], 1, 3:6] 
 				#Dy = D[peri_indexes[i-1], 1, 3:6]
@@ -368,13 +368,13 @@ def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
 
 				#phi_shift_test += math.acos(np.dot(v_peri[i, :], v_peri[i-1, :])/(np.linalg.norm(v_peri[i, :])*np.linalg.norm(v_peri[i-1, :])))
 
-				#Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
+				Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
 
 				#Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i, :]))/(v_peri[i, :]*v_peri[i, :]*np.abs(v_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i-1, :]))/(v_peri[i-1, :]*v_peri[i-1, :]*np.abs(v_peri[i, :]))))
 			
 
-		#Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
-		#Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
+		Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
+		Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
 
 		 #print(Dq_shift, Dq_shift_sigma)
 
@@ -410,7 +410,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
 	plt.legend()
 	plt.show()   
 
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test)
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift)
 
 	#return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, q_peri, phi_shift, peri_indexes, phi_shift_test, Dq_shift)
 
