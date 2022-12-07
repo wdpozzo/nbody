@@ -16,21 +16,21 @@ G = 6.67e-11 #*(u.meter**3)/(u.kilogram*u.second**2) # 6.67e-11 #
 C = 299792458. #*(u.meter/u.second) #299792458. #
 
 Mmerc = 0.3301e24
-Mearth = 5.97216787e24 
+Mearth = 5.97216787e24
 AU = 149597870700. #*u.meter
 Ms = 1.98840987e30
 
 #parameters for solution files management     
-plot_step = 5000
-buffer_lenght = 10000000 # buffer_lenght >= plot_step*data_thin
-data_thin = 1000
+plot_step = 1000
+buffer_lenght = 5000000 # buffer_lenght >= plot_step*data_thin
+data_thin = 10
 
 ICN_it = 2 
 
 #nbodies = 6
-dt = 0.1
+dt = 0.5
 dt2 = 0.5*dt
-N  = 700000000
+N  = 500000000
 p = 0
 
 Neff = int(N/(data_thin*plot_step))
@@ -312,7 +312,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		r_N = np.sqrt(q_N_rel[:,0]*q_N_rel[:,0] + q_N_rel[:,1]*q_N_rel[:,1] + q_N_rel[:,2]*q_N_rel[:,2])
 		r_1PN = np.sqrt(q_1PN_rel[:,0]*q_1PN_rel[:,0] + q_1PN_rel[:,1]*q_1PN_rel[:,1] + q_1PN_rel[:,2]*q_1PN_rel[:,2])
 			
-		col_rainbow = cm.rainbow(np.linspace(0, 1, len(masses)))   
+		col_rainbow = cm.rainbow(np.linspace(0, 1, len(m)))   
 
 
 		D_tot_q_peri = np.array([[0 for j in range(3)] for i in range(len(peri_indexes_N))]).astype(np.longdouble)
@@ -332,7 +332,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		f = plt.figure(figsize=(16,14))
 
 		ax1 = f.add_subplot(131)
-		ax1.plot(N_arr, abs(r_spher_1PN - r_spher_N), label = '1PN vs. N')
+		ax1.plot(N_arr, r_spher_1PN - r_spher_N, label = '1PN vs. N')
 		ax1.set_xlabel('iteration', fontsize="x-large")
 		ax1.set_ylabel('Relative radius difference [m]', fontsize="x-large")
 		plt.grid()
@@ -414,9 +414,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		ax2.grid()
 		ax2.legend(fontsize="large")		
 		
-		plt.show()
-	
-		
+		plt.show()	
 
 		p_s_N = np.sum(phi_shift_N)
 		p_s_N = p_s_N/Neff 
@@ -434,6 +432,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		print("Standard GR shift: {} [rad/rev]".format(a_shift_N))
 		print("Shift difference: {} [rad/rev]".format(abs(p_s_1PN - p_s_N)))
 		print("Shift difference (test): {} +- {} [rad/rev]".format(abs(phi_shift_test_1PN - phi_shift_test_N), np.sqrt(D_shift_1PN*D_shift_1PN + D_shift_N*D_shift_N)))
+		print("Shift 1PN (test): {} +- {} [rad/rev]\nShift N (test): {} +- {} [rad/rev]".format(phi_shift_test_1PN, D_shift_1PN, phi_shift_test_N, D_shift_N))
 
 		
 	#N body case	   		
@@ -502,7 +501,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 		r_N = np.sqrt(q_N_rel[:,0]*q_N_rel[:,0] + q_N_rel[:,1]*q_N_rel[:,1] + q_N_rel[:,2]*q_N_rel[:,2])
 		r_1PN = np.sqrt(q_1PN_rel[:,0]*q_1PN_rel[:,0] + q_1PN_rel[:,1]*q_1PN_rel[:,1] + q_1PN_rel[:,2]*q_1PN_rel[:,2])
 			
-		col_rainbow = cm.rainbow(np.linspace(0, 1, len(masses)))   
+		col_rainbow = cm.rainbow(np.linspace(0, 1, len(m)))   
 
 
 		D_tot_q_peri = np.array([[0 for j in range(3)] for i in range(len(peri_indexes_N))]).astype(np.longdouble)
@@ -824,7 +823,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 					
 	return 
 	
-
+'''
 #natural initial coordinates
   
 t0 = Time('2001-01-01T0:0:00.0', scale='tdb')
@@ -882,9 +881,9 @@ vcm = np.array([np.sum(vx*m/Mtot), np.sum(vy*m/Mtot), np.sum(vz*m/Mtot)])
 sx = np.zeros(len(m)).astype(np.longdouble)
 sy = np.zeros(len(m)).astype(np.longdouble)
 sz = np.zeros(len(m)).astype(np.longdouble)
-
-
 '''
+
+#'''
 #custom initial coordinates
 m = np.array((2,1)).astype(np.longdouble)
 
@@ -916,7 +915,7 @@ sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
 
 planet_names = ['sun', 'mercury']
-'''
+#'''
 
 '''
 m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms

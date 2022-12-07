@@ -86,7 +86,7 @@ def gen_3d_frame(p1, p2, q1, q2, Neff, m):
 	return(q1, q2, p1, p2)#, H) 
 '''
 		
-def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
+def kepler(q1, q2, p1, p2, D, N, Neff, H, m, dt, order, q_peri):
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
 	
@@ -318,37 +318,65 @@ def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
         
         	shift = math.sqrt(G*M*R[i])/(r_rel[i]*r_rel[i]) #in keplerian motion this is constant (2nd law)
         	phi_shift[i] = shift
-	
+
+	'''
 	peri_indexes = argrelextrema(r_rel, np.less)
 	peri_indexes = np.transpose(peri_indexes)
 		
 	n_peri = len(peri_indexes)
 	
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+
+	v_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+        '''
+
+	n_peri = len(q_peri)
+	
+	#Dq_shift_tmp2 = np.zeros(3, dtype='float64')
+	#Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
+	
+	#diff = np.zeros(n_peri-1)
 	
 	phi_shift_test = 0 
-	Dq_shift = 0	
+	Dq_shift = 0
+
+
+	test = np.ones((n_peri), dtype='float64')
+	acos_test = np.zeros((n_peri), dtype='float64')
+
 
 	if (n_peri != 0):
 		for i in range(0, n_peri):
 	
-			q_peri[i,:] = q[1, peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
+			#q_peri[i,:] = q2[peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
+			#v_peri[i,:] = p2[peri_indexes[i], :]/m[1] #- q_cm[peri_indexes[i], :]
 			
-			if (i != 0):					
-				Dx = D[peri_indexes[i], 1, 0:3] 
-				Dy = D[peri_indexes[i-1], 1, 0:3]			
+			if (i != 0):		
+				#Dx = D[peri_indexes[i], 1, 0:3] 
+				#Dy = D[peri_indexes[i-1], 1, 0:3]
 			
+				#Dx = D[peri_indexes[i], 1, 3:6] 
+				#Dy = D[peri_indexes[i-1], 1, 3:6]
+			
+				print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))	
+	
+				test[i] = (np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))	                        
+
 				phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
 
-				Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
+				acos_test[i] = phi_shift_test
+
+				#phi_shift_test += math.acos(np.dot(v_peri[i, :], v_peri[i-1, :])/(np.linalg.norm(v_peri[i, :])*np.linalg.norm(v_peri[i-1, :])))
+
+				#Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
+
+				#Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i, :]))/(v_peri[i, :]*v_peri[i, :]*np.abs(v_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i-1, :]))/(v_peri[i-1, :]*v_peri[i-1, :]*np.abs(v_peri[i, :]))))
 			
-		phi_shift_test = phi_shift_test/n_peri
 
+		#Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
+		#Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
 
-		Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
-		Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
-
-		#print(Dq_shift, Dq_shift_sigma)
+		 #print(Dq_shift, Dq_shift_sigma)
 
 	'''
 	N_arr = np.linspace(0, N - N/Neff, Neff)
@@ -370,7 +398,21 @@ def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
 	plt.show()         
 	'''
 
-	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad,  q_peri, phi_shift, phi_shift_test, peri_indexes, Dq_shift)
+	N_arr = np.linspace(0, N, n_peri)
+	        
+	f = plt.figure(figsize=(6,4))
+	ax = f.add_subplot(111)
+	ax.plot(N_arr, test, label ='argument')
+	ax.plot(N_arr, acos_test, label ='acos(argument)')
+	ax.set_xlabel('iteration')
+	ax.set_ylabel('shift')
+	plt.grid()
+	plt.legend()
+	plt.show()   
+
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test)
+
+	#return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, q_peri, phi_shift, peri_indexes, phi_shift_test, Dq_shift)
 
 
 	
@@ -502,6 +544,7 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 		
 	n_peri = len(peri_indexes)
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+	v_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
 	Dq_shift_tmp2 = np.zeros(3, dtype='float64')
 	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
 	
@@ -515,7 +558,9 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 
 			#q_peri[i,:] = q_rel[peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
 
-			q_peri[i,:] = q[1, peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
+			q_peri[i,:] = q[1, peri_indexes[i], :]
+
+			#v_peri[i,:] = p[1, peri_indexes[i], :]/m[1] #- q_cm[peri_indexes[i], :]
 			
 			if (i != 0):					
 				Dx = D[peri_indexes[i], 1, 0:3] 
@@ -523,7 +568,13 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 			
 				phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
 
+				print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))
+
+				#phi_shift_test += math.acos(np.dot(v_peri[i, :], v_peri[i-1, :])/(np.linalg.norm(v_peri[i, :])*np.linalg.norm(v_peri[i-1, :])))
+
 				Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
+
+				#Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i, :]))/(v_peri[i, :]*v_peri[i, :]*np.abs(v_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i-1, :]))/(v_peri[i-1, :]*v_peri[i-1, :]*np.abs(v_peri[i, :]))))
 			
 		phi_shift_test = phi_shift_test/n_peri
 

@@ -127,9 +127,9 @@ cdef long double _potential_1pn(body_t b1, body_t b2) nogil:
     for k in range(3):
         normal[k] = (b1.q[k]-b2.q[k])/r
         
-    V += ((1./8.)*V0*(-12.*p12/(m1*m1) + 14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
+    V += (0.25*V0*(-12.*p12/(m1*m1) + 14.0*_dot(b1.p, b2.p)/m1m2 + 2.0*_dot(normal,b1.p)*_dot(normal,b2.p)/m1m2))/C2
 
-    V += 0.25*(V0*G*(m1+ m2)/r)/C2 #(0.25*V0*G*(m1+ m2)/r)/C2
+    V += (0.5*V0*G*(m1+ m2)/r)/C2 #(0.25*V0*G*(m1+ m2)/r)/C2
     
     free(normal)
     
@@ -287,7 +287,7 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
         dq[k]     = b1.q[k]-b2.q[k]
         
         #normal without normalization...why? cause in the following expression every component is explicit and so the factor 1/r is already counted there
-        normal[k] = dq[k]#/r
+        normal[k] = dq[k] #/r
 
     cdef long double m1 = b1.mass
     cdef long double m2 = b2.mass
@@ -313,10 +313,10 @@ cdef void _gradient_1pn(long double *out, body_t b1, body_t b2) nogil:
     for k in range(3):
 
         # derivative wrt q
-        out[k] += ( -0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.125*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2 #( -0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.125*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2
+        out[k] += ( -1.0*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.25*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.25*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2 #( -0.5*G*G*m1m2*(m1 + m2)*dq[k]/r4 - 0.125*G*m1m2*dq[k]*(14*p1_p2/m1m2 + 2*n_p1*n_p2/(m1m2*r2) -12.*p12/m1sq)/r3 + 0.125*G*m1m2*(2*b1.p[k]*n_p2/(m1m2*r2) + 2*b2.p[k]*n_p1/(m1m2*r2) - 4.*dq[k]*n_p1*n_p2/(m1m2*r4))/r )/C2
 
         # derivative wrt p
-        out[k+3] += ( 0.125*G*m1m2*( 14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq )/r - 0.5*b1.p[k]*p12/m1cu )/C2 #( 0.125*G*m1m2*( 14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq )/r - 0.5*b1.p[k]*p12/m1cu )/C2
+        out[k+3] += ( 0.25*G*m1m2*( 14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq )/r - 0.5*b1.p[k]*p12/m1cu )/C2 #( 0.125*G*m1m2*( 14*b2.p[k]/m1m2 + 2*dq[k]*n_p2/(m1m2*r2) - 24*b1.p[k]/m1sq )/r - 0.5*b1.p[k]*p12/m1cu )/C2
     
     free(dq)
     free(normal)

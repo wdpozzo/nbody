@@ -6,9 +6,10 @@ from nbody.engine import run, _H_2body
 from Kep_dynamic import kepler, kepler_sol_sys, KepElemToCart
 from collections import deque 
 from optparse import OptionParser
-from nbody.CM_coord_system import CM_system
+from nbody.CM_coord_system import CM_system, CartToSpher
 import pickle
-            
+from scipy.signal import argrelextrema
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits import mplot3d
@@ -188,7 +189,6 @@ if __name__=="__main__":
 
     #print(x,y,z,vx,vy,vz,sx,sy,sz)
     '''
- 
 
     #custom initial coordinates
     m = np.array((2,1)).astype(np.longdouble)
@@ -205,7 +205,7 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-
+    #'''
     m[0], m[1] = 1.e0*Ms, 1.e0*Mmerc
     
     x[0], x[1] =  0., 69.818e9
@@ -219,7 +219,23 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
+    #'''
 
+    '''
+    m[0], m[1] = 1.e0*Ms, 1.e0*Mearth
+    
+    x[0], x[1] =  0., 152.100e9
+    y[0], y[1] = 0., 0.
+    z[0], z[1] = 0., 0.
+
+    vx[0], vx[1] = 0., 0.
+    vy[0], vy[1] = 0., 29.29e3
+    vz[0], vz[1] = 0., 0.
+    
+    sx[0], sx[1] = 0., 0.
+    sy[0], sy[1] = 0., 0.
+    sz[0], sz[1] = 0., 0.
+    '''
 
     '''
     #random initial coordinates
@@ -242,9 +258,9 @@ if __name__=="__main__":
     
     #parameters for solution files management 
   
-    plot_step = 2500
-    buffer_lenght = 500000
-    data_thin = 100
+    plot_step = 1000000
+    buffer_lenght = 1000000
+    data_thin = 5
 
     #------------------------------------------------------#  
  
@@ -261,10 +277,11 @@ if __name__=="__main__":
         run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght, plot_step)
     
     s, H, T, V, D, t_sim = [], [], [], [], [], []
+    s_long, D_long = [], [] #, H_long, T_long, V_long, t_sim_long = [], [], [], []
     
     for i in range(nout):  
         s_tot, H_tot, T_tot, V_tot, t_tot, D_tot = [], [], [], [], [], []
-        
+
         s_tot.append(pickle.load(open('solution_{}_order{}.pkl'.format(i, order),'rb')))
         H_tot.append(pickle.load(open('hamiltonian_{}_order{}.pkl'.format(i, order),'rb')))
         T_tot.append(pickle.load(open('kinetic_{}_order{}.pkl'.format(i, order),'rb')))
@@ -278,6 +295,13 @@ if __name__=="__main__":
         V.append(V_tot[0][::plot_step])
         D.append(D_tot[0][::plot_step])
         t_sim.append(t_tot[::plot_step])        
+
+        s_long.append(s_tot[0]) #[::plot_step])
+        #H_long.append(H_tot[0]) #[::plot_step])
+        #T_long.append(T_tot[0]) #[::plot_step])
+        #V_long.append(V_tot[0]) #[::plot_step])
+        D_long.append(D_tot[0]) #[::plot_step])
+        #t_sim_long.append(t_tot) #[::plot_step])    
         
         del s_tot
         del H_tot
@@ -304,6 +328,21 @@ if __name__=="__main__":
     D = np.concatenate((D[:]), axis=0)
     t_sim = np.concatenate((t_sim[:]), axis=0) 
 
+    #
+    s_long = np.array(s_long, dtype=object)#.flatten()
+    #H_long = np.array(H_long, dtype=object)#.flatten()
+    #T_long = np.array(T_long, dtype=object)#.flatten()
+    #V_long = np.array(V_long, dtype=object)#.flatten()
+    D_long = np.array(D_long, dtype=object)
+    #t_sim_long = np.array(t_sim_long, dtype=object)
+    
+    s_long = np.concatenate((s_long[:]))
+    #H_long = np.concatenate((H_long[:]))
+    #T_long = np.concatenate((T_long[:]))
+    #V_long = np.concatenate((V_long[:]))
+    D_long = np.concatenate((D_long[:]), axis=0)
+    #t_sim_long = np.concatenate((t_sim_long[:]), axis=0) 
+    #
     
     if opts.animate == 1:
         
@@ -377,7 +416,7 @@ if __name__=="__main__":
 
         f = plt.figure(figsize=(6,4))
         ax = f.add_subplot(111)
-        ax.plot(range(Neff), nbodies)
+        ax.plot(N_arr, nbodies)
         ax.set_xlabel('iteration')
         ax.set_ylabel('nbodies')
     
@@ -477,7 +516,12 @@ if __name__=="__main__":
             s1 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')
             q2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')
             p2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')       
-            s2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')    
+            s2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')   
+
+            q1_long = np.array([[0 for i in range(0, 3)] for k in range(0, int(N/data_thin))], dtype='longdouble')
+            p1_long = np.array([[0 for i in range(0, 3)] for k in range(0, int(N/data_thin))], dtype='longdouble')
+            q2_long = np.array([[0 for i in range(0, 3)] for k in range(0, int(N/data_thin))], dtype='longdouble')
+            p2_long = np.array([[0 for i in range(0, 3)] for k in range(0, int(N/data_thin))], dtype='longdouble')           
                       
             for i in range(0, Neff):
 
@@ -488,14 +532,41 @@ if __name__=="__main__":
                 q2[i,:] = s[i][1]['q']
                 p2[i,:] = s[i][1]['p']
                 s2[i,:] = s[i][1]['s']                      
+
+            print(len(s[:]), len(s[:]), N, np.shape(q1_long), np.shape(q1))
+
+            for i in range(0, int(N/data_thin)):
+
+                q1_long[i,:] = s_long[i][0]['q']
+                p1_long[i,:] = s_long[i][0]['p']
+
+                q2_long[i,:] = s_long[i][1]['q']
+                p2_long[i,:] = s_long[i][1]['p']
             
-           
+            #
+            q_long_rel, p_long_rel, q_long_cm, p_long_cm = CM_system(p1_long, p2_long, q1_long, q2_long, int(N/data_thin), m[0], m[1])   
+
+            r_long_rel = np.sqrt(q_long_rel[:,0]*q_long_rel[:,0] + q_long_rel[:,1]*q_long_rel[:,1] + q_long_rel[:,2]*q_long_rel[:,2])
+            
+            peri_indexes = argrelextrema(r_long_rel, np.less)
+            peri_indexes = np.transpose(peri_indexes)            
+ 
+            n_peri = len(peri_indexes)
+
+            q_peri_long = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+ 
+            if (n_peri != 0):
+                for i in range(0, n_peri):
+                    q_peri_long[i,:] = q2_long[peri_indexes[i], :] 
+            #
+
+
             q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])        
             r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
 
             N_shift = 6.488703338e-5
             
-            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, q_peri, peri_indexes, phi_shift_test = kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order)
+            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test = kepler(q1, q2, p1, p2, D_long, N, Neff, H, m, dt, order, q_peri_long) #peri_indexes, Dq_shift
             
                    
             p_s = np.sum(phi_shift)
@@ -589,31 +660,38 @@ if __name__=="__main__":
             
             plt.show()
             '''
+            col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri_long)))   
+            
             
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(111, projection = '3d')
             #ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)  
-            for i in range(0, len(peri_indexes)): 
-                ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
+            for i in range(0, len(q_peri_long)): 
+                ax.plot(q_peri_long[i,0], q_peri_long[i,1], q_peri_long[i,2], 'o', label = 'Perihelion orbit {}'.format(i), color = col_rainbow[i])
             ax.set_xlabel('x [m]', fontsize="x-large")
             ax.set_ylabel('y [m]', fontsize="x-large")
             ax.set_zlabel('z [m]', fontsize="x-large")        
             plt.legend(fontsize="large")
             
             plt.show()                  
-
+            
+            
+            N_arr_long = np.linspace(0, N, int(N/data_thin))
+            
+            '''
             f = plt.figure(figsize=(16,6))
             
-            ax = f.add_subplot(111)
-            ax.scatter(N_arr, r_sim, label = 'Orbital radius', alpha=0.5)
             
-            for i in range(0, len(peri_indexes)):
+            ax = f.add_subplot(111)
+            ax.scatter(N_arr_long, r_long_rel, label = 'Orbital radius', alpha=0.5)
+   
+            for i in range(0, len(q_peri_long)):
             	index = peri_indexes[i]
             	index = index[0]
-            	index_N = N_arr[index]
+            	index_N = N_arr_long[index]
 
-            	ax.plot(index_N, r_sim[index], 'o', label = 'Perihelion orbit {}'.format(i))
+            	ax.plot(index_N, r_long_rel[index], 'o', label = 'Perihelion orbit {}'.format(i))
             	
             ax.set_xlabel('iteration', fontsize="x-large")
             ax.set_ylabel('orbital radius [m]', fontsize="x-large")       
@@ -621,12 +699,39 @@ if __name__=="__main__":
             plt.legend(fontsize="large")
             
             plt.show()                  
+            '''
+
+            r_spher_rel, theta_spher_rel, phi_spher_rel= CartToSpher(np.ascontiguousarray(q_rel[:,0]), np.ascontiguousarray(q_rel[:,1]), np.ascontiguousarray(q_rel[:,2]))
+                
+            f = plt.figure(figsize=(16,14))
+            ax1 = f.add_subplot(131)
+            ax1.plot(N_arr, r_spher_rel)
+            ax1.set_xlabel('iteration', fontsize="x-large")
+            ax1.set_ylabel('Relative distance [m]', fontsize="x-large")
+            plt.grid()
+            plt.legend(fontsize="large")
+
+            ax2 = f.add_subplot(132)
+            ax2.plot(N_arr, theta_spher_rel, label = '')
+            ax2.set_xlabel('iteration', fontsize="x-large")
+            ax2.set_ylabel('Righ ascension [rad]', fontsize="x-large")
+            plt.grid()
+            plt.legend(fontsize="large")
+
+            ax3 = f.add_subplot(133)
+            ax3.plot(N_arr, phi_spher_rel, label = '')
+            ax3.set_xlabel('iteration', fontsize="x-large")
+            ax3.set_ylabel('Declination [rad]', fontsize="x-large")
+            plt.grid()
+            plt.legend(fontsize="large")
+
+            plt.show()
+ 
 
             f = plt.figure(figsize=(16,16))
 
             ax1 = f.add_subplot(121)
-            for k in range(len(m)):
-                ax1.plot(N_arr, D[:][k][0], label= "Numerical Error")
+            ax1.plot(N_arr, D[:,1, 0], label= "Numerical Error")
             ax1.set_xlabel('iteration', fontsize="x-large")
             ax1.set_ylabel(r'$\Delta x$ [m]', fontsize="x-large")
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -634,8 +739,7 @@ if __name__=="__main__":
             plt.legend(fontsize="large")
 
             ax2 = f.add_subplot(122)
-            for k in range(len(m)):
-                ax2.plot(N_arr, D[:][k][1], label= "Numerical Error")
+            ax2.plot(N_arr, D[:,1,1], label= "Numerical Error")
             ax2.set_xlabel('iteration', fontsize="x-large")
             ax2.set_ylabel(r'$\Delta y$ [m]', fontsize="x-large")
             plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
@@ -644,13 +748,32 @@ if __name__=="__main__":
 
             plt.show()       
 
-      
+
+            q2_an = q1 - q_an_rel     
+            
+            D_q2_an = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='longdouble')#.astype(np.longdouble) 
+
+            for i in range(Neff):
+       
+                D_q2_an[i, 0] = np.sqrt(D[i,0, 0]*D[i,0, 0] + (np.sqrt(D[i,0, 0]*D[i,0, 0] + D[i,1, 0]*D[i,1, 0])))
+                D_q2_an[i, 1] = np.sqrt(D[i,0, 1]*D[i,0, 1] + (np.sqrt(D[i,0, 1]*D[i,0, 1] + D[i,1, 1]*D[i,1, 1])))
+                D_q2_an[i, 2] = np.sqrt(D[i,0, 2]*D[i,0, 2] + (np.sqrt(D[i,0, 2]*D[i,0, 2] + D[i,1, 2]*D[i,1, 2])))
+            
+            f = plt.figure(figsize=(16,6))
+            ax = f.add_subplot(111)
+            ax.errorbar(q2[:,0], q2[:,1], yerr = D[:,1, 1], xerr = D[:,1, 0], label = 'Numerical solution', alpha=0.7)  
+            ax.errorbar(q2_an[:,0], q2_an[:,1], yerr = D_q2_an[:, 1], xerr = D_q2_an[:,0], label = 'Analytical solution' )
+            ax.set_xlabel('x [m]', fontsize="x-large")
+            ax.set_ylabel('y [m]', fontsize="x-large")      
+            plt.legend(fontsize="large")
+            
+    
             print('Newtonian shift {} [rad/rev]'.format(N_shift)) 
             print('Standard GR shift = {} [rad/revolution]'.format(a_shift))
             #print('Perihelion shift = {}'.format(a_p[-1]*415.2))
             
             print('Numerical perihelion shift: {} [rad/revolution]'.format(p_s))
-            print('Numerical perihelion shift (test): {} [rad/revolution]'.format(phi_shift_test))
+            print('Numerical perihelion shift (test): {} +- {} [rad/revolution]'.format(phi_shift_test, 0)) #Dq_shift))
             
         else :
 
@@ -766,13 +889,14 @@ if __name__=="__main__":
             
             plt.show()
             
-            
+            col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri)))   
+         
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(111, projection = '3d')
             ax.scatter(q[1,:,0], q[1,:,1], q[1,:,2], label = 'Numerical solution', alpha=0.5)
             for i in range(0, len(q_peri)): 
-            	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i))
+            	ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit {}'.format(i), color = col_rainbow[i])
             ax.set_xlabel('x [m]')
             ax.set_ylabel('y [m]')
             ax.set_zlabel('z [m]')        

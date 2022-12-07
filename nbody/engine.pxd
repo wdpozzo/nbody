@@ -4,6 +4,8 @@ from nbody.body cimport body_t
     
 cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it) 
 
+cdef _one_step_icn_mod(body_t *bodies, unsigned int nbodies, long double dt, int order, unsigned int ICN_it) 
+
 cdef void _initialise(body_t *bodies,
                       unsigned int n,
                       long double[:] mass,
@@ -20,6 +22,10 @@ cdef void _initialise(body_t *bodies,
 cdef void _free(body_t *s) nogil
 
 cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int order) 
+
+cdef _one_step_mid(body_t *bodies, unsigned int nbodies, long double dt, int order) 
+
+cdef _one_step_lw(body_t *bodies, unsigned int nbodies, long double dt, int order) 
 
 cdef _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int order)
 

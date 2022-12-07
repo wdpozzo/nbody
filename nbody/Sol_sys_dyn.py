@@ -23,16 +23,16 @@ Ms = 1.98840987e30
 
 
 #parameters for solution files management     
-plot_step = 5000
-buffer_lenght = 10000000 # buffer_lenght >= plot_step*data_thin
-data_thin = 2000
+plot_step = 500
+buffer_lenght = 1000000 # buffer_lenght >= plot_step*data_thin
+data_thin = 100
 
 PN_order = 0
 ICN_it = 2 
 
 #nbodies = 6
-dt = 0.2
-N  = 600000000
+dt = 1
+N  = 1000000
 
 dt2 = 0.5*dt
 p = 0
@@ -42,7 +42,7 @@ nout = int(N/buffer_lenght) #number of files generated
 
 #---------------------------------------#
 #actual natural initial coordinates 
-t0 = Time('2005-01-01T0:0:00.0', scale='tdb')
+t0 = Time('1995-01-01T0:0:00.0', scale='tdb')
 
 masses = {
 'Sun'     : Ms, #1st planet has to be the central attractor
@@ -53,7 +53,7 @@ masses = {
 'Mars'    : 0.1075*Mearth,
 'Jupiter' : 317.83*Mearth,
 'Saturn'  : 95.16*Mearth,
-'Uranus'  : 14.54*Mearth,
+#'Uranus'  : 14.54*Mearth,
 #'Neptune' : 17.15*Mearth,
 #'Pluto'   : 0.00218*Mearth,
 }
@@ -67,7 +67,7 @@ planet_names = [
 'Mars',
 'Jupiter',
 'Saturn',
-'Uranus',
+#'Uranus',
 #'Neptune',
 #'Pluto',
 ]
@@ -126,7 +126,7 @@ sy_0  = np.zeros(len(m)).astype(np.longdouble)
 sz_0 = np.zeros(len(m)).astype(np.longdouble)
 
 for k in range(len(m)):
-    planets_0 = (get_body_barycentric_posvel(planet_names[k], t0, ephemeris= 'DE440'))
+    planets_0 = (get_body_barycentric_posvel(planet_names[k], t0, ephemeris= 'DE430'))
          
     x_0[k] = planets_0[0].x.to(u.meter).value 
     y_0[k] = planets_0[0].y.to(u.meter).value 
@@ -189,8 +189,8 @@ t_sim = np.concatenate((t_sim[:]), axis=0)
 
 #print(np.shape(s))
 
-
 #print(Neff, np.shape(t_sim), len(V))
+
 #collect SS data
 for i in range(Neff):
     #print(len(t_sim), t_sim[i], i)
@@ -198,7 +198,7 @@ for i in range(Neff):
 
     for planet in planet_names:
 
-        planets.append(get_body_barycentric_posvel(planet, t, ephemeris='DE440'))   
+        planets.append(get_body_barycentric_posvel(planet, t, ephemeris='DE430'))   
 
     x[i][:] = np.array([planet[0].x.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
     y[i][:] = np.array([planet[0].y.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
@@ -222,11 +222,12 @@ for i in range(Neff):
 
     #print(t, (t - t0).sec, (i)*(N/Neff)*dt2, i)
     
-t_s = (N)*dt2 #sec
+t_s = (N - N/Neff)*dt2 #sec
 t_s = t_s/(60*60*24*365) #year
 t_nat = (t_sim[-1])/(60*60*24*365) # sec --> year
 
-print('Simulation time: nominal = {} - ICN condition = {}'.format(t_s, t_nat)) #, len(t_nat), len(t_sim))
+print('Simulation time: Nominal = {} - Effective = {}'.format(t_s, t_nat)) #, len(t_nat), len(t_sim))
+
 
 
 N_arr = np.linspace(0, N, Neff)
@@ -258,6 +259,18 @@ ax.set_ylabel('Energy', fontsize="x-large")
 ax.grid()
 plt.legend(fontsize="large")
 plt.show()
+
+'''
+f = plt.figure(figsize=(16,14))
+ax = f.add_subplot(111)
+ax.plot(N_arr, t_sim, label = 't_sim')
+ax.plot(N_arr, np.linspace(0, dt2*N, Neff), label = 't_astro')
+ax.set_xlabel('iteration', fontsize="x-large")
+ax.set_ylabel('time', fontsize="x-large")
+ax.grid()
+plt.legend(fontsize="large")
+plt.show()
+'''
 
 f = plt.figure(figsize=(16,14))
 ax = f.add_subplot(111, projection = '3d')

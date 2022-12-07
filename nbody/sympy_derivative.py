@@ -16,7 +16,7 @@ p1dp2  = px1*px2+py1*py2+pz1*pz2
 n12dp1 = ((x1-x2)*px1+(y1-y2)*py1+(z1-z2)*pz1)/r
 n12dp2 = ((x1-x2)*px2+(y1-y2)*py2+(z1-z2)*pz2)/r
 
-H_1PN = -(1/8)*(p1_2**2)/(m1**3) + (1/8)*(G*m1*m2/r)*(-12*p1_2/(m1*m1) + 14*p1dp2/(m1*m2) + 2*(n12dp1*n12dp2)/(m1*m2)) + 0.25*(G*m1*m2/r)*(G*(m1+m2)/r)
+H_1PN = -(1/8)*(p1_2**2)/(m1**3) + 0.25*(G*m1*m2/r)*(-12*p1_2/(m1*m1) + 14*p1dp2/(m1*m2) + 2*(n12dp1*n12dp2)/(m1*m2)) + 0.5*(G*m1*m2/r)*(G*(m1+m2)/r)
 
 dHdx1 = H_1PN.diff(x1)
 dHdpx1 = H_1PN.diff(px1)
