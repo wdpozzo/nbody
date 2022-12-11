@@ -23,16 +23,16 @@ Ms = 1.98840987e30
 
 
 #parameters for solution files management     
-plot_step = 500
+plot_step = 10000
 buffer_lenght = 1000000 # buffer_lenght >= plot_step*data_thin
-data_thin = 100
+data_thin = 50
 
 PN_order = 0
 ICN_it = 2 
 
 #nbodies = 6
-dt = 1
-N  = 1000000
+dt = 0.1
+N  = 50000000
 
 dt2 = 0.5*dt
 p = 0
@@ -42,7 +42,7 @@ nout = int(N/buffer_lenght) #number of files generated
 
 #---------------------------------------#
 #actual natural initial coordinates 
-t0 = Time('1995-01-01T0:0:00.0', scale='tdb')
+t0 = Time('2000-01-01T0:0:00.0', scale='tdb')
 
 masses = {
 'Sun'     : Ms, #1st planet has to be the central attractor

@@ -258,9 +258,9 @@ if __name__=="__main__":
     
     #parameters for solution files management 
   
-    plot_step = 2000
-    buffer_lenght = 1000000
-    data_thin = 500
+    plot_step = 20000
+    buffer_lenght = 2000000
+    data_thin = 50
 
     #------------------------------------------------------#  
  

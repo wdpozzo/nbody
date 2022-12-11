@@ -561,9 +561,9 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
     cdef body_t *tmp1 = <body_t *>malloc(nbodies*sizeof(body_t))
     if tmp1 == NULL:
         raise MemoryError
-    cdef body_t *tmp2 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if tmp2 == NULL:
-        raise MemoryError
+    #cdef body_t *tmp2 = <body_t *>malloc(nbodies*sizeof(body_t))
+    #if tmp2 == NULL:
+    #    raise MemoryError
         
     cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
     if g == NULL:
@@ -574,6 +574,16 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
         if g[i] == NULL:
             raise MemoryError
         memset(g[i], 0, 6*sizeof(long double))    
+
+    cdef long double **g_temp = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g_temp == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g_temp[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g_temp[i] == NULL:
+            raise MemoryError
+        memset(g_temp[i], 0, 6*sizeof(long double))
 
 
     cdef body_t tmp
@@ -602,12 +612,35 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
         memset(D[i], 0, 6*sizeof(long double))
 
     _gradients(g, bodies, nbodies, order)
-
+    _gradients(g_temp, bodies, nbodies, order)
 
     for k in range(nbodies):
         start[k] = bodies[k] 
 
+    for k in range(nbodies):            
+        for j in range(3):
+                
+            tmp1[k].q[j] = bodies[k].q[j] + dt*g[k][j+3]
+            tmp1[k].p[j] = bodies[k].p[j] - dt2*g[k][j]
+            tmp1[k].s[j] = bodies[k].s[j]
 
+    for k in range(nbodies):
+        memset(g[k], 0, 6*sizeof(long double))
+    _gradients(g, tmp1, nbodies, order) 
+
+    for k in range(nbodies):            
+        for j in range(3):
+
+            tmp1[k].q[j] = bodies[k].q[j] + dt2*(g[k][j+3] + g_temp[k][j+3])
+            tmp1[k].p[j] += - dt2*g[k][j]
+
+    for k in range(nbodies):            
+        for j in range(3):
+
+            bodies[k].q[j] = tmp1[k].q[j]
+            bodies[k].p[j] = tmp1[k].p[j]
+            bodies[k].s[j] = tmp1[k].s[j]
+    '''
     for k in range(nbodies):            
         for j in range(3):
                 
@@ -619,18 +652,21 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
         memset(g[k], 0, 6*sizeof(long double))
     _gradients(g, tmp1, nbodies, order)       
 
-
     for k in range(nbodies):  
         for j in range(3):
 
-            tmp2[k].q[j] = bodies[k].q[j] + dt*g[k][3+j]
-            tmp2[k].p[j] = tmp1[k].p[j] 
-            tmp2[k].s[j] = tmp1[k].s[j] 
+            tmp1[k].q[j] += dt2*g[k][3+j]
+
+    for k in range(nbodies):            
+        for j in range(3):
+
+            tmp2[k].q[j] = tmp1[k].q[j] + dt2*g[k][3+j]
+            tmp2[k].q[j] = tmp1[k].p[j] 
+            tmp2[k].q[j] = tmp1[k].s[j]
 
     for k in range(nbodies):
         memset(g[k], 0, 6*sizeof(long double))
     _gradients(g, tmp2, nbodies, order)   
-
 
     for k in range(nbodies):            
         for j in range(3):
@@ -638,9 +674,9 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
             bodies[k].q[j] = tmp2[k].q[j]
             bodies[k].p[j] = tmp2[k].p[j] - dt2*g[k][j]
             bodies[k].s[j] = tmp2[k].s[j]
-
+    '''
     _free(tmp1)
-    _free(tmp2)
+    #_free(tmp2)
 
     for k in range(nbodies): 
         for j in range(3):    
@@ -676,6 +712,11 @@ cdef _one_step_sv(body_t *bodies, unsigned int nbodies, long double dt, int orde
         free(g[i])
  
     free(g);
+
+    for i in range(nbodies):
+        free(g_temp[i])
+ 
+    free(g_temp);
 
     cdef list dx = []
     cdef list dy = []
@@ -1773,10 +1814,10 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
         # evolve forward in time
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp = _one_step_eu(bodies, n, dt, order)
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lp(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_sv(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lw(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_sv(bodies, n, dt, order) #FIXME
+        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lw(bodies, n, dt, order) #FIXME
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_rk(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_gar(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_gar(bodies, n, dt, order) #FIXME
         dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
         #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn_mod(bodies, n, dt, order, ICN_it)
 
