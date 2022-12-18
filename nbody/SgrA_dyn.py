@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from mpl_toolkits import mplot3d
 
+import astropy.units as u
+import astropy.coordinates as apycoords
+
 #import pyorb
 
 day = 86400. #*u.second
@@ -25,15 +28,15 @@ Mearth = 5.97216787e24
 AU = 149597870700. #*u.meter
 Ms = 1.98840987e30 #*(u.kilogram) # 1.988e30 #
 
-plot_step = 1000
-buffer_lenght = 10000
-data_thin = 10
+plot_step = 20000
+buffer_lenght = 1000000
+data_thin = 50
 
 #PN_order = 1
 ICN_it = 2
 
-dt = 100
-N  = 100000
+dt = 10
+N  = 200000000
 p = 1
 
 Neff = int(N/(data_thin*plot_step))
@@ -141,11 +144,40 @@ D_obs_RA = np.array([0.0066*arcs, 0.0009*arcs, 0.0012*arcs, 0.0010*arcs, 0.0009*
 
 D_obs_Decl = np.array([0.0065*arcs, 0.0010*arcs, 0.0012*arcs, 0.0008*arcs, 0.0006*arcs, 0.0009*arcs, 0.0011*arcs, 0.0065*arcs, 0.0007*arcs, 0.0007*arcs, 0.0007*arcs, 0.0007*arcs, 0.0008*arcs, 0.0007*arcs, 0.0006*arcs, 0.0012*arcs, 0.0011*arcs, 0.0008*arcs, 0.0009*arcs, 0.0010*arcs, 0.0013*arcs, 0.0009*arcs, 0.0009*arcs, 0.0008*arcs, 0.0015*arcs, 0.0008*arcs, 0.0008*arcs, 0.0021*arcs, 0.0013*arcs, 0.0017*arcs, 0.0016*arcs, 0.0019*arcs, 0.0010*arcs])
 
+#Decl = np.pi/2 - Decl
+
+x_S02_obs = np.zeros(len(RA))
+y_S02_obs = np.zeros(len(RA))
+z_S02_obs = np.zeros(len(RA))
+
+Dx_S02_obs = np.zeros(len(RA))
+Dy_S02_obs = np.zeros(len(RA))
+Dz_S02_obs = np.zeros(len(RA))
+
 #------------------------------------------------------#   
 Neff = int(N/(data_thin*plot_step))
 nout = int(N/buffer_lenght)    
 #------------------------------------------------------#
-	
+
+'''
+for i in range(len(RA)):
+    c = apycoords.SkyCoord(ra = RA[i]*u.rad, dec = Decl[i]*u.rad, distance= 1691371411.2*u.au, frame='icrs', unit='rad')
+    #gc = c.transform_to(apycoords.Galactocentric)
+    dc = apycoords.SkyCoord(ra = D_obs_RA[i]*u.rad, dec = D_obs_Decl[i]*u.rad, distance= 1691371411.2*u.au, frame='icrs', unit='rad')
+    #dgc = dc.transform_to(apycoords.Galactocentric)
+
+    c.representation_type = 'cartesian'
+    dc.representation_type = 'cartesian'
+    
+    x_S02_obs[i] = c.x.to(u.m).value
+    y_S02_obs[i] = c.y.to(u.m).value
+    z_S02_obs[i] = c.z.to(u.m).value
+    
+    Dx_S02_obs[i] = dc.x.to(u.m).value
+    Dy_S02_obs[i] = dc.y.to(u.m).value
+    Dz_S02_obs[i] = dc.z.to(u.m).value
+'''
+
 x_S02_obs, y_S02_obs, z_S02_obs = SpherToCart(RA, Decl, 1691371411.2*AU)
 
 Dx_S02_obs, Dy_S02_obs, Dz_S02_obs = SpherToCart(D_obs_RA, D_obs_Decl, 1691371411.2*AU)
@@ -603,7 +635,7 @@ ax = f.add_subplot(111, projection = '3d')
 ax.plot(q_1PN[0,:,0], q_1PN[0,:,1], q_1PN[0,:,2], label= "Sgr A*")
 ax.plot(q_N[1,:,0], q_N[1,:,1], q_N[1,:,2], label= "N S0-2 orbit")
 ax.plot(q_1PN[1,:,0], q_1PN[1,:,1], q_1PN[1,:,2], label= "1PN S0-2 orbit")
-ax.errorbar(x_S02_obs, y_S02_obs, z_S02_obs, yerr = Dy_S02_obs, xerr = Dx_S02_obs, zerr= Dz_S02_obs, marker='.', label = "Astronometric data (2002-2015)" )
+ax.errorbar(x_S02_obs, y_S02_obs, z_S02_obs, yerr = Dy_S02_obs, xerr = Dx_S02_obs, zerr= Dz_S02_obs, marker='.', label = "Astronometric data (2002-2015)")
 ax.set_xlabel('x [m]', fontsize="x-large")
 ax.set_ylabel('y [m]', fontsize="x-large")
 ax.set_zlabel('z [m]', fontsize="x-large")
@@ -616,7 +648,7 @@ ax = f.add_subplot(111)
 ax.plot(q_1PN[0,:,0], q_1PN[0,:,1], label= "Sgr A*")
 ax.plot(q_N[1,:,0], q_N[1,:,1], label= "N S0-2 orbit")
 ax.plot(q_1PN[1,:,0], q_1PN[1,:,1], label= "1PN S0-2 orbit")
-ax.errorbar(x_S02_obs, y_S02_obs, yerr = Dy_S02_obs, xerr = Dx_S02_obs, marker='.', label = "Astronometric data (2002-2015)" )
+ax.errorbar(x_S02_obs, y_S02_obs, yerr = Dy_S02_obs, xerr = Dx_S02_obs, marker='.', label = "Astronometric data (2002-2015)")
 ax.set_xlabel('x [m]', fontsize="x-large")
 ax.set_ylabel('y [m]', fontsize="x-large")
 plt.grid()

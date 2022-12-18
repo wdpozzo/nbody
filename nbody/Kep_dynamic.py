@@ -6,6 +6,8 @@ from nbody.CM_coord_system import CM_system
 from scipy.signal import argrelextrema
 import matplotlib.pyplot as plt
 
+import matplotlib.cm as cm
+
 #from scipy.special import lambertw
 
 '''
@@ -86,7 +88,7 @@ def gen_3d_frame(p1, p2, q1, q2, Neff, m):
 	return(q1, q2, p1, p2)#, H) 
 '''
 		
-def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
+def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
 	
@@ -164,7 +166,7 @@ def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long
 	#True_anom = np.zeros(Neff, dtype='float64')
 	phi_shift = np.zeros(Neff, dtype='float64')
 	
-	for i in range(0, Neff):
+	for i in range(0, Neff): #
 
 		if (order == 0):
 		
@@ -291,12 +293,13 @@ def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long
 			q_analit_rel[i,2] = q_rel[i,2] #+ q_cm[i,2]
 
 		if (order >= 1):
+
 			a = (np.max(r_rel) + np.min(r_rel))/2.
 			b = np.sqrt(np.max(r_rel)*np.min(r_rel))
 			e[i] = np.sqrt(1 - (b*b)/(a*a))
 			
 			q_analit_rel[i,0] = q_rel[i,0] #+ tmp_x
-			q_analit_rel[i,1] = q_rel[i,1]#+ tmp_y
+			q_analit_rel[i,1] = q_rel[i,1] #+ tmp_y
 			q_analit_rel[i,2] = q_rel[i,2] #+ q_cm[i,2]
 
 		r_dif[i] = abs(math.sqrt(q_analit_rel[i,0]*q_analit_rel[i,0] + q_analit_rel[i,1]*q_analit_rel[i,1] + q_analit_rel[i,2]*q_analit_rel[i,2]) - r_rel[i]) 
@@ -323,18 +326,29 @@ def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long
 	q_long_rel, p_long_rel, q_long_cm, p_long_cm = CM_system(p1_long, p2_long, q1_long, q2_long, N_thin, m[0], m[1])   
 	r_long_rel = np.sqrt(q_long_rel[:,0]*q_long_rel[:,0] + q_long_rel[:,1]*q_long_rel[:,1] + q_long_rel[:,2]*q_long_rel[:,2])
 
+	#print(np.shape(r_long_rel), np.shape(r_kepler))
+
 	peri_indexes = argrelextrema(r_long_rel, np.less)
 	peri_indexes = np.transpose(peri_indexes)
 
+	#peri_indexes_an = argrelextrema(r_kepler, np.less)
+	#peri_indexes_an = np.transpose(peri_indexes_an)
+
 	n_peri = len(peri_indexes)
+	#n_peri_an = len(peri_indexes_an)
+
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+	#q_peri_an = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
+
+	#print(peri_indexes_an, n_peri, peri_indexes)
 	
 	if (n_peri != 0):
 		for i in range(0, n_peri):
-			q_peri[i,:] = q2_long[peri_indexes[i], :] 
+			q_peri[i,:] = q2_long[peri_indexes[i], :] #q_long_rel[peri_indexes[i], :] #
+			#q_peri_an[i,:] = q2_long[peri_indexes_an[i], :]  #q_long_rel[peri_indexes_an[i], :] # 
 	#
 
-	n_peri = len(q_peri)
+	#n_peri = len(q_peri)
 	
 	Dq_shift_tmp2 = np.zeros(3, dtype='float64')
 	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
@@ -359,7 +373,7 @@ def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long
 				#Dx = D[peri_indexes[i], 1, 3:6] 
 				#Dy = D[peri_indexes[i-1], 1, 3:6]
 			
-				print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))	
+				#print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))	
 	
 				test[i] = (np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))	                        
 
@@ -399,17 +413,93 @@ def kepler(q1, q2, p1, p2, D, N, N_thin, Neff, H, m, dt, order, q1_long, q2_long
 	plt.show()         
 	'''
 
-	N_arr = np.linspace(0, N, n_peri)
+	N_arr_peri = np.linspace(0, N, n_peri)
+	N_arr_peri_kep = np.linspace(0, N, n_peri_an)
 	        
 	f = plt.figure(figsize=(6,4))
 	ax = f.add_subplot(111)
-	ax.plot(N_arr, test, label ='argument')
-	ax.plot(N_arr, acos_test, label ='acos(argument)')
+	ax.plot(N_arr_peri, test, label ='argument')
+	ax.plot(N_arr_peri, acos_test, label ='acos(argument)')
 	ax.set_xlabel('iteration')
 	ax.set_ylabel('shift')
 	plt.grid()
 	plt.legend()
-	plt.show()   
+	plt.show()
+
+
+        '''	
+	time_long = np.linspace(0, N*dt, len(peri_indexes))
+	time_kep = np.linspace(0, N*dt, len(peri_indexes_an))     
+   
+	f = plt.figure(figsize=(6,4))
+	ax = f.add_subplot(111)
+	ax.scatter(N_arr_peri, time_long, label ='Sim periheli')
+	ax.scatter(N_arr_peri_kep, time_kep, label ='Kep periheli')
+	ax.set_xlabel('iteration')
+	ax.set_ylabel('shift')
+	plt.grid()
+	plt.legend()
+	plt.show()
+        '''
+
+	col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri)))   
+	col_viridis = cm.viridis(np.linspace(0, 1, len(q_peri)))   
+
+	inf = []
+	up = []
+	for i in range(0, len(peri_indexes)):	 
+		inf.append(int(peri_indexes[i] - 2))
+		up.append(int(peri_indexes[i] + 3))
+
+	#print(inf, up, q2_long[inf:up, 0], np.shape(q2_long[inf:up, 0]))
+
+	f = plt.figure(figsize=(16,6))
+	ax = f.add_subplot(111)
+	for i in range(0, len(q_peri)):	 
+		ax.plot(q2_long[inf[i]:up[i], 0], q2_long[inf[i]:up[i], 1], alpha = 0.5, label = 'Rev {}'.format(i))
+		ax.plot(q_peri[i,0], q_peri[i,1], 'o', label = 'Perihelion orbit Sim {}'.format(i), color = col_rainbow[i])
+		ax.plot(q_peri_an[i,0], q_peri_an[i,1], 'o', label = 'Perihelion orbit Kepl {}'.format(i), color = col_viridis[i])
+
+	ax.set_xlabel('x [m]', fontsize="x-large")
+	ax.set_ylabel('y [m]', fontsize="x-large")      
+	plt.legend(fontsize="large")
+	plt.grid()   
+	plt.show()       
+
+	#print(np.shape(q_peri), np.shape(q_peri_an), np.shape(N_arr_peri))
+        '''
+	f = plt.figure(figsize=(16,6))
+
+	ax = f.add_subplot(131)
+            #ax.plot(q_rel[:,0], q_rel[:,1], q_rel[:,2], label = 'Numerical solution', alpha=0.5)
+	for i in range(0, len(q_peri)): 
+		ax.scatter(N_arr_peri[i], q_peri[i,0] - q_peri_an[i,0], label = 'Perihelion diff {}'.format(i))
+	ax.set_xlabel('iter', fontsize="x-large")
+	ax.set_ylabel('x [m]', fontsize="x-large")     
+	plt.legend(fontsize="large")
+	plt.grid()
+
+	ax1 = f.add_subplot(132)
+	for i in range(0, len(q_peri)): 
+		ax1.scatter(N_arr_peri[i], q_peri[i,1] - q_peri_an[i,1], label = 'Perihelion diff {}'.format(i))
+	ax1.set_xlabel('iter', fontsize="x-large")
+	ax1.set_ylabel('y [m]', fontsize="x-large")     
+	plt.legend(fontsize="large")
+	plt.grid()
+
+	ax2 = f.add_subplot(133)
+	for i in range(0, len(q_peri)): 
+		ax2.scatter(N_arr_peri[i], q_peri[i,2] - q_peri_an[i,2], label = 'Perihelion diff {}'.format(i))
+	ax2.set_xlabel('iter', fontsize="x-large")
+	ax2.set_ylabel('z [m]', fontsize="x-large")     
+	plt.legend(fontsize="large")
+	plt.grid()
+
+	plt.show()     
+        '''
+
+	print(phi_shift_test)
+
 
 	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri)
 

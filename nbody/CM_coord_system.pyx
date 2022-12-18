@@ -44,9 +44,9 @@ cpdef SpherToCart(np.ndarray[double, mode="c", ndim=1] RA, np.ndarray[double, mo
     
     for i in range(len(RA)):
 
-        x[i] = r*math.sin(Decl[i])*math.cos(RA[i])
-        y[i] = r*math.sin(Decl[i])*math.sin(RA[i])
-        z[i] = r*math.cos(Decl[i])
+        x[i] = r*math.cos(Decl[i])*math.cos(RA[i])
+        y[i] = r*math.sin(Decl[i])*math.cos(RA[i])
+        z[i] = r*math.sin(Decl[i])
 
     return (x, y, z)
 

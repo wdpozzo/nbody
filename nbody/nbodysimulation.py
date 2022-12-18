@@ -260,7 +260,7 @@ if __name__=="__main__":
   
     plot_step = 20000
     buffer_lenght = 2000000
-    data_thin = 50
+    data_thin = 25
 
     #------------------------------------------------------#  
  
@@ -277,7 +277,7 @@ if __name__=="__main__":
         run(N, np.longdouble(dt), opts.PN_order, m, x, y, z, m*vx, m*vy, m*vz, sx, sy, sz, ICN_it, data_thin, buffer_lenght, plot_step)
     
     s, H, T, V, D, t_sim = [], [], [], [], [], []
-    s_long, D_long = [], [] #, H_long, T_long, V_long, t_sim_long = [], [], [], []
+    s_long, D_long = [], [] #,  T_long, V_long, t_sim_long = [], [], [], []
     
     for i in range(nout):  
         s_tot, H_tot, T_tot, V_tot, t_tot, D_tot = [], [], [], [], [], []
@@ -533,7 +533,7 @@ if __name__=="__main__":
                 p2[i,:] = s[i][1]['p']
                 s2[i,:] = s[i][1]['s']                      
 
-            print(len(s[:]), len(s[:]), N, np.shape(q1_long), np.shape(q1))
+            #print(len(s[:]), len(s[:]), N, np.shape(q1_long), np.shape(q1))
 
             for i in range(0, int(N/data_thin)):
 
@@ -549,7 +549,7 @@ if __name__=="__main__":
 
             N_shift = 6.488703338e-5
             
-            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri = kepler(q1, q2, p1, p2, D_long, N, (N/data_thin), Neff, H, m, dt, order, q1_long, q2_long, p1_long, p2_long) #peri_indexes, Dq_shift
+            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri = kepler(q1, q2, p1, p2, D, N, Neff, int(N/data_thin), H, m, dt, order, q1_long, q2_long, p1_long, p2_long) #peri_indexes, Dq_shift
             
                    
             p_s = np.sum(phi_shift)
@@ -589,6 +589,8 @@ if __name__=="__main__":
             
             plt.show()
             '''
+
+            #N_arr_long = np.linspace(0,N,int(N/data_thin))
 
             f = plt.figure(figsize=(16,8))
             
@@ -659,8 +661,6 @@ if __name__=="__main__":
             
             plt.show()                  
             
-            
-            N_arr_long = np.linspace(0, N, int(N/data_thin))
             
             '''
             f = plt.figure(figsize=(16,6))

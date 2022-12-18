@@ -1267,8 +1267,8 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
         #k1   
         for j in range(3):
             
-            k1[k].q[j] = dt2*g[k][3+j] #dt*g[k][3+j]
-            k1[k].p[j] = -dt2*g[k][j] #-dt*g[k][j] 
+            k1[k].q[j] = dt*g[k][3+j] #dt2*g[k][3+j] 
+            k1[k].p[j] = -dt*g[k][j] #-dt2*g[k][j] # 
                      
             tmp_q[k].q[j] = bodies[k].q[j] + 0.25*k1[k].q[j]    
             tmp_q[k].p[j] = bodies[k].p[j]     
@@ -1287,8 +1287,8 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
         #k2
         for j in range(3):
             
-            k2[k].q[j] = dt2*g_q[k][3+j]  #dt*0.25*g_q[k][3+j]   
-            k2[k].p[j] = -dt2*g_p[k][j] #-dt*0.25*g_p[k][j]         
+            k2[k].q[j] = dt*0.25*g_q[k][3+j] #dt2*g_q[k][3+j]  
+            k2[k].p[j] = -dt*0.25*g_p[k][j]  #-dt2*g_p[k][j]        
                         
             tmp_q[k].q[j] = bodies[k].q[j] + 3./32.*k1[k].q[j] + 9./32.*k2[k].q[j]    
             tmp_q[k].p[j] = bodies[k].p[j]   
@@ -1308,8 +1308,8 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
         #k3
         for j in range(3):
             
-            k3[k].q[j] = dt2*g_q[k][3+j]  #3./8.*dt*g_q[k][3+j]
-            k3[k].p[j] = - dt2*g_p[k][j]   #-3./8.*dt*g_p[k][j]         
+            k3[k].q[j] = 3./8.*dt*g_q[k][3+j] #dt2*g_q[k][3+j]  
+            k3[k].p[j] = -3./8.*dt*g_p[k][j] #- dt2*g_p[k][j]    
                         
             tmp_q[k].q[j] = bodies[k].q[j] + 1932./2197.*k1[k].q[j] - 7200./2197.*k2[k].q[j] +  7296./2197.*k3[k].q[j]    
             tmp_q[k].p[j] = bodies[k].p[j]     
@@ -1329,8 +1329,8 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
         #k4
         for j in range(3):
             
-            k4[k].q[j] = dt2*g_q[k][3+j]  #(12./13.*dt)*g_q[k][3+j]   
-            k4[k].p[j] = -dt2*g_p[k][j]  #-(12./13.*dt)*g_p[k][j]      
+            k4[k].q[j] = (12./13.*dt)*g_q[k][3+j] #dt2*g_q[k][3+j]     
+            k4[k].p[j] = -(12./13.*dt)*g_p[k][j] #-dt2*g_p[k][j]        
                         
             tmp_q[k].q[j] = bodies[k].q[j] + 439./216.*k1[k].q[j] - 8*k2[k].q[j] +  3680./513.*k3[k].q[j] - 845./4104.*k4[k].q[j]    
             tmp_q[k].p[j] = bodies[k].p[j]     
@@ -1350,8 +1350,8 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
         #k5
         for j in range(3):
             
-            k5[k].q[j] = dt2*g_q[k][3+j]  #dt*g_q[k][3+j]   
-            k5[k].p[j] = -dt2*g_p[k][j]  #-dt*g_p[k][j]         
+            k5[k].q[j] = dt*g_q[k][3+j] #dt2*g_q[k][3+j]     
+            k5[k].p[j] = -dt*g_p[k][j] #-dt2*g_p[k][j]           
                         
             tmp_q[k].q[j] = bodies[k].q[j] - 8./27.*k1[k].q[j] + 2*k2[k].q[j] -  3544./2565.*k3[k].q[j] + 1859./4104.*k4[k].q[j] - 11./40.*k5[k].q[j]   
             tmp_q[k].p[j] = bodies[k].p[j]     
