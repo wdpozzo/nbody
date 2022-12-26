@@ -161,7 +161,7 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
             if (K[k].p[j] <= 0.5):
                     #tmp.q[j] = np.sqrt(2*dt2)
                 dt2_q_list.append(dt2)
-                    #bodies[k].q[j] = tmp.q[j] + start[k].q[j]
+                    #bodies[k].q[j] = tmp.q[j] + stacrt[k].q[j]
         
         dt2_q_array[k] = np.linalg.norm(dt2_q_list)
         dt2_p_array[k] = np.linalg.norm(dt2_p_list)
@@ -1104,8 +1104,8 @@ cdef _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int orde
         mass = bodies[k].mass
                 
         for j in range(3):
-            bodies[k].q[j] += dt2*g[k][3+j]
-            bodies[k].p[j] -= dt2*g[k][j]
+            bodies[k].q[j] += dt*g[k][3+j]
+            bodies[k].p[j] -= dt*g[k][j]
 #            bodies[i].s[j] =  dtsquare*g[i,j] #FIXME: spin evolution
 
 
@@ -1135,8 +1135,8 @@ cdef _one_step_eu(body_t *bodies, unsigned int nbodies, long double dt, int orde
                 dt2 = tmp.q[j]*tmp.q[j]*0.5
             '''
 
-            D[k][j+3] = tmp.q[j] + dt2
-            D[k][j] = tmp.p[j] + dt2
+            D[k][j+3] = tmp.q[j] + dt
+            D[k][j] = tmp.p[j] + dt
                      
     _free(start)
     #_free(K)
@@ -1181,7 +1181,7 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
     cdef long double dt2 = 0.5*dt
 
     # variables for "test" implementations
-
+    #'''
     cdef body_t *k1 = <body_t *>malloc(nbodies*sizeof(body_t))
     if k1 == NULL:
         raise MemoryError
@@ -1197,17 +1197,7 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
     cdef body_t *k4 = <body_t *>malloc(nbodies*sizeof(body_t))
     if k4 == NULL:
         raise MemoryError
-    
-    #'''
-    cdef body_t *k5 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if k3 == NULL:
-        raise MemoryError
-    
-    cdef body_t *k6 = <body_t *>malloc(nbodies*sizeof(body_t))
-    if k4 == NULL:
-        raise MemoryError
-    #'''
-   
+
     cdef body_t *tmp_q = <body_t *>malloc(nbodies*sizeof(body_t))
     if tmp_q == NULL:
         raise MemoryError
@@ -1254,6 +1244,20 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
 
     for k in range(nbodies):
         start[k] = bodies[k]       
+
+    #'''
+
+    #'''
+    cdef body_t *k5 = <body_t *>malloc(nbodies*sizeof(body_t))
+    if k5 == NULL:
+        raise MemoryError
+    
+    cdef body_t *k6 = <body_t *>malloc(nbodies*sizeof(body_t))
+    if k6 == NULL:
+        raise MemoryError
+
+    #'''
+   
 
 
     # Runke-Kutta-Fehlberg (6° order) -- test
@@ -1456,7 +1460,7 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
 
             bodies[k].q[j] += (1./6.)*k1[k].q[j] + (1./3.)*k2[k].q[j] + (1./3.)*k3[k].q[j] + (1./6.)*k4[k].q[j]   
             bodies[k].p[j] += (1./6.)*k1[k].p[j] + (1./3.)*k2[k].p[j] + (1./3.)*k3[k].p[j] + (1./6.)*k4[k].p[j]
-    #''' 
+    ''' 
 
 
     #standard Runke-Kutta (4° order)
@@ -1627,8 +1631,11 @@ cdef _one_step_rk(body_t *bodies, unsigned int nbodies, long double dt, int orde
                 dt2 = tmp_cond.q[j]*tmp_cond.q[j]*0.5
             '''
 
-            D[k][j+3] = tmp_cond.q[j]*tmp_cond.q[j] + dt2*dt2
-            D[k][j] = tmp_cond.p[j]*tmp_cond.p[j] + dt2*dt2
+            #D[k][j+3] = tmp_cond.q[j]*tmp_cond.q[j]*tmp_cond.q[j]*tmp_cond.q[j] + dt2*dt2*dt2*dt2 #4th order
+            D[k][j+3] = tmp_cond.q[j]*tmp_cond.q[j]*tmp_cond.q[j]*tmp_cond.q[j]*tmp_cond.q[j]*tmp_cond.q[j] + dt2*dt2*dt2*dt2*dt2*dt2 #6th order
+
+            #D[k][j] = tmp_cond.p[j]*tmp_cond.p[j]*tmp_cond.p[j]*tmp_cond.p[j] + dt2*dt2*dt2*dt2 #4th order
+            D[k][j] = tmp_cond.p[j]*tmp_cond.p[j]*tmp_cond.p[j]*tmp_cond.p[j]*tmp_cond.p[j]*tmp_cond.p[j] + dt2*dt2*dt2*dt2*dt2*dt2 #6th order 
 
     _free(start)
     #_free(K)

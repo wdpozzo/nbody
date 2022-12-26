@@ -87,8 +87,142 @@ def gen_3d_frame(p1, p2, q1, q2, Neff, m):
 					
 	return(q1, q2, p1, p2)#, H) 
 '''
+
+def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
+
+	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
+	
+	L_rel =	np.cross(q_rel, p_rel)
+	L = np.linalg.norm(L_rel, axis = -1)
+	
+	q_analit_rel = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')
+
+	
+	p_cm_2 = np.array([[0 for i in range(0, 3)] for Neff in range(0, Neff)], dtype='float64')	
+	r_dif = np.zeros(Neff, dtype='float64')
+	r_rel = np.zeros(Neff, dtype='float64')
+	
+	for i in range(0, Neff):
+		r_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
+			   
+	#Dinamica Kepleriana#-------------------------------------------------#
+	
+	M = m[0] + m[1]
+	mu = (m[0]*m[1])/M
+	
+	#ricavo H_rel -----------------------
+	p_cm_2 = (p_cm[:,0]*p_cm[:,0] + p_cm[:, 1]*p_cm[:, 1] + p_cm[:, 2]*p_cm[:, 2])
+
+	H -= p_cm_2/(2*M)
+
+	
+	H2 = H*H
+	L2 = L*L	
 		
-def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
+	k = G*M*mu
+
+	R = L2/(k*mu) # semi-latus rectum = a*(1 - e*e)
+	alpha = H2/R 
+	
+	e = np.zeros(Neff, dtype='float64')	
+	E = np.zeros(Neff, dtype='float64')	
+	m_a = np.zeros(Neff, dtype='float64')	
+	a_p = np.zeros(Neff, dtype='float64')	
+	P_quad = np.zeros(Neff, dtype='float64')		
+	t = np.zeros(Neff, dtype='float64')	
+	r_kepler = np.zeros(Neff, dtype='float64')
+	phi_orb = np.zeros(Neff, dtype='float64')
+	phi_shift = np.zeros(Neff, dtype='float64')
+	
+	for i in range(0, Neff): #
+
+		if (order == 0):
+		
+			e[i] = np.float(math.sqrt(1 + (2*H[i]*L2[i])/(k*k*mu)))		
+			 
+			phi_orb[i] = np.float(math.atan2(q_rel[i,1], q_rel[i,0]))
+		
+			if (1 > e[i]):
+				a = np.float(R[i]/(1 - e[i]*e[i])) # semi-major axis
+				b = np.float(R[i]/(math.sqrt(1 - e[i]*e[i]))) # semi-minor axis
+
+			if (1 <= e[i]):
+				a = np.float(R[i]/(e[i]*e[i] - 1)) # semi-major axis
+				b = np.float(R[i]/(math.sqrt(e[i]*e[i] - 1))) # semi-minor axis
+
+			c = np.sqrt(a*a - b*b)		
+		
+			E[i] = 2*math.atan2(math.sqrt(1.- e[i])*math.tan(phi_orb[i]/2.), math.sqrt(1.+ e[i])) # eccentric anomaly
+		
+			
+			j_iter = 0
+			
+			for j in range(0, j_iter):
+				m_a[i] = E[i] - e[i]*math.sin(E[i])
+
+				theta = math.atan2(e[i]*math.sqrt(2.)*math.sin(m_a[i]), (1. - e[i]*math.cos(m_a[i])))
+				
+				root = math.sqrt(2.)*math.tan(0.5*theta)
+				
+				E_temp = m_a[i] + root
+				m_temp = E_temp - e[i]*math.sin(E_temp)
+				
+				E[i] = E_temp + (m_a[i] - m_temp)/(1. - e[i]*math.cos(E_temp))
+				
+			m_a[i] = E[i] - e[i]*math.sin(E[i])
+
+					
+			if (e[i]<1):
+				x_kepler = a*math.cos(E[i]) - c #a*math.cos(E[i])  # 
+				y_kepler = b*math.sin(E[i]) 
+				
+				t[i] = a*math.sqrt(a/alpha[i])*(E[i] - e[i]*math.sin(E[i]))
+				r_kepler[i] = a*(1 - e[i]*math.cos(E[i]))
+
+			if (e[i]>1):
+				x_kepler = c - a*math.cosh(E[i]) #( a*math.cosh(E[i]) 
+				y_kepler = b*(math.sinh(E[i]))
+
+				t[i] = a*math.sqrt(a/alpha[i])*(e[i]*math.sinh(E[i]) - E)
+				r_kepler[i] = a*(e[i]*math.cosh(E[i]) - 1)
+				
+			if (e[i]==1):
+				x_kepler = a*math.cosh(E[i]) + c #a*math.cosh(E[i]) 
+				y_kepler = b*(math.sinh(E[i]))
+
+				t[i] = a*math.sqrt(a/alpha[i])*(e[i]*math.sinh(E[i]) + E)
+				r_kepler[i] = a*(e[i]*math.cosh(E[i]) + 1) 
+
+
+			q_analit_rel[i,0] = x_kepler #+ tmp_x
+			q_analit_rel[i,1] = y_kepler #+ tmp_y
+			q_analit_rel[i,2] = q_rel[i,2] #+ q_cm[i,2]
+
+		if (order >= 1):
+
+			a = (np.max(r_rel) + np.min(r_rel))/2.
+			b = np.sqrt(np.max(r_rel)*np.min(r_rel))
+			e[i] = np.sqrt(1 - (b*b)/(a*a))
+			
+			q_analit_rel[i,0] = q_rel[i,0] #+ tmp_x
+			q_analit_rel[i,1] = q_rel[i,1] #+ tmp_y
+			q_analit_rel[i,2] = q_rel[i,2] #+ q_cm[i,2]
+
+		r_dif[i] = abs(math.sqrt(q_analit_rel[i,0]*q_analit_rel[i,0] + q_analit_rel[i,1]*q_analit_rel[i,1] + q_analit_rel[i,2]*q_analit_rel[i,2]) - r_rel[i]) 
+
+
+		a_p[i] = 6*math.pi*G*M/(C*C*a*(1 - e[i]*e[i])) #apsidial precession [#rad per revolution]
+		
+		#dal maggiore ---------------------
+		f_e = (1./((1. - e[i]*e[i])**(7./2.)))*(1. + (73./24.)*(e[i]*e[i]) + (37./96.)*(e[i]*e[i]*e[i]*e[i]))
+		
+		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   	
+          	#----------------------------------
+
+	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad)
+
+
+def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
 	
@@ -427,7 +561,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long
 	plt.show()
 
 
-        '''	
+	'''	
 	time_long = np.linspace(0, N*dt, len(peri_indexes))
 	time_kep = np.linspace(0, N*dt, len(peri_indexes_an))     
    
@@ -440,7 +574,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long
 	plt.grid()
 	plt.legend()
 	plt.show()
-        '''
+	'''
 
 	col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri)))   
 	col_viridis = cm.viridis(np.linspace(0, 1, len(q_peri)))   
@@ -458,7 +592,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long
 	for i in range(0, len(q_peri)):	 
 		ax.plot(q2_long[inf[i]:up[i], 0], q2_long[inf[i]:up[i], 1], alpha = 0.5, label = 'Rev {}'.format(i))
 		ax.plot(q_peri[i,0], q_peri[i,1], 'o', label = 'Perihelion orbit Sim {}'.format(i), color = col_rainbow[i])
-		ax.plot(q_peri_an[i,0], q_peri_an[i,1], 'o', label = 'Perihelion orbit Kepl {}'.format(i), color = col_viridis[i])
+		#ax.plot(q_peri_an[i,0], q_peri_an[i,1], 'o', label = 'Perihelion orbit Kepl {}'.format(i), color = col_viridis[i])
 
 	ax.set_xlabel('x [m]', fontsize="x-large")
 	ax.set_ylabel('y [m]', fontsize="x-large")      
@@ -467,7 +601,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long
 	plt.show()       
 
 	#print(np.shape(q_peri), np.shape(q_peri_an), np.shape(N_arr_peri))
-        '''
+	'''
 	f = plt.figure(figsize=(16,6))
 
 	ax = f.add_subplot(131)
@@ -496,7 +630,7 @@ def kepler(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long
 	plt.grid()
 
 	plt.show()     
-        '''
+	'''
 
 	print(phi_shift_test)
 

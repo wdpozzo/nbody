@@ -3,7 +3,7 @@ import math
 #from nbody.body import body
 #from nbody.hamiltonian import hamiltonian, gradients, kinetic_energy, potential
 from nbody.engine import run, _H_2body
-from Kep_dynamic import kepler, kepler_sol_sys, KepElemToCart
+from Kep_dynamic import kepler, kepler_shift, kepler_sol_sys, KepElemToCart
 from collections import deque 
 from optparse import OptionParser
 from nbody.CM_coord_system import CM_system, CartToSpher
@@ -205,7 +205,7 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    #'''
+    '''
     m[0], m[1] = 1.e0*Ms, 1.e0*Mmerc
     
     x[0], x[1] =  0., 69.818e9
@@ -219,9 +219,9 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    #'''
-
     '''
+
+    #'''
     m[0], m[1] = 1.e0*Ms, 1.e0*Mearth
     
     x[0], x[1] =  0., 152.100e9
@@ -235,7 +235,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    '''
+    #'''
 
     '''
     #random initial coordinates
@@ -258,9 +258,9 @@ if __name__=="__main__":
     
     #parameters for solution files management 
   
-    plot_step = 20000
+    plot_step = 2000
     buffer_lenght = 2000000
-    data_thin = 25
+    data_thin = 500
 
     #------------------------------------------------------#  
  
@@ -548,12 +548,14 @@ if __name__=="__main__":
             r_sim = np.sqrt(q_rel[:,0]*q_rel[:,0] + q_rel[:,1]*q_rel[:,1] + q_rel[:,2]*q_rel[:,2])
 
             N_shift = 6.488703338e-5
-            
-            r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri = kepler(q1, q2, p1, p2, D, N, Neff, int(N/data_thin), H, m, dt, order, q1_long, q2_long, p1_long, p2_long) #peri_indexes, Dq_shift
+
+            r_dif, q_an_rel, r_kepler, L, a_p, P_quad = kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order)
+
+            #r_dif, q_an_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri = kepler_shift(q1, q2, p1, p2, D_long, N, Neff, int(N/data_thin), H, m, dt, order, q1_long, q2_long, p1_long, p2_long) #peri_indexes, Dq_shift
             
                    
-            p_s = np.sum(phi_shift)
-            p_s = p_s/Neff 
+            #p_s = np.sum(phi_shift)
+            #p_s = p_s/Neff 
 
             a_shift = np.sum(a_p)
             a_shift = a_shift/Neff 
@@ -645,9 +647,10 @@ if __name__=="__main__":
             
             plt.show()
             '''
-            col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri)))   
+
+            #col_rainbow = cm.rainbow(np.linspace(0, 1, len(q_peri)))   
             
-            
+            '''
             f = plt.figure(figsize=(16,6))
             
             ax = f.add_subplot(111, projection = '3d')
@@ -660,30 +663,8 @@ if __name__=="__main__":
             plt.legend(fontsize="large")
             
             plt.show()                  
-            
-            
             '''
-            f = plt.figure(figsize=(16,6))
             
-            
-            ax = f.add_subplot(111)
-            ax.scatter(N_arr_long, r_long_rel, label = 'Orbital radius', alpha=0.5)
-   
-            for i in range(0, len(q_peri)):
-            	index = peri_indexes[i]
-            	index = index[0]
-            	index_N = N_arr_long[index]
-
-            	ax.plot(index_N, r_long_rel[index], 'o', label = 'Perihelion orbit {}'.format(i))
-            	
-            ax.set_xlabel('iteration', fontsize="x-large")
-            ax.set_ylabel('orbital radius [m]', fontsize="x-large")       
-            plt.grid()
-            plt.legend(fontsize="large")
-            
-            plt.show()                  
-            '''
-
             r_spher_rel, theta_spher_rel, phi_spher_rel= CartToSpher(np.ascontiguousarray(q_rel[:,0]), np.ascontiguousarray(q_rel[:,1]), np.ascontiguousarray(q_rel[:,2]))
                 
             f = plt.figure(figsize=(16,14))

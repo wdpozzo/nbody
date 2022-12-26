@@ -21,16 +21,17 @@ AU = 149597870700. #*u.meter
 Ms = 1.98840987e30
 
 #parameters for solution files management     
-plot_step = 1000
-buffer_lenght = 5000000 # buffer_lenght >= plot_step*data_thin
-data_thin = 10
+plot_step = 10000
+buffer_lenght = 2000000 # buffer_lenght >= plot_step*data_thin
+data_thin = 100
 
 ICN_it = 2 
 
 #nbodies = 6
-dt = 0.5
+dt = 0.02
+N  = 1000000000
+
 dt2 = 0.5*dt
-N  = 500000000
 p = 0
 
 Neff = int(N/(data_thin*plot_step))
@@ -823,7 +824,7 @@ def energy_test(N, dt, m, x, y, z, px, py, pz, sx, sy, sz, nout, planet_names):
 					
 	return 
 	
-'''
+#'''
 #natural initial coordinates
   
 t0 = Time('2001-01-01T0:0:00.0', scale='tdb')
@@ -881,9 +882,9 @@ vcm = np.array([np.sum(vx*m/Mtot), np.sum(vy*m/Mtot), np.sum(vz*m/Mtot)])
 sx = np.zeros(len(m)).astype(np.longdouble)
 sy = np.zeros(len(m)).astype(np.longdouble)
 sz = np.zeros(len(m)).astype(np.longdouble)
-'''
-
 #'''
+
+'''
 #custom initial coordinates
 m = np.array((2,1)).astype(np.longdouble)
 
@@ -915,7 +916,7 @@ sy[0], sy[1] = 0., 0.
 sz[0], sz[1] = 0., 0.
 
 planet_names = ['sun', 'mercury']
-#'''
+'''
 
 '''
 m[0], m[1] = 2.e-1*Ms, 0.8e-2*Ms
