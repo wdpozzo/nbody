@@ -205,23 +205,25 @@ if __name__=="__main__":
     sy = np.array((2,1)).astype(np.longdouble)
     sz = np.array((2,1)).astype(np.longdouble)
     
-    '''
+    #'''
     m[0], m[1] = 1.e0*Ms, 1.e0*Mmerc
     
-    x[0], x[1] =  0., 69.818e9
+    x[0], x[1] =  0., 69.818e9 #Aphelion
+    #x[0], x[1] =  0., 46.e9 #Perihelion
     y[0], y[1] = 0., 0.
     z[0], z[1] = 0., 0.
 
     vx[0], vx[1] = 0., 0.
-    vy[0], vy[1] = 0., 38.86e3
+    vy[0], vy[1] = 0., 38.86e3 #Aphelion
+    #vy[0], vy[1] = 0., 58.98e3 #Perihelion
     vz[0], vz[1] = 0., 0.
     
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    '''
-
     #'''
+
+    '''
     m[0], m[1] = 1.e0*Ms, 1.e0*Mearth
     
     x[0], x[1] =  0., 152.100e9
@@ -235,7 +237,7 @@ if __name__=="__main__":
     sx[0], sx[1] = 0., 0.
     sy[0], sy[1] = 0., 0.
     sz[0], sz[1] = 0., 0.
-    #'''
+    '''
 
     '''
     #random initial coordinates
@@ -612,6 +614,17 @@ if __name__=="__main__":
             plt.legend(fontsize = 'large')
             plt.grid()
 
+            plt.show()
+
+            f = plt.figure(figsize=(8,6))
+            ax1 = f.add_subplot(111)
+            #ax1.plot(N_arr, T, label = 'Kinetic energy')
+            #ax1.plot(N_arr, V, label = 'Potential energy')
+            ax1.plot(N_arr, (H[0] - H)/H, label = 'Hamiltonian variation')
+            ax1.set_xlabel('iteration')
+            ax1.set_ylabel(r'$\Delta H / H$')
+            ax1.legend()
+            ax1.grid()
             plt.show()
 
             f = plt.figure(figsize=(16,8))

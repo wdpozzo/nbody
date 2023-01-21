@@ -1,10 +1,11 @@
 cimport cython                        
 import numpy as np
 cimport numpy as np
+from libc.math cimport sqrt, abs
 from libc.stdlib cimport malloc, free
 from libc.string cimport memset
 from nbody.body cimport body_t, _create_system, _find_mergers, _merge_bodies
-from nbody.hamiltonian cimport _hamiltonian, _gradients
+from nbody.hamiltonian cimport _hamiltonian, _gradients, _modulus
 from cpython cimport array
 #from __future__ import print_function
 
@@ -27,10 +28,10 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
 
     cdef unsigned int i,j,k
     cdef long double dt2 = 0.5*dt
-    cdef list dt2_p_list = []
-    cdef list dt2_q_list = []
-    cdef np.ndarray[long double, mode="c", ndim=1] dt2_p_array = np.zeros((nbodies), dtype = np.longdouble) 
-    cdef np.ndarray[long double, mode="c", ndim=1] dt2_q_array = np.zeros((nbodies), dtype = np.longdouble) 
+    #cdef list dt2_p_list = []
+    #cdef list dt2_q_list = []
+    #cdef np.ndarray[long double, mode="c", ndim=1] dt2_p_array = np.zeros((nbodies), dtype = np.longdouble) 
+    #cdef np.ndarray[long double, mode="c", ndim=1] dt2_q_array = np.zeros((nbodies), dtype = np.longdouble) 
 
     cdef body_t tmp_1
     cdef body_t tmp
@@ -255,6 +256,453 @@ cdef _one_step_icn(body_t *bodies, unsigned int nbodies, long double dt, int ord
     free(D);
 
     return (dx, dy, dz, dpx, dpy, dpz, dt2)
+
+
+
+
+
+cdef acc(np.ndarray[long double, mode="c", ndim=1] q, long double mass, long double r, int nbodies):
+
+    cdef long double G = 6.67430e-11
+    cdef unsigned int j
+    cdef long double *a = <long double *>malloc(3*sizeof(long double))
+
+    for j in range(3):    
+        if (r != 0):
+            a[j] = - (G*mass/(r*r*r))*q[j]
+        else:
+            a[j] = 0 
+
+    return (a[0], a[1], a[2]) 
+
+
+cdef jerk(np.ndarray[long double, mode="c", ndim=1] q, np.ndarray[long double, mode="c", ndim=1] p, long double mass, long double r, int nbodies):
+
+    cdef long double G = 6.67430e-11
+    cdef unsigned int j
+    cdef long double *jer = <long double *>malloc(3*sizeof(long double)) 
+
+    for j in range(3):
+        if (r != 0):
+            jer[j] = -(G*mass/(r*r*r))*q[j] + 3*G*mass*((np.dot(p, q)/mass)*q[j])/(r*r*r*r*r)
+        else:
+            jer[j] = 0
+
+    return (jer[0], jer[1], jer[2])
+
+cdef estimate_error_bs(long double q_4th, long double p_4th, long double q_2nd, long double p_2nd, double tol, unsigned int order):
+
+    #cdef list extrapolation_coefficients = [1/1, 1/2, 5/12, 3/8, 251/720, 95/288, 19087/60480, 5257/17280, 19369/64800]
+    cdef long double error_q #= <long double *>malloc(3*sizeof(long double))
+    cdef long double error_p #= <long double *>malloc(3*sizeof(long double))
+    cdef long double error #= <long double *>malloc(3*sizeof(long double))
+    #cdef long double q_bs #= <long double *>malloc(3*sizeof(long double))
+    #cdef long double p_bs #= <long double *>malloc(3*sizeof(long double))
+
+    error_q = np.max(abs(q_4th - q_2nd))
+    error_p = np.max(abs(p_4th - p_2nd))
+
+    error =  np.max(error_q, error_p)
+
+    #if error < tol:
+        
+    return (error, error_q, error_p)
+
+    '''
+    else:
+        order = min(4 - 1, 2)
+
+        q_bs = (q_4th*extrapolation_coefficients[order] - q_2nd*extrapolation_coefficients[order+1])/(extrapolation_coefficients[order] - extrapolation_coefficients[order+1])
+
+        p_bs = (p_4th*extrapolation_coefficients[order] - p_2nd*extrapolation_coefficients[order+1])/(extrapolation_coefficients[order] - extrapolation_coefficients[order+1])
+
+    return estimate_error_bs(q_bs, p_bs, q_2nd, p_2nd, tol, order)
+    '''
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef _one_step_hermite(body_t *bodies, unsigned int nbodies, long double dt, unsigned int int_order, unsigned int order): 
+
+    cdef long double G = 6.67430e-11
+    cdef double tol = 1e-8
+
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
+
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
+    cdef unsigned int i,j,k
+    cdef long double *jerk = <long double *>malloc(3*sizeof(long double)) 
+    cdef long double *a = <long double *>malloc(3*sizeof(long double))
+    #cdef long double *a = <long double *>malloc(3*sizeof(long double)) 
+    #cdef long double *jerk = <long double *>malloc(3*sizeof(long double))
+    #cdef long double *error = <long double *>malloc(3*sizeof(long double))
+    cdef long double *error_q = <long double *>malloc(3*sizeof(long double))
+    cdef long double *error_p = <long double *>malloc(3*sizeof(long double))
+    #cdef np.ndarray[long double, mode="c",ndim=1] q_arr
+    #cdef np.ndarray[long double, mode="c",ndim=1] p_arr
+    #cdef np.ndarray[long double, mode="c",ndim=1] error 
+    #cdef np.ndarray[long double, mode="c",ndim=1] error_q
+    #cdef np.ndarray[long double, mode="c",ndim=1] error_p 
+    #cdef long double *q_arr = <long double *>malloc(3*sizeof(long double)) 
+    #cdef long double *p_arr = <long double *>malloc(3*sizeof(long double))
+    cdef long double r
+    #cdef long double *err = <long double *>malloc(nbodies*sizeof(long double))
+
+    cdef body_t tmp_2nd
+    cdef body_t tmp_4th
+
+    '''
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))
+          
+    _gradients(g, bodies, nbodies, order)
+    '''
+            
+    for k in range(nbodies):
+
+        mass = bodies[k].mass     
+        #tmp_4th[k].mass = mass 
+        #print(1)    
+        r = sqrt(_modulus(bodies[k].q[0], bodies[k].q[1], bodies[k].q[2]))
+
+        #print(1, r, mass, np.type(q_arr), np.type(bodies[k].q[0]))
+        #print(1) 
+        #q_arr = np.array(list(bodies[k].q), dtype = 'float128')
+        #q_arr = np.array(bodies[k].q, dtype = 'float128')
+
+        #print(1, r, mass, np.type(bodies[k].q[0]))
+
+        #p_arr = np.array(bodies[k].p, dtype = 'float128')
+
+        #print(1, np.type(q_arr), np.type(bodies[k].q[0]))
+
+        #a = acc(q_arr, mass, r, nbodies)
+        #jerk = jerk(q_arr, p_arr, mass, r, nbodies)
+  
+        for j in range(3):
+
+            if (r != 0):
+                a[j] = - (G*mass/(r*r*r))*bodies[k].q[j]
+                jerk[j] = -(G*mass/(r*r*r))*bodies[k].q[j] + 3*G*mass*((np.dot(bodies[k].p, bodies[k].q)/mass)*bodies[k].q[j])/(r*r*r*r*r) #CHECK the mass in the dot product
+            else:
+                a[j] = 0
+                jerk[j] = 0
+
+            tmp_4th.q[j] = bodies[k].q[j] + bodies[k].p[j]*dt/mass + 0.5*a[j]*(dt*dt) + (1/6)*jerk[j]*(dt*dt*dt)
+            #tmp_4th.q[j] = bodies[k].q[j] + dt*g[k][3+j] + 0.5*a[j]*(dt*dt) + (1/6)*jerk[j]*(dt*dt*dt)
+            tmp_4th.p[j] = bodies[k].p[j] + dt*a[j]*mass + 0.5*jerk[j]*(dt*dt)*mass
+            #tmp_4th.p[j] = bodies[k].p[j] - dt*g[k][j] + 0.5*jerk[j]*(dt*dt)
+            
+            tmp_2nd.q[j] = bodies[k].q[j] + bodies[k].p[j]*dt/mass + 0.5*a[j]*(dt*dt)
+            tmp_2nd.p[j] = bodies[k].p[j] + dt*a[j]*mass
+            
+            error_q[j] = np.max(abs(tmp_4th.q[j] - tmp_2nd.q[j]))
+            error_p[j] = np.max(abs(tmp_4th.p[j] - tmp_2nd.p[j]))
+            #error[j] =  np.max(error_q[j], error_p[j])
+
+            #error[j], error_q[j], error_p[j] = estimate_error_bs(tmp_4th.q[j], tmp_4th.p[j], tmp_2nd.q[j], tmp_2nd.p[j], tol, int_order)
+
+            bodies[k].q[j] = tmp_4th.q[j]
+            bodies[k].p[j] = tmp_4th.p[j]
+        
+        dx.append(error_q[0])
+        dy.append(error_q[1])
+        dz.append(error_q[2])
+
+        dpx.append(error_p[0])
+        dpy.append(error_p[1])
+        dpz.append(error_p[2])
+    
+    '''
+    for i in range(nbodies):
+        free(g[i])
+ 
+    free(g);
+    '''
+
+    #free(tmp_4th)
+    #free(tmp_2nd)
+
+    #free(a)
+    #free(jerk)
+    #free(q_arr)
+    #free(p_arr)
+    free(error_q)
+    free(error_p)
+    free(a)
+    free(jerk)
+    #free(error)
+    #free(err)
+    #del a
+    #del jerk
+    #del q_arr
+    #del p_arr
+
+        #err[k] = sqrt(_modulus(error[0], error[1], error[2]))       
+   
+        #if (err[k] > tol):
+            #dt_tmp = dt*0.5
+            #for j in range(3):
+                #dt_tmp = dt*0.5
+
+        #else:
+
+
+            #dt_tmp = dt*min(2, (tol/err)**(1/int_order))
+
+    return (dx, dy, dz, dpx, dpy, dpz, dt)
+
+
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef _one_step_FR(body_t *bodies, unsigned int nbodies, long double dt, unsigned int order): 
+
+    cdef double tol = 1e-10
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
+
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
+    cdef unsigned int i,j,k
+
+    cdef long double *error_q = <long double *>malloc(3*sizeof(long double))
+    cdef long double *error_p = <long double *>malloc(3*sizeof(long double))
+    #cdef long double *error = <long double *>malloc(3*sizeof(long double))
+    #cdef np.ndarray[long double, mode="c",ndim=1] err
+    #cdef list err
+    #cdef long double *err = <long double *>malloc(nbodies*sizeof(long double))
+
+    cdef body_t tmp
+    cdef long double dt2 = 0.5*dt
+    cdef long double dt_tmp = dt
+
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))
+          
+    _gradients(g, bodies, nbodies, order)
+
+    cdef body_t *start = <body_t *>malloc(nbodies*sizeof(body_t))
+    if start == NULL:
+        raise MemoryError
+            
+    for k in range(nbodies):
+        start[k] = bodies[k] 
+
+        mass = bodies[k].mass     
+  
+        for j in range(3):
+
+            tmp.q[j] = bodies[k].q[j] + dt*bodies[k].p[j] + dt*dt2*g[k][j+3]
+            tmp.p[j] = bodies[k].p[j] + dt*g[k][j]
+            #tmp.q[j] = bodies[k].q[j] + dt*bodies[k].p[j]
+
+            bodies[k].q[j] = tmp.q[j]
+            bodies[k].p[j] = tmp.p[j]
+
+            tmp.q[j] = bodies[k].q[j] - start[k].q[j]
+            tmp.p[j] = bodies[k].p[j] - start[k].p[j]
+
+            error_q[j] = tmp.q[j] + dt
+            error_p[j] = tmp.p[j] + dt 
+            #error[j] =  np.max([error_q[j],error_p[j]])
+        
+        dx.append(error_q[0])
+        dy.append(error_q[1])
+        dz.append(error_q[2])
+
+        dpx.append(error_p[0])
+        dpy.append(error_p[1])
+        dpz.append(error_p[2])
+
+        #err[k] = np.max([error[0], error[1], error[2]])
+
+
+    for i in range(nbodies):
+        free(g[i])
+ 
+    free(g);
+
+    _free(start)
+    free(error_q)
+    free(error_p)
+    #free(error)
+
+    #cdef long double max_err = np.max([err[:]])
+
+    #if max_err > tol:
+        #dt_tmp *= 0.9*sqrt(tol/max_err)
+
+    #free(err)
+
+    return (dx, dy, dz, dpx, dpy, dpz, dt_tmp)
+
+
+
+
+'''
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+@cython.cdivision(True)
+cdef _one_step_srk(body_t *bodies, unsigned int nbodies, long double dt, unsigned int int_order, unsigned int order): 
+
+    #cdef long double G = 6.67430e-11
+    #cdef double tol = 1e-8
+
+    cdef list dx = []
+    cdef list dy = []
+    cdef list dz = []
+
+    cdef list dpx = []
+    cdef list dpy = []
+    cdef list dpz = []
+
+    cdef unsigned int i,j,k
+
+    cdef long double *error_q = <long double *>malloc(3*sizeof(long double))
+    cdef long double *error_p = <long double *>malloc(3*sizeof(long double))
+
+    cdef body_t tmp_bef
+    cdef body_t tmp_aft
+    cdef body_t tmp_tot
+    #cdef body_t tmp_4th
+
+    cdef long double *error_p = <long double *>malloc(3*sizeof(long double))
+
+    cdef long double *b = <long double *>malloc(2*sizeof(long double))
+
+    cdef long double **a = <long double **>malloc(2*sizeof(long double *))    
+    if a == NULL:
+        raise MemoryError
+        
+    for i in range(2):
+        a[i] = <long double *>malloc(2*sizeof(long double)) #FIXME: for the spins
+        if a[i] == NULL:
+            raise MemoryError
+        memset(a[i], 0, 2*sizeof(long double))
+
+    cdef long double **g = <long double **>malloc(nbodies*sizeof(long double *))    
+    if g == NULL:
+        raise MemoryError
+        
+    for i in range(nbodies):
+        g[i] = <long double *>malloc(6*sizeof(long double)) #FIXME: for the spins
+        if g[i] == NULL:
+            raise MemoryError
+        memset(g[i], 0, 6*sizeof(long double))
+          
+    _gradients(g, bodies, nbodies, order)
+    
+            
+    for k in range(nbodies):
+        mass = bodies[k].mass     
+  
+        for j in range(3):
+
+            tmp_tot.q[j] = bodies[k].q[j]
+            tmp_tot.p[j] = bodies[k].p[j]
+
+            tmp_bef.q[j] = bodies[k].q[j] + dt*0.25*bodies[k].p[j]
+            tmp_bef.p[j] = bodies[k].p[j] + dt*0.25*bodies[k].p[j]
+
+            tmp_bef.q[j] = bodies[k].q[j] + dt*0.25*bodies[k].p[j]  
+
+            tmp.q[j] = bodies[k].q[j] + dt*g[k][3+j]
+            #tmp_4th.q[j] = bodies[k].q[j] + dt*g[k][3+j] + 0.5*a[j]*(dt*dt) + (1/6)*jerk[j]*(dt*dt*dt)
+            tmp.p[j] = bodies[k].p[j] + dt*a[j]*mass + 0.5*jerk[j]*(dt*dt)*mass
+            #tmp_4th.p[j] = bodies[k].p[j] - dt*g[k][j] + 0.5*jerk[j]*(dt*dt)
+            
+            tmp_2nd.q[j] = bodies[k].q[j] + bodies[k].p[j]*dt/mass + 0.5*a[j]*(dt*dt)
+            tmp_2nd.p[j] = bodies[k].p[j] + dt*a[j]*mass
+            
+            error_q[j] = np.max(abs(tmp_4th.q[j] - tmp_2nd.q[j]))
+            error_p[j] = np.max(abs(tmp_4th.p[j] - tmp_2nd.p[j]))
+            #error[j] =  np.max(error_q[j], error_p[j])
+
+            #error[j], error_q[j], error_p[j] = estimate_error_bs(tmp_4th.q[j], tmp_4th.p[j], tmp_2nd.q[j], tmp_2nd.p[j], tol, int_order)
+
+            bodies[k].q[j] = tmp_4th.q[j]
+            bodies[k].p[j] = tmp_4th.p[j]
+        
+        dx.append(error_q[0])
+        dy.append(error_q[1])
+        dz.append(error_q[2])
+
+        dpx.append(error_p[0])
+        dpy.append(error_p[1])
+        dpz.append(error_p[2])
+    
+
+    #for i in range(nbodies):
+    #   free(g[i])
+ 
+    #free(g);
+
+
+    #free(tmp_4th)
+    #free(tmp_2nd)
+
+    #free(a)
+    #free(jerk)
+    #free(q_arr)
+    #free(p_arr)
+    free(error_q)
+    free(error_p)
+    free(a)
+    free(jerk)
+    #free(error)
+    #free(err)
+    #del a
+    #del jerk
+    #del q_arr
+    #del p_arr
+
+        #err[k] = sqrt(_modulus(error[0], error[1], error[2]))       
+   
+        #if (err[k] > tol):
+            #dt_tmp = dt*0.5
+            #for j in range(3):
+                #dt_tmp = dt*0.5
+
+        #else:
+
+
+            #dt_tmp = dt*min(2, (tol/err)**(1/int_order))
+
+    return (dx, dy, dz, dpx, dpy, dpz, dt)
+'''
+
+
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -1782,7 +2230,7 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
     cdef list T = []
     cdef long double h, t, v
     cdef long double time = 0.
-    cdef long double dt2_tmp = 0.
+    cdef long double dt_tmp = dt
     cdef list t_sim = []
 
     #cdef long int nsteps = nsteps
@@ -1819,16 +2267,19 @@ cpdef run(long long int nsteps, long double dt, unsigned int order,
         n = _merge(bodies, n)
         
         # evolve forward in time
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp = _one_step_eu(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lp(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_sv(bodies, n, dt, order) #FIXME
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_lw(bodies, n, dt, order) #FIXME
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_rk(bodies, n, dt, order)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_gar(bodies, n, dt, order) #FIXME
-        dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
-        #dx, dy, dz, dpx, dpy, dpz, dt2_tmp  = _one_step_icn_mod(bodies, n, dt, order, ICN_it)
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp = _one_step_eu(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_lp(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_sv(bodies, n, dt, order) #FIXME
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_lw(bodies, n, dt, order) #FIXME
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_rk(bodies, n, dt, order)
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_gar(bodies, n, dt, order) #FIXME
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_icn(bodies, n, dt, order, ICN_it)
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_icn_mod(bodies, n, dt, order, ICN_it)
+        #dx, dy, dz, dpx, dpy, dpz, dt_tmp  = _one_step_hermite(bodies, n, dt, 4, order)
+        
+        dx, dy, dz, dpx, dpy, dpz, dt_tmp = _one_step_FR(bodies, n, dt_tmp, order)
 
-        time += dt2_tmp    
+        time += dt_tmp    
         # store 1 every nthin steps 
 
         if ( (i+1)%nthin == 0.):    

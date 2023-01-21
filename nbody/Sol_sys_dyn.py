@@ -23,16 +23,16 @@ Ms = 1.98840987e30
 
 
 #parameters for solution files management     
-plot_step = 10000
-buffer_lenght = 1000000 # buffer_lenght >= plot_step*data_thin
-data_thin = 50
+plot_step = 4000
+buffer_lenght = 20000000 # buffer_lenght >= plot_step*data_thin
+data_thin = 500
 
 PN_order = 0
 ICN_it = 2 
 
 #nbodies = 6
-dt = 0.1
-N  = 50000000
+dt = 0.015
+N  = 3000000000
 
 dt2 = 0.5*dt
 p = 0
@@ -42,7 +42,7 @@ nout = int(N/buffer_lenght) #number of files generated
 
 #---------------------------------------#
 #actual natural initial coordinates 
-t0 = Time('2000-01-01T0:0:00.0', scale='tdb')
+t0 = Time('1990-01-01T0:0:00.0', scale='tdb')
 
 masses = {
 'Sun'     : Ms, #1st planet has to be the central attractor
@@ -198,7 +198,7 @@ for i in range(Neff):
 
     for planet in planet_names:
 
-        planets.append(get_body_barycentric_posvel(planet, t, ephemeris='DE430'))   
+        planets.append(get_body_barycentric_posvel(planet, t, ephemeris='DE440'))   
 
     x[i][:] = np.array([planet[0].x.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
     y[i][:] = np.array([planet[0].y.to(u.meter).value for planet in planets[len(m)*(i) : len(m)*(i+1)]]).astype(np.longdouble)
@@ -222,7 +222,7 @@ for i in range(Neff):
 
     #print(t, (t - t0).sec, (i)*(N/Neff)*dt2, i)
     
-t_s = (N - N/Neff)*dt2 #sec
+t_s = (N)*dt2 #sec
 t_s = t_s/(60*60*24*365) #year
 t_nat = (t_sim[-1])/(60*60*24*365) # sec --> year
 
@@ -337,6 +337,7 @@ D_rel_planets_diff = np.array([[0 for i in range(Neff)] for k in range(len(m))])
 
 r_rel_planets = np.array([[0 for i in range(Neff)] for k in range(len(m))]).astype(np.longdouble)
 r_AstPy_planets = np.array([[0 for i in range(Neff)] for k in range(len(m))]).astype(np.longdouble)
+
 for i in range(Neff):
     for j in range(len(m)):
         D_tot_q[j][i][0] = np.sqrt(AstPy_err[j]*AstPy_err[j] + D[i][j][0]*D[i][j][0])
@@ -344,6 +345,7 @@ for i in range(Neff):
         D_tot_q[j][i][2] = np.sqrt(AstPy_err[j]*AstPy_err[j] + D[i][j][2]*D[i][j][2])
 
         D_rel_planets_diff[j][i] = np.sqrt((np.sqrt(D[i][j][0]*D[i][j][0] + D[i][j][1]*D[i][j][1] + D[i][j][2]*D[i][j][2]))**2 + AstPy_err[j]*AstPy_err[j])
+
         r_rel_planets[j,i] = np.sqrt(q[j,i,0]*q[j,i,0] + q[j,i,1]*q[j,i,1] + q[j,i,2]*q[j,i,2])
         r_AstPy_planets[j,i] = np.sqrt(x[i][j]*x[i][j] + y[i][j]*y[i][j] + z[i][j]*z[i][j])
 
@@ -355,10 +357,10 @@ for k in range(0, len(m)):
         ax1.scatter(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), color = col_rainbow[k])
         #ax1.errorbar(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), yerr = D_rel_planets_diff[k][i], fmt='o', color = col_rainbow[k])
         if (i==Neff-1):
-            ax1.scatter(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), color = col_rainbow[k], label = 'Simulation vs. AstroPy {} relative distance'.format(planet_names[k]))
+            ax1.scatter(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), color = col_rainbow[k], label = r'{} $r_{rel}$ difference'.format(planet_names[k]))
             #ax1.errorbar(N_arr[i], abs(r_rel_planets[k,i] - r_AstPy_planets[k,i]), yerr = D_rel_planets_diff[k][i], fmt='o', color = col_rainbow[k], label = 'Simulation vs. AstroPy {} relative distance'.format(planet_names[k]))
 ax1.set_xlabel('iteration', fontsize="x-large")
-ax1.set_ylabel('Relative displacement [m]', fontsize="x-large")
+ax1.set_ylabel('Simulation vs. Astropy displacement [m]', fontsize="x-large")
 plt.grid()
 plt.legend(fontsize="large")
 plt.show()

@@ -35,18 +35,23 @@ cpdef CM_system(np.ndarray[long double, mode="c", ndim=2] p1, np.ndarray[long do
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cpdef SpherToCart(np.ndarray[double, mode="c", ndim=1] RA, np.ndarray[double, mode="c", ndim=1] Decl, long double r):
+#cpdef SpherToCart(np.ndarray[double, mode="c", ndim=1] RA, np.ndarray[double, mode="c", ndim=1] Decl, long double r):
+cpdef SpherToCart(np.ndarray[long double, mode="c", ndim=1] RA, np.ndarray[long double, mode="c", ndim=1] Decl, np.ndarray[long double, mode="c", ndim=1] Incl, np.ndarray[long double, mode="c", ndim=1] r):
 
     cdef unsigned int i
     cdef x = np.zeros(len(RA))
     cdef y = np.zeros(len(RA))
     cdef z = np.zeros(len(RA))
-    
-    for i in range(len(RA)):
+    cdef double theta, phi
 
-        x[i] = r*math.cos(Decl[i])*math.cos(RA[i])
-        y[i] = r*math.sin(Decl[i])*math.cos(RA[i])
-        z[i] = r*math.sin(Decl[i])
+    for i in range(len(RA)):
+        theta = (np.pi/2) - Decl[i]
+        phi = RA[i]
+        theta += Incl[i]
+
+        x[i] = r*math.cos(theta)*math.sin(phi)
+        y[i] = r*math.sin(theta)*math.sin(phi)
+        z[i] = r*math.cos(phi)
 
     return (x, y, z)
 

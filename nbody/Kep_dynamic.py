@@ -219,10 +219,15 @@ def kepler(q1, q2, p1, p2, N, Neff, H, m, dt, order):
 		P_quad[i] = -(((32./5.)*(G*G*G*G)*(mu*mu)*(M*M*M))/((a*a*a*a*a)*(C*C*C*C*C)))*f_e   	
           	#----------------------------------
 
+	peri_indexes = argrelextrema(r_rel, np.less)
+	peri_indexes = np.transpose(peri_indexes)
+
+	print(len(peri_indexes))
+
 	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad)
 
 
-def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
+def kepler_shift(q1, q2, p1, p2, D, N, Neff, N_thin, H, m, dt, order, q1_long, q2_long, p1_long, p2_long):
 	
 	q_rel, p_rel, q_cm, p_cm = CM_system(p1, p2, q1, q2, Neff, m[0], m[1])	
 	
@@ -252,7 +257,7 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 	for i in range(0, Neff):
 		r_rel[i] = math.sqrt(q_rel[i,0]*q_rel[i,0] + q_rel[i,1]*q_rel[i,1] + q_rel[i,2]*q_rel[i,2])	
 			   
-	#Dinamica Kepleriana#-------------------------------------------------#
+	#  Dinamica Kepleriana  #-------------------------------------------------#
 	
 	M = m[0] + m[1]
 	mu = (m[0]*m[1])/M
@@ -455,9 +460,12 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
         
         	shift = math.sqrt(G*M*R[i])/(r_rel[i]*r_rel[i]) #in keplerian motion this is constant (2nd law)
         	phi_shift[i] = shift
-
 	#
-	q_long_rel, p_long_rel, q_long_cm, p_long_cm = CM_system(p1_long, p2_long, q1_long, q2_long, N_thin, m[0], m[1])   
+
+	q_long_rel, p_long_rel, q_long_cm, p_long_cm = CM_system(p1_long, p2_long, q1_long, q2_long, N_thin, m[0], m[1])		
+   
+	#r2_long = np.sqrt(q2_long[:,0]*q2_long[:,0] + q2_long[:,1]*q2_long[:,1] + q2_long[:,2]*q2_long[:,2])
+	
 	r_long_rel = np.sqrt(q_long_rel[:,0]*q_long_rel[:,0] + q_long_rel[:,1]*q_long_rel[:,1] + q_long_rel[:,2]*q_long_rel[:,2])
 
 	#print(np.shape(r_long_rel), np.shape(r_kepler))
@@ -473,19 +481,9 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 
 	q_peri = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
 	#q_peri_an = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri)], dtype='float64')
-
-	#print(peri_indexes_an, n_peri, peri_indexes)
-	
-	if (n_peri != 0):
-		for i in range(0, n_peri):
-			q_peri[i,:] = q2_long[peri_indexes[i], :] #q_long_rel[peri_indexes[i], :] #
-			#q_peri_an[i,:] = q2_long[peri_indexes_an[i], :]  #q_long_rel[peri_indexes_an[i], :] # 
-	#
-
-	#n_peri = len(q_peri)
 	
 	Dq_shift_tmp2 = np.zeros(3, dtype='float64')
-	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for n_peri in range(0, n_peri-1)], dtype='float64')	
+	Dq_shift_tmp1 = np.array([[0 for i in range(0, 3)] for k in range(0, n_peri-1)], dtype='float64')	
 	
 	phi_shift_test = 0 
 	Dq_shift = 0
@@ -496,7 +494,8 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 
 	if (n_peri != 0):
 		for i in range(0, n_peri):
-	
+			q_peri[i,:] = q_long_rel[peri_indexes[i], :]   #q2_long[peri_indexes[i], :] 
+			#q_peri_an[i,:] = q2_long[peri_indexes_an[i], :]  #q_long_rel[peri_indexes_an[i], :] # 
 			#q_peri[i,:] = q2[peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
 			#v_peri[i,:] = p2[peri_indexes[i], :]/m[1] #- q_cm[peri_indexes[i], :]
 			
@@ -504,8 +503,8 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 				Dx = D[peri_indexes[i], 1, 0:3] 
 				Dy = D[peri_indexes[i-1], 1, 0:3]
 			
-				#Dx = D[peri_indexes[i], 1, 3:6] 
-				#Dy = D[peri_indexes[i-1], 1, 3:6]
+				#Dvx = D[peri_indexes[i], 1, 3:6] 
+				#Dvy = D[peri_indexes[i-1], 1, 3:6]
 			
 				#print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))	
 	
@@ -513,19 +512,27 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 
 				phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
 
-				acos_test[i] = phi_shift_test
+				acos_test[i] = np.float(math.acos(test[i]))
 
 				#phi_shift_test += math.acos(np.dot(v_peri[i, :], v_peri[i-1, :])/(np.linalg.norm(v_peri[i, :])*np.linalg.norm(v_peri[i-1, :])))
 
 				Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i, :]))/(q_peri[i, :]*q_peri[i, :]*np.abs(q_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(q_peri[i, :], q_peri[i-1, :]))*np.abs(q_peri[i-1, :]))/(q_peri[i-1, :]*q_peri[i-1, :]*np.abs(q_peri[i, :]))))
 
-				#Dq_shift_tmp1[i-1, :] = (Dx[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i, :]))/(v_peri[i, :]*v_peri[i, :]*np.abs(v_peri[i-1, :])))) + (Dy[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i-1, :]))/(v_peri[i-1, :]*v_peri[i-1, :]*np.abs(v_peri[i, :]))))
-			
+				#Dq_shift_tmp1[i-1, :] = (Dvx[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i, :]))/(v_peri[i, :]*v_peri[i, :]*np.abs(v_peri[i-1, :])))) + (Dvy[:]*np.abs(- (math.tan(np.dot(v_peri[i, :], v_peri[i-1, :]))*np.abs(v_peri[i-1, :]))/(v_peri[i-1, :]*v_peri[i-1, :]*np.abs(v_peri[i, :]))))
+				
+				Dq_shift_tmp2[i] = np.linalg.norm(Dq_shift_tmp1[i-1][:])
+		
+		Dq_shift = np.sum(Dq_shift_tmp2[:])
 
-		Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
-		Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
+		phi_shift_test = phi_shift_test/n_peri
 
-		 #print(Dq_shift, Dq_shift_sigma)
+		
+		#Dq_shift_tmp2[:] = np.linalg.norm(Dq_shift_tmp1[:])
+		#Dq_shift = np.sum(Dq_shift_tmp2[:])	
+
+		#Dq_shift_tmp2[:] = np.sum(Dq_shift_tmp1[:])
+		#Dq_shift = np.linalg.norm(Dq_shift_tmp2[:])
+
 
 	'''
 	N_arr = np.linspace(0, N - N/Neff, Neff)
@@ -547,8 +554,20 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 	plt.show()         
 	'''
 
+	N_arr = np.linspace(0, N, Neff)
 	N_arr_peri = np.linspace(0, N, n_peri)
-	N_arr_peri_kep = np.linspace(0, N, n_peri_an)
+
+	f = plt.figure(figsize=(6,4))
+	ax = f.add_subplot(111)
+	ax.plot(N_arr, m_a, label ='m_an')
+	ax.scatter(N_arr_peri, m_a[peri_indexes], label ='m_an at periapses')
+	ax.set_xlabel('iteration')
+	ax.set_ylabel('Mean anomaly')
+	plt.grid()
+	plt.legend()
+	plt.show()
+
+	#N_arr_peri_kep = np.linspace(0, N, n_peri_an)
 	        
 	f = plt.figure(figsize=(6,4))
 	ax = f.add_subplot(111)
@@ -581,6 +600,7 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 
 	inf = []
 	up = []
+
 	for i in range(0, len(peri_indexes)):	 
 		inf.append(int(peri_indexes[i] - 2))
 		up.append(int(peri_indexes[i] + 3))
@@ -588,19 +608,22 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 	#print(inf, up, q2_long[inf:up, 0], np.shape(q2_long[inf:up, 0]))
 
 	f = plt.figure(figsize=(16,6))
-	ax = f.add_subplot(111)
+	ax = f.add_subplot(111, projection = '3d')
 	for i in range(0, len(q_peri)):	 
-		ax.plot(q2_long[inf[i]:up[i], 0], q2_long[inf[i]:up[i], 1], alpha = 0.5, label = 'Rev {}'.format(i))
-		ax.plot(q_peri[i,0], q_peri[i,1], 'o', label = 'Perihelion orbit Sim {}'.format(i), color = col_rainbow[i])
+		#ax.plot(q2_long[inf[i]:up[i], 0], q2_long[inf[i]:up[i], 1], q2_long[inf[i]:up[i], 2], alpha = 0.5, label = 'Rev {}'.format(i))
+		ax.plot(q_long_rel[inf[i]:up[i], 0], q_long_rel[inf[i]:up[i], 1], q_long_rel[inf[i]:up[i], 2], alpha = 0.5, label = 'Rev {}'.format(i))
+		ax.plot(q_peri[i,0], q_peri[i,1], q_peri[i,2], 'o', label = 'Perihelion orbit Sim {}'.format(i), color = col_rainbow[i])
 		#ax.plot(q_peri_an[i,0], q_peri_an[i,1], 'o', label = 'Perihelion orbit Kepl {}'.format(i), color = col_viridis[i])
 
 	ax.set_xlabel('x [m]', fontsize="x-large")
-	ax.set_ylabel('y [m]', fontsize="x-large")      
+	ax.set_ylabel('y [m]', fontsize="x-large")   
+	ax.set_xlabel('z [m]', fontsize="x-large")   
 	plt.legend(fontsize="large")
 	plt.grid()   
 	plt.show()       
 
 	#print(np.shape(q_peri), np.shape(q_peri_an), np.shape(N_arr_peri))
+
 	'''
 	f = plt.figure(figsize=(16,6))
 
@@ -632,7 +655,7 @@ def kepler_shift(q1, q2, p1, p2, D_long, N, Neff, N_thin, H, m, dt, order, q1_lo
 	plt.show()     
 	'''
 
-	print(phi_shift_test)
+	#print(phi_shift_test)
 
 
 	return (r_dif, q_analit_rel, r_kepler, L, a_p, P_quad, phi_shift, phi_shift_test, Dq_shift, q_peri)
@@ -730,6 +753,7 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 		
 		#apsidial precession given by coupling of the planet with the other bodies  (newtonian) [#rad per revolution]
 
+		
 		for j in range(2, len(m)):	
 		
 			'''
@@ -739,7 +763,9 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 			#r_m = math.sqrt((q[1,i,0]-q[j,i,0])*(q[1,i,0]-q[j,i,0]) + (q[1,i,1]-q[j,i,1])*(q[1,i,1]-q[j,i,1]) + (q[1,i,2]-q[j,i,2])*(q[1,i,2]-q[j,i,2])) #distance from Mercury
 			
 			r_m = math.sqrt((q_rel[i,0]-q[j,i,0])*(q_rel[i,0]-q[j,i,0]) + (q_rel[i,1]-q[j,i,1])*(q_rel[i,1]-q[j,i,1]) + (q_rel[i,2]-q[j,i,2])*(q_rel[i,2]-q[j,i,2])) #distance from Sun-Mercury
-			
+
+			#print(r_m, q_rel[i,:], q[j,i,:], e*e)
+
 			a_p2_arr[j] = (3.*math.pi/2.)*(m[j]/M)*(a/r_m)*(a/r_m)*(a/r_m)*(math.sqrt(1.- e*e)) #apsidial precession given by coupling of the planet with the other bodies  (newtonian) [#rad per revolution]
 
 			a_p4_arr[j] = 4.*math.pi*(G*m[j]/(C*C*a))*(a/r_m)*(a/r_m)*math.sqrt(a/r_m) #apsidial precession given by gravitomagnetic effect [#rad per revolution]		
@@ -783,7 +809,7 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 
 			#q_peri[i,:] = q_rel[peri_indexes[i], :] #- q_cm[peri_indexes[i], :]
 
-			q_peri[i,:] = q[1, peri_indexes[i], :]
+			q_peri[i,:] = q_rel[peri_indexes[i], :] #q[1, peri_indexes[i], :]
 
 			#v_peri[i,:] = p[1, peri_indexes[i], :]/m[1] #- q_cm[peri_indexes[i], :]
 			
@@ -793,7 +819,7 @@ def kepler_sol_sys(p, q, D, Neff, H, m, dt, order):
 			
 				phi_shift_test += np.float(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))))
 
-				print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))
+				#print(math.acos(np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :]))), np.dot(q_peri[i, :], q_peri[i-1, :])/(np.linalg.norm(q_peri[i, :])*np.linalg.norm(q_peri[i-1, :])))
 
 				#phi_shift_test += math.acos(np.dot(v_peri[i, :], v_peri[i-1, :])/(np.linalg.norm(v_peri[i, :])*np.linalg.norm(v_peri[i-1, :])))
 
@@ -822,10 +848,10 @@ def KepElemToCart(a, T, e, Omega, i, w, N, Neff):
 	
 	ke = pyasl.KeplerEllipse(a, T, e, Omega, i, w)
 	
-	#t = np.linspace(0, N, Neff)
+	t = np.linspace(0, N, Neff)
 	# Calculate the orbit position at the given points
 	# in a Cartesian coordinate system.
-	pos = ke.xyzPos(0)
+	pos = ke.xyzPos(t[0])
 	
 	#print("Shape of output array: ", pos.shape)
 
@@ -833,7 +859,7 @@ def KepElemToCart(a, T, e, Omega, i, w, N, Neff):
 	#radius = ke.radius(1)
 
 	# Calculate velocity on orbit
-	vel = ke.xyzVel(0)
+	vel = ke.xyzVel(t[0])
 	
 	return (pos[:][0], pos[:][1], pos[:][2], vel[:][0], vel[:][1], vel[:][2])#, radius)
 	
